@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>bAIsed - Detect Bias. Ensure Fairness.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb3b2",
+                    "on-tertiary-fixed-variant": "#763032",
+                    "surface-container-highest": "#e1e3e3",
+                    "outline": "#7e7576",
+                    "tertiary-fixed": "#ffdad9",
+                    "on-tertiary-fixed": "#3d050b",
+                    "on-tertiary": "#ffffff",
+                    "surface": "#f9f9f9",
+                    "primary": "#3a6662",
+                    "secondary": "#3a6662",
+                    "tertiary-container": "#3d050b",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#214e4a",
+                    "secondary-fixed": "#bdece6",
+                    "secondary-fixed-dim": "#a2cfca",
+                    "inverse-surface": "#2e3131",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#c16b6c",
+                    "on-secondary-container": "#406c68",
+                    "on-secondary-fixed": "#00201e",
+                    "surface-bright": "#f9f9f9",
+                    "surface-variant": "#e1e3e3",
+                    "primary-container": "#1b1b1b",
+                    "outline-variant": "#cfc4c5",
+                    "on-primary-fixed": "#1b1b1b",
+                    "on-primary-container": "#848484",
+                    "tertiary": "#000000",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-surface": "#191c1c",
+                    "on-surface-variant": "#4c4546",
+                    "secondary-container": "#bdece6",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#474747",
+                    "surface-container-high": "#e7e8e8",
+                    "inverse-primary": "#c6c6c6",
+                    "background": "#f9f9f9",
+                    "on-background": "#191c1c",
+                    "surface-dim": "#d9dada",
+                    "surface-container": "#edeeee",
+                    "inverse-on-surface": "#f0f1f1",
+                    "surface-tint": "#5e5e5e",
+                    "surface-container-low": "#f3f4f4",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#e2e2e2",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "8px",
+                    "xl": "16px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "md": "16px",
+                    "gutter": "16px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .hero-score-card {
+            transform-style: preserve-3d;
+            transition: transform 220ms ease, box-shadow 220ms ease;
+        }
+        .hero-mini-bar > div {
+            transition: width 850ms cubic-bezier(0.2, 0.9, 0.2, 1);
+        }
+        .hero-stat-chip {
+            transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+        .hero-stat-chip:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.88);
+            border-color: rgba(58, 102, 98, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg" data-page="landing">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-zinc-800">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-16 font-['Inter'] antialiased tracking-tight">
+<a class="text-2xl font-black tracking-tighter text-black dark:text-white" data-nav-label="bAIsed" href="/app">bAIsed</a>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-1 transition-colors duration-200" href="#">Solutions</a>
+<a class="text-gray-500 dark:text-zinc-400 font-medium hover:text-black dark:hover:text-teal-300 transition-colors duration-200" href="#">Methodology</a>
+<a class="text-gray-500 dark:text-zinc-400 font-medium hover:text-black dark:hover:text-teal-300 transition-colors duration-200" href="#">Case Studies</a>
+<a class="text-gray-500 dark:text-zinc-400 font-medium hover:text-black dark:hover:text-teal-300 transition-colors duration-200" href="#">Pricing</a>
+<a class="text-gray-500 dark:text-zinc-400 font-medium hover:text-black dark:hover:text-teal-300 transition-colors duration-200" href="#">Docs</a>
+</div>
+<div class="flex items-center gap-4" data-auth-container>
+<button class="hidden lg:block text-gray-600 dark:text-zinc-300 font-medium px-4 py-2">Login</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold active:opacity-80 transition-opacity">Get Started</button>
+</div>
+</div>
+</nav>
+<main class="pt-16">
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-20 pb-32 px-6">
+<div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+<div class="z-10">
+<span class="inline-block py-1 px-3 rounded-full bg-secondary-container text-on-secondary-container text-label-md mb-6">NEW: V2.0 ENGINE RELEASED</span>
+<h1 class="font-headline-lg text-6xl md:text-7xl mb-6 tracking-tight">Detect Bias.<br/><span class="text-secondary">Ensure Fairness.</span></h1>
+<p class="text-body-lg text-on-surface-variant max-w-xl mb-10 text-xl leading-relaxed">
+                        Quantify algorithmic integrity with high-precision transparent metrics. Audit your models for disparate impact before they hit production.
+                    </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-lg font-bold text-lg flex items-center gap-2" data-action="Start Free Audit">
+                            Start Free Audit <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="bg-secondary-container text-on-secondary-container px-8 py-4 rounded-lg font-bold text-lg border border-outline-variant/30" data-action="Book Demo">
+                            Book Demo
+                        </button>
+</div>
+</div>
+<div class="relative">
+<div class="hero-score-card glass-card rounded-[32px] p-10 shadow-2xl relative z-10 border border-white/40" id="hero-score-card">
+    <div class="flex flex-col gap-12">
+        <!-- Header: Score & Verdict -->
+             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 border-b border-white/20 pb-8">
+             <div>
+                 <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-2">Overall Parity</p>
+                 <p class="text-5xl font-black tracking-tighter text-on-surface" id="hero-current-score">84.2%</p>
+             </div>
+             <div class="rounded-2xl border border-secondary/10 bg-white/40 px-5 py-3 shadow-sm backdrop-blur-md">
+                 <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant">Live Verdict</p>
+                 <span class="mt-1 block text-lg font-black text-secondary" id="hero-status">Moderate Bias Detected</span>
+             </div>
+         </div>
+
+         <!-- Group Stats Chart -->
+         <div class="grid gap-10 lg:grid-cols-[1fr_260px]">
+             <div>
+                 <div class="mb-4 flex items-center justify-between gap-4">
+                     <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Selection Rate By Group</p>
+                     <span class="rounded-full border border-white/60 bg-white/40 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-on-surface-variant" id="hero-group-count">0 groups</span>
+                 </div>
+                 <div class="grid gap-3" id="hero-group-chart"></div>
+             </div>
+             <div class="rounded-2xl border border-white/60 bg-white/40 p-5 shadow-sm backdrop-blur-sm">
+                 <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">From Your Last Upload</p>
+                 <p class="text-xs leading-relaxed text-on-surface-variant" id="hero-dataset-meta">Upload a CSV/XLSX in the Workbench to see group stats here.</p>
+                 <div class="mt-5 grid grid-cols-2 gap-3">
+                     <div class="rounded-xl border border-white/60 bg-white/50 p-3">
+                         <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">DIR</p>
+                         <p class="mt-1 text-lg font-black text-on-surface" id="hero-dir">-</p>
+                     </div>
+                     <div class="rounded-xl border border-white/60 bg-white/50 p-3">
+                         <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Gap</p>
+                         <p class="mt-1 text-lg font-black text-on-surface" id="hero-selection-gap">-</p>
+                     </div>
+                 </div>
+             </div>
+         </div>
+
+         <p class="text-center text-xs font-medium leading-relaxed text-on-surface-variant italic" id="hero-parity-copy">
+           Upload a dataset to replace the demo values with real group-level parity stats.
+         </p>
+     </div>
+ </div>
+<!-- Background blobs -->
+<div class="absolute -top-10 -right-10 w-64 h-64 bg-secondary-fixed opacity-30 blur-3xl rounded-full"></div>
+<div class="absolute -bottom-10 -left-10 w-48 h-48 bg-tertiary-fixed opacity-20 blur-3xl rounded-full"></div>
+</div>
+</div>
+</section>
+<!-- Problem Section: The Inheritance of Inequity -->
+<section class="py-24 bg-surface-container-low px-6">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-20">
+<h2 class="font-headline-lg text-4xl mb-4">The Inheritance of Inequity</h2>
+<p class="text-on-surface-variant max-w-2xl mx-auto text-lg">AI doesn't just process data; it mirrors history. Without active intervention, historical biases in lending, hiring, and healthcare become automated systemic failures.</p>
+</div>
+<div class="grid lg:grid-cols-2 gap-12 items-center">
+<div class="space-y-8">
+<div class="flex gap-6 items-start">
+<div class="bg-primary text-on-primary p-3 rounded-xl">
+<span class="material-symbols-outlined">data_object</span>
+</div>
+<div>
+<h4 class="font-headline-md text-xl mb-2">Biased Training Sets</h4>
+<p class="text-on-surface-variant">Models learn from historical data that often reflects past societal prejudices, reinforcing those patterns in future predictions.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="bg-primary text-on-primary p-3 rounded-xl">
+<span class="material-symbols-outlined">trending_down</span>
+</div>
+<div>
+<h4 class="font-headline-md text-xl mb-2">Disparate Outcomes</h4>
+<p class="text-on-surface-variant">Automated systems frequently yield higher rejection rates for marginalized groups even when qualifications are identical.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="bg-primary text-on-primary p-3 rounded-xl">
+<span class="material-symbols-outlined">visibility_off</span>
+</div>
+<div>
+<h4 class="font-headline-md text-xl mb-2">The "Black Box" Problem</h4>
+<p class="text-on-surface-variant">Without bAIsed, developers cannot explain why certain groups are penalized by their proprietary algorithms.</p>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl p-8 shadow-sm border border-outline-variant/20">
+<h4 class="font-headline-md text-lg mb-6">Outcome Imbalance (Hiring Model)</h4>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between text-body-sm mb-2">
+<span>Demographic Group A</span>
+<span class="font-bold">78% Approval</span>
+</div>
+<div class="h-6 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[78%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-sm mb-2">
+<span>Demographic Group B</span>
+<span class="font-bold">32% Approval</span>
+</div>
+<div class="h-6 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-error w-[32%]"></div>
+</div>
+</div>
+</div>
+<div class="mt-8 p-4 bg-tertiary-fixed/30 rounded-lg flex gap-4">
+<span class="material-symbols-outlined text-error">warning</span>
+<p class="text-body-sm text-on-tertiary-fixed-variant">Critical disparity detected. The model is 2.4x more likely to reject Group B candidates based on historical zip code proxy data.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Solution Diagram -->
+<section class="py-24 px-6 overflow-hidden">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-4xl mb-4">The Pipeline to Fairness</h2>
+<p class="text-on-surface-variant">Our end-to-end framework bridges the gap between raw data and ethical AI.</p>
+</div>
+<div class="relative">
+<!-- Connector line -->
+<div class="absolute top-1/2 left-0 w-full h-1 bg-outline-variant -translate-y-1/2 hidden lg:block z-0"></div>
+<div class="grid md:grid-cols-4 gap-8 relative z-10">
+<div class="bg-white p-6 rounded-xl border border-outline-variant text-center">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined text-primary">database</span>
+</div>
+<h5 class="font-bold mb-2">Data</h5>
+<p class="text-body-sm text-on-surface-variant">Ingest training datasets from any source.</p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-outline-variant text-center">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<h5 class="font-bold mb-2">Analysis</h5>
+<p class="text-body-sm text-on-surface-variant">Scan for latent variables and proxy bias.</p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-secondary text-center shadow-lg shadow-secondary/10">
+<div class="w-12 h-12 bg-secondary text-on-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined" data-weight="fill">search_check</span>
+</div>
+<h5 class="font-bold mb-2">Bias Detection</h5>
+<p class="text-body-sm text-on-surface-variant">Real-time quantification of inequity.</p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-outline-variant text-center">
+<div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined text-primary">lightbulb</span>
+</div>
+<h5 class="font-bold mb-2">Insight</h5>
+<p class="text-body-sm text-on-surface-variant">Actionable steps to retune model parity.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Grid (Bento Style) -->
+<section class="py-24 px-6 bg-surface">
+<div class="max-w-7xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6">
+<div class="md:col-span-2 glass-card rounded-xl p-10 flex flex-col justify-between border-outline-variant/30 shadow-md">
+<div>
+<span class="material-symbols-outlined text-4xl text-secondary mb-6">bolt</span>
+<h3 class="font-headline-md text-3xl mb-4">Bias Detection Engine</h3>
+<p class="text-body-lg text-on-surface-variant max-w-md">Our proprietary algorithm scans trillions of data points to identify 40+ types of cognitive and historical bias in under 3 seconds.</p>
+</div>
+<img class="w-full h-48 object-cover rounded-lg mt-10" data-alt="Abstract visualization of flowing digital data streams in shades of teal and dark gray representing neural networks" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKUzmNCKTe4nD5c4gA7y_w118asLHZgABxz-T7DlrYqmq7T_BCOQoUZa6J6xzLqMeymVI4g-ZliOUAHk3wI4mcC0jVxU5X9GwDLV6ZzGDZAUntuOp3thT1JEpHxtLEzXOjvdmdV-tC0FOJjBFjmlDCelsBcxrmKUTuxtu9kJNZDgE_BNDOwXgZaFzUsGaHN0y7BElSlwMsVLO35XTbELVbkRa--Eej8poX16lP2l9QMK_qselVsSJIkbyPtaINEDPKC4Tz-VXz8Kv1"/>
+</div>
+<div class="bg-primary text-on-primary rounded-xl p-10 flex flex-col justify-between shadow-xl">
+<div>
+<span class="material-symbols-outlined text-4xl mb-6">speed</span>
+<h3 class="font-headline-md text-2xl mb-4">Real-Time Bias Meter</h3>
+<p class="text-body-sm opacity-80">Embed our SDK into your production environment for continuous monitoring of live inference drift.</p>
+</div>
+<div class="mt-8 border-t border-white/20 pt-6">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+<span class="text-label-md">LIVE MONITORING ACTIVE</span>
+</div>
+</div>
+</div>
+<div class="bg-secondary-container rounded-xl p-10 shadow-sm border border-secondary/20">
+<span class="material-symbols-outlined text-4xl text-on-secondary-container mb-6">psychology</span>
+<h3 class="font-bold text-2xl mb-4 text-on-secondary-container">Explainable Results</h3>
+<p class="text-body-sm text-on-secondary-container/80">Every audit comes with a plain-English explanation. Move beyond "The AI said so" to "Here is exactly why."</p>
+<p class="mt-4 text-body-sm text-on-secondary-container/80">We surface the exact disparity drivers, quantify impact at each decision stage, and suggest fixes that map to common compliance frameworks.</p>
+<div class="mt-6 grid gap-2 text-xs text-on-secondary-container/80">
+  <div class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 rounded-full bg-on-secondary-container/70"></span><span>Top contributing features and proxy-risk signals</span></div>
+  <div class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 rounded-full bg-on-secondary-container/70"></span><span>Per-group selection rates with disparity rankings</span></div>
+  <div class="flex items-start gap-2"><span class="mt-0.5 h-1.5 w-1.5 rounded-full bg-on-secondary-container/70"></span><span>Actionable remediation plan (thresholds, reweighting, sampling)</span></div>
+</div>
+</div>
+<div class="md:col-span-2 glass-card rounded-xl p-10 flex flex-col md:flex-row gap-10 items-center border-outline-variant/30 shadow-md">
+<div class="flex-1">
+<span class="material-symbols-outlined text-4xl text-tertiary mb-6">science</span>
+<h3 class="font-headline-md text-2xl mb-4">What-If Simulator</h3>
+<p class="text-body-sm text-on-surface-variant">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
+</div>
+<div class="flex-1 bg-surface-container rounded-lg p-6 w-full">
+  <div class="flex items-center justify-between gap-4">
+    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Scenario Preview</p>
+    <span class="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black text-secondary uppercase tracking-wider">Instant</span>
+  </div>
+  <div class="mt-5 grid gap-4">
+    <div class="rounded-xl border border-outline-variant/40 bg-white/40 p-4">
+      <p class="text-xs font-semibold text-on-surface">Change</p>
+      <p class="mt-1 text-xs text-on-surface-variant">Increase diversity weight to <span class="font-mono text-on-surface">0.75</span> and apply mild reweighting.</p>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="rounded-xl border border-outline-variant/40 bg-white/40 p-3">
+        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">DIR</p>
+        <p class="mt-1 text-sm font-black text-on-surface">0.92</p>
+      </div>
+      <div class="rounded-xl border border-outline-variant/40 bg-white/40 p-3">
+        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">SPD</p>
+        <p class="mt-1 text-sm font-black text-on-surface">-0.03</p>
+      </div>
+      <div class="rounded-xl border border-outline-variant/40 bg-white/40 p-3">
+        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">Accuracy</p>
+        <p class="mt-1 text-sm font-black text-on-surface">93.4%</p>
+      </div>
+    </div>
+    <div class="rounded-xl border border-outline-variant/40 bg-white/40 p-3">
+      <div class="flex items-center justify-between text-xs">
+        <span class="font-semibold text-on-surface">Parity improvement</span>
+        <span class="font-mono text-secondary">+8.1%</span>
+      </div>
+      <div class="mt-2 h-2 rounded-full bg-black/5 overflow-hidden">
+        <div class="h-2 rounded-full bg-secondary" style="width: 78%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Demo: Fairness Simulator -->
+<section class="py-24 px-6">
+<div class="max-w-5xl mx-auto bg-primary-container rounded-3xl p-8 md:p-16 text-on-primary">
+<div class="grid lg:grid-cols-2 gap-16 items-center">
+<div>
+<h2 class="font-headline-lg text-4xl mb-6">Try the Fairness Simulator</h2>
+<p class="text-on-primary-container mb-10 text-lg">Adjust the ethical parameters below to see how they impact model accuracy and fairness parity in real-time.</p>
+<div class="space-y-8">
+<div>
+<div class="flex justify-between mb-4">
+<label class="font-bold">Group Diversity Weight</label>
+<span class="text-secondary font-mono" id="sim-diversity-value">0.65</span>
+</div>
+<input class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-secondary" id="sim-diversity-slider" max="100" min="0" step="1" type="range" value="65"/>
+</div>
+<div>
+<div class="flex justify-between mb-4">
+<label class="font-bold">Fairness Constraint</label>
+<span class="text-secondary font-mono" id="sim-constraint-label">Optimal</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 px-4 rounded border border-zinc-700 text-sm hover:bg-zinc-800" data-sim-constraint="Loose" type="button">Loose</button>
+<button class="py-2 px-4 rounded border border-secondary bg-secondary/10 text-secondary text-sm" data-sim-constraint="Optimal" type="button">Optimal</button>
+<button class="py-2 px-4 rounded border border-zinc-700 text-sm hover:bg-zinc-800" data-sim-constraint="Strict" type="button">Strict</button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white/5 rounded-2xl p-8 border border-white/10 flex flex-col items-center">
+<p class="text-label-md text-on-primary-container uppercase mb-8">BIAS SEVERITY GAUGE</p>
+<div class="relative w-48 h-48">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="45" stroke="rgba(255,255,255,0.1)" stroke-width="8"></circle>
+<circle cx="50" cy="50" fill="none" id="sim-gauge-fill" r="45" stroke="#13eed3" stroke-dasharray="283" stroke-dashoffset="99" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center rotate-90">
+<span class="text-4xl font-black" id="sim-risk-label">Low</span>
+<span class="text-xs opacity-60">Risk Profile</span>
+</div>
+</div>
+<div class="mt-8 text-center">
+<p class="text-sm opacity-80 mb-2">Estimated Model Accuracy</p>
+<p class="text-2xl font-bold" id="sim-accuracy">94.1%</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- How It Works -->
+<section class="py-24 px-6 bg-surface-container-high">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-4xl mb-4">The 3-Step Audit</h2>
+</div>
+<div class="grid md:grid-cols-3 gap-12">
+<div class="text-center">
+<div class="w-16 h-16 bg-primary text-on-primary rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl font-black">1</div>
+<h4 class="font-headline-md mb-4">Upload</h4>
+<p class="text-on-surface-variant">Connect your training data via API or upload secure CSV/Parquet files.</p>
+</div>
+<div class="text-center">
+<div class="w-16 h-16 bg-primary text-on-primary rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl font-black">2</div>
+<h4 class="font-headline-md mb-4">Analyze</h4>
+<p class="text-on-surface-variant">Our engine performs deep scans across demographic intersections.</p>
+</div>
+<div class="text-center">
+<div class="w-16 h-16 bg-secondary text-on-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl font-black">3</div>
+<h4 class="font-headline-md mb-4">Insights</h4>
+<p class="text-on-surface-variant">Download regulatory compliance reports and mitigation paths.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Tech Stack -->
+<section class="py-20 border-t border-outline-variant/30 px-6">
+<div class="max-w-7xl mx-auto text-center">
+<p class="text-label-md text-on-surface-variant mb-12 uppercase tracking-widest">Built with Modern Infrastructure</p>
+<div class="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all">
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">cloud</span> Google Cloud</div>
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">local_fire_department</span> Firebase</div>
+<div class="flex items-center gap-2 font-bold text-xl font-sans">NEXT.js</div>
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">bolt</span> FastAPI</div>
+</div>
+</div>
+</section>
+<!-- CTA -->
+<section class="py-24 px-6 bg-white overflow-hidden relative">
+<div class="absolute top-0 right-0 w-1/3 h-full bg-secondary-fixed opacity-10 blur-3xl rounded-full translate-x-1/2"></div>
+<div class="max-w-4xl mx-auto text-center relative z-10">
+<h2 class="font-headline-lg text-5xl mb-6">Ready for an ethical AI future?</h2>
+<p class="text-body-lg text-on-surface-variant mb-10 text-xl">Join hundreds of data science teams ensuring fairness in their algorithms today.</p>
+<div class="flex flex-col sm:flex-row justify-center gap-4">
+<button class="bg-primary text-on-primary px-10 py-5 rounded-xl font-bold text-lg shadow-xl shadow-black/10" data-action="Start analyzing your data now">Start analyzing your data now</button>
+<button class="bg-white text-primary border border-primary px-10 py-5 rounded-xl font-bold text-lg" data-action="Contact Enterprise Sales">Contact Enterprise Sales</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 border-t border-gray-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 font-['Inter'] text-sm leading-relaxed">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:flex lg:justify-between max-w-7xl mx-auto px-6 gap-8">
+<div class="max-w-xs">
+<div class="text-xl font-black text-black dark:text-white mb-4">bAIsed</div>
+<p class="text-gray-600 dark:text-zinc-400">© 2024 bAIsed. Algorithmic transparency for a fair future.</p>
+</div>
+<div class="flex flex-wrap gap-8 lg:gap-16">
+<div class="flex flex-col gap-4">
+<span class="font-bold text-black dark:text-white">Product</span>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">Solutions</a>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">API Status</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-bold text-black dark:text-white">Resources</span>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">AI Ethics Hub</a>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">Documentation</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-bold text-black dark:text-white">Legal</span>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">Privacy Policy</a>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-bold text-black dark:text-white">Connect</span>
+<div class="flex gap-4">
+<button class="w-10 h-10 rounded-full bg-white dark:bg-zinc-900 border border-outline-variant flex items-center justify-center focus:ring-2 focus:ring-teal-500">
+<span class="material-symbols-outlined text-sm">alternate_email</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-white dark:bg-zinc-900 border border-outline-variant flex items-center justify-center focus:ring-2 focus:ring-teal-500">
+<span class="material-symbols-outlined text-sm">share</span>
+</button>
+</div>
+<a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" href="#">Contact Us</a>
+</div>
+</div>
+</footer>
+<script src="/frontend/site.js"></script>
+</body></html>
