@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-fixed-variant": "#474747", "surface-container-high": "#e7e8e8", "on-secondary-fixed-variant": "#214e4a", "tertiary-container": "#3d050b", "surface-bright": "#f9f9f9", "on-background": "#191c1c", "tertiary-fixed-dim": "#ffb3b2", primary: "#000000", "surface-variant": "#e1e3e3", "primary-fixed-dim": "#c6c6c6", background: "#f9f9f9", secondary: "#3a6662", "surface-container": "#edeeee", "on-primary": "#ffffff", outline: "#7e7576", "on-tertiary-fixed-variant": "#763032", tertiary: "#000000", "on-error-container": "#93000a", "outline-variant": "#cfc4c5", "inverse-on-surface": "#f0f1f1", "on-error": "#ffffff", error: "#ba1a1a", "on-tertiary-fixed": "#3d050b", "on-surface": "#191c1c", "inverse-primary": "#c6c6c6", "on-secondary-container": "#406c68", "surface-container-low": "#f3f4f4", "primary-fixed": "#e2e2e2", "secondary-fixed-dim": "#a2cfca", "tertiary-fixed": "#ffdad9", "surface-container-highest": "#e1e3e3", "inverse-surface": "#2e3131", "on-secondary-fixed": "#00201e", "on-secondary": "#ffffff", "on-primary-fixed": "#1b1b1b", "on-primary-container": "#848484", "primary-container": "#1b1b1b", "surface-tint": "#5e5e5e", "surface-dim": "#d9dada", surface: "#f9f9f9", "secondary-fixed": "#bdece6", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#c16b6c", "error-container": "#ffdad6", "secondary-container": "#bdece6", "on-tertiary": "#ffffff", "on-surface-variant": "#4c4546"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "16px", xs: "4px", xl: "32px", unit: "4px", sm: "8px", lg: "24px", "container-margin": "40px", gutter: "16px", base: "8px"}, fontFamily: {"label-sm": ["Inter"], "mono-data": ["Inter"], h3: ["Inter"], h2: ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], h1: ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "body-sm": ["Inter"]}, fontSize: {"label-sm": ["12px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600"}], "mono-data": ["13px", {lineHeight: "1", letterSpacing: "-0.01em", fontWeight: "500"}], h3: ["18px", {lineHeight: "1.4", letterSpacing: "0", fontWeight: "600"}], h2: ["24px", {lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "body-md": ["14px", {lineHeight: "1.5", letterSpacing: "0", fontWeight: "400"}], h1: ["36px", {lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["12px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "500"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "body-sm": ["14px", {lineHeight: "1.5", fontWeight: "400"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .lab-grid-bg {
+            background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .card-shadow:hover {
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface" data-page="case_study">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-50 bg-white border-b border-slate-200">
+<div class="flex justify-between items-center w-full px-10 py-4 max-w-7xl mx-auto">
+<a class="text-xl font-black tracking-tighter text-teal-600" data-nav-label="bAIsed" href="/app">bAIsed</a>
+<nav class="hidden md:flex items-center space-x-8">
+<a class="font-sans text-sm font-medium tracking-tight text-slate-600 hover:text-teal-600 transition-colors" href="#">Solutions</a>
+<a class="font-sans text-sm font-medium tracking-tight text-slate-600 hover:text-teal-600 transition-colors" href="#">Methodology</a>
+<a class="font-sans text-sm font-medium tracking-tight text-teal-600 border-b-2 border-teal-600 pb-1" href="#">Case Studies</a>
+<a class="font-sans text-sm font-medium tracking-tight text-slate-600 hover:text-teal-600 transition-colors" href="#">Pricing</a>
+<a class="font-sans text-sm font-medium tracking-tight text-slate-600 hover:text-teal-600 transition-colors" href="#">Docs</a>
+</nav>
+<div class="flex items-center space-x-4" data-auth-container>
+<button class="font-sans text-sm font-medium text-slate-600 hover:bg-slate-50 px-4 py-2 rounded transition-all active:scale-95" data-action="Login">Login</button>
+<button class="font-sans text-sm font-medium bg-primary text-on-primary px-4 py-2 rounded transition-all active:scale-95" data-action="Get Started">Get Started</button>
+</div>
+</div>
+</header>
+<main class="lab-grid-bg min-h-screen">
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-10 py-xl">
+<div class="mb-xl">
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-label-sm font-label-sm rounded-full mb-md">IMPACT REPORTS</span>
+<h1 class="font-h1 text-h1 text-on-background mb-sm">AI Accountability in Action</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Discover how leading organizations use bAIsed to identify, measure, and mitigate algorithmic bias in critical decision-making systems.</p>
+</div>
+<!-- Bento Grid Case Studies -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Large Featured Card: Equitable Talent Acquisition -->
+<div class="col-span-12 lg:col-span-8 bg-white border border-outline-variant rounded-xl overflow-hidden card-shadow transition-all group">
+<div class="grid md:grid-cols-2 h-full">
+<div class="p-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-primary" data-icon="work">work</span>
+<span class="font-label-sm text-label-sm uppercase text-outline">HR &amp; Recruitment</span>
+</div>
+<h2 class="font-h2 text-h2 mb-md" id="case-feature-title">Equitable Talent Acquisition at TechCorp</h2>
+<p class="text-on-surface-variant mb-lg" id="case-feature-summary">How a Fortune 500 tech firm reduced demographic disparity in technical hiring by 42% using our Lab-Grade auditing toolkit.</p>
+<div class="grid grid-cols-2 gap-md mb-lg">
+<div class="border-l-2 border-primary pl-md">
+<div class="font-mono-data text-mono-data text-primary">BIAS REDUCTION</div>
+<div class="font-h2 text-h2" id="case-feature-bias-reduction">-42%</div>
+</div>
+<div class="border-l-2 border-primary pl-md">
+<div class="font-mono-data text-mono-data text-primary">HIRING SPEED</div>
+<div class="font-h2 text-h2" id="case-feature-hiring-speed">+18%</div>
+</div>
+</div>
+</div>
+<button class="w-fit flex items-center gap-xs font-label-sm text-label-sm text-primary group-hover:gap-md transition-all" data-action="View Full Analysis">
+                                VIEW FULL ANALYSIS <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="bg-slate-50 p-lg relative flex items-center justify-center border-l border-outline-variant">
+<!-- High-Fidelity Chart Placeholder -->
+<div class="w-full h-64 flex items-end justify-around gap-xs relative">
+<div class="absolute inset-0 flex flex-col justify-between py-xs pointer-events-none opacity-20">
+<div class="w-full border-t border-slate-400"></div>
+<div class="w-full border-t border-slate-400"></div>
+<div class="w-full border-t border-slate-400"></div>
+<div class="w-full border-t border-slate-400"></div>
+</div>
+<div class="w-8 bg-slate-300 h-[80%] rounded-t-sm relative group/bar">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-slate-500 opacity-0 group-hover/bar:opacity-100">80%</div>
+</div>
+<div class="w-8 bg-primary h-[38%] rounded-t-sm relative group/bar">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-primary opacity-0 group-hover/bar:opacity-100">38%</div>
+</div>
+<div class="w-8 bg-slate-300 h-[72%] rounded-t-sm relative group/bar">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-slate-500 opacity-0 group-hover/bar:opacity-100">72%</div>
+</div>
+<div class="w-8 bg-primary h-[41%] rounded-t-sm relative group/bar">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-primary opacity-0 group-hover/bar:opacity-100">41%</div>
+</div>
+<div class="w-8 bg-slate-300 h-[65%] rounded-t-sm relative group/bar">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-slate-500 opacity-0 group-hover/bar:opacity-100">65%</div>
+</div>
+<div class="w-8 bg-primary h-[22%] rounded-t-sm relative group/bar">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-primary opacity-0 group-hover/bar:opacity-100">22%</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Card: Fair Credit Assessment -->
+<div class="col-span-12 lg:col-span-4 bg-white border border-outline-variant rounded-xl p-lg card-shadow flex flex-col justify-between group">
+<div>
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance">account_balance</span>
+<span class="font-label-sm text-label-sm uppercase text-outline">FinTech</span>
+</div>
+<h3 class="font-h3 text-h3 mb-sm">Fair Credit Scoring</h3>
+<p class="text-body-md text-on-surface-variant mb-lg">Audit of a mortgage approval engine uncovering hidden zip-code bias.</p>
+<div class="bg-surface-container-low p-md rounded-lg mb-lg">
+<div class="flex justify-between items-end mb-xs">
+<span class="font-mono-data text-xs text-on-surface-variant">Approval Fairness Gap</span>
+<span class="font-mono-data text-xs text-error font-bold" id="case-credit-gap">-14% → -2%</span>
+</div>
+<div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[98%]"></div>
+</div>
+</div>
+</div>
+<button class="w-full py-2 border border-primary text-primary font-label-sm text-label-sm rounded group-hover:bg-primary-fixed-dim transition-all active:scale-95" data-action="Read Case Study">READ CASE STUDY</button>
+</div>
+<!-- Small Grid Items -->
+<div class="col-span-12 md:col-span-4 bg-white border border-outline-variant rounded-xl p-lg card-shadow group">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-on-primary-fixed-variant" data-icon="health_and_safety">health_and_safety</span>
+<span class="font-label-sm text-label-sm uppercase text-outline">Healthcare</span>
+</div>
+<h3 class="font-h3 text-h3 mb-sm">Predictive Diagnostics</h3>
+<p class="text-body-md text-on-surface-variant mb-md">Correcting diagnostic model skew for underrepresented populations.</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-h2 text-h2 text-primary" id="case-healthcare-parity">99.2%</span>
+<span class="text-xs text-outline">Accuracy Parity</span>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-white border border-outline-variant rounded-xl p-lg card-shadow group">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-on-primary-fixed-variant" data-icon="gavel">gavel</span>
+<span class="font-label-sm text-label-sm uppercase text-outline">Public Sector</span>
+</div>
+<h3 class="font-h3 text-h3 mb-sm">Judicial Risk Engines</h3>
+<p class="text-body-md text-on-surface-variant mb-md">Independent audit of sentencing recommendation software.</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-h2 text-h2 text-primary" id="case-public-sector-audit">Full</span>
+<span class="text-xs text-outline">Transparency Audit</span>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-white border border-outline-variant rounded-xl p-lg card-shadow group">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-on-primary-fixed-variant" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-label-sm text-label-sm uppercase text-outline">Retail</span>
+</div>
+<h3 class="font-h3 text-h3 mb-sm">Dynamic Pricing Audit</h3>
+<p class="text-body-md text-on-surface-variant mb-md">Eliminating price discrimination in localized e-commerce algorithms.</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-h2 text-h2 text-primary" id="case-retail-bias">Zero</span>
+<span class="text-xs text-outline">Bias Variance</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Detailed Impact Section with High-Density UI -->
+<section class="bg-white border-y border-outline-variant py-xl">
+<div class="max-w-7xl mx-auto px-10">
+<div class="flex flex-col md:flex-row gap-xl items-center">
+<div class="w-full md:w-1/2">
+<h2 class="font-h2 text-h2 mb-md">Quantifying the Impact</h2>
+<p class="text-body-lg text-on-surface-variant mb-lg">Our lab-grade methodology doesn't just find bias; it provides the mathematical blueprint for its removal. Over 150+ organizations have seen these aggregate results:</p>
+<div class="space-y-md">
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded">
+<span class="font-body-md font-semibold">Average Disparity Reduction</span>
+<span class="font-mono-data text-primary text-h3">38%</span>
+</div>
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded">
+<span class="font-body-md font-semibold">Regulatory Compliance Score</span>
+<span class="font-mono-data text-primary text-h3">A+</span>
+</div>
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded">
+<span class="font-body-md font-semibold">Client ROI in Year 1</span>
+<span class="font-mono-data text-primary text-h3">4.2x</span>
+</div>
+</div>
+</div>
+<div class="w-full md:w-1/2">
+<div class="aspect-video bg-slate-50 border border-outline-variant rounded-xl overflow-hidden relative p-lg">
+<img class="w-full h-full object-cover rounded opacity-90 mix-blend-multiply" data-alt="Modern minimalist data dashboard showing complex analytical charts and heatmaps in a clean white and teal user interface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTFMUGoSLGjKlBHsggKhx7Ze58WBj589Ui53JpYEdPS7mFclnLjGCJWFRL9KWUALW8xJRlW_DTp1azWgxXID-uMvoI7TiicDPT8CBWLyCaoPzcrU1Vx3gw4oIVQ0FiH5Jna-eYV_PyE9HwCGtM6NUvhCG9qHZSluUFSWr5C_hI45lQtTmvmOIIzTWIWTsHlgzpj2h8lAAMDrkIGDuhq90eTg3XzZdxKGLhl2Tj9bD1l-ixbjstCBxsylovjAUbo133SzVkzF4Xc8t2"/>
+<div class="absolute inset-0 bg-gradient-to-t from-white/40 to-transparent pointer-events-none"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="max-w-7xl mx-auto px-10 py-xl text-center">
+<h2 class="font-h2 text-h2 mb-md">Ready to audit your algorithms?</h2>
+<p class="text-body-lg text-on-surface-variant mb-xl max-w-xl mx-auto">Join the ranks of ethical leaders using data-driven insights to build trust and performance.</p>
+<div class="flex flex-col sm:flex-row gap-md justify-center">
+<button class="bg-primary text-on-primary px-xl py-md rounded-lg font-h3 transition-all hover:shadow-lg active:scale-95" data-action="Schedule a Consultation">Schedule a Consultation</button>
+<button class="border border-primary text-primary px-xl py-md rounded-lg font-h3 transition-all hover:bg-primary-fixed-dim active:scale-95" data-action="Download Whitepaper">Download Whitepaper</button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-slate-50 border-t border-slate-200">
+<div class="flex flex-col md:flex-row justify-between items-center px-10 py-8 max-w-7xl mx-auto">
+<div class="flex flex-col mb-md md:mb-0">
+<div class="font-bold text-slate-900 mb-2">bAIsed</div>
+<p class="font-sans text-xs text-slate-500">© 2024 bAIsed. Lab-grade analysis for ethical AI.</p>
+</div>
+<div class="flex gap-lg">
+<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Contact</a>
+<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all opacity-80 hover:opacity-100" href="#">Security</a>
+</div>
+</div>
+</footer>
+<script src="/frontend/site.js"></script>
+</body></html>
