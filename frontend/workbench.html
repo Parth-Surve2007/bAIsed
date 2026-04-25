@@ -161,6 +161,37 @@
           </form>
         </section>
 
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm" id="ai-analyzer-section">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
+              <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Groq API.</p>
+            </div>
+            <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
+          </div>
+          <form class="space-y-5" id="ai-analyzer-form">
+            <p class="text-sm text-slate-700">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
+            <div class="flex flex-wrap gap-3">
+              <button class="flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed" id="ai-submit-btn" type="submit">
+                <svg class="h-4 w-4 hidden" id="ai-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Generate Detailed AI Report</span>
+              </button>
+            </div>
+          </form>
+          
+          <!-- Results Area -->
+          <div id="ai-result-panel" class="mt-6 hidden rounded-2xl border border-secondary bg-secondary/5 p-5">
+            <h3 class="mb-3 text-lg font-bold text-on-secondary-container">AI Analysis Result</h3>
+            <p class="mb-4 text-xs font-medium text-secondary"><span id="ai-model-name"></span> • <span id="ai-row-count"></span> rows analyzed</p>
+            <div class="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed" id="ai-response-text"></div>
+          </div>
+          
+          <div id="ai-error-panel" class="mt-6 hidden rounded-2xl border border-red-200 bg-red-50 p-5">
+            <h3 class="mb-2 text-lg font-bold text-red-900">Analysis Failed</h3>
+            <p class="text-sm text-red-700 whitespace-pre-wrap" id="ai-error-text"></p>
+          </div>
+        </section>
+
         <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
           <div class="grid gap-8 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
             <div>

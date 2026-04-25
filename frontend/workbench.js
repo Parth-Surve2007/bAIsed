@@ -576,6 +576,8 @@
         renderError("Please choose a CSV or XLSX file before uploading.");
         return;
       }
+      
+      window.lastUploadedDatasetFile = file;
 
       const submitBtn = form.querySelector('button[type="submit"]');
       const originalText = submitBtn?.textContent;
@@ -631,9 +633,71 @@
     });
   }
 
+  function bindAiAnalyzerForm() {
+    const form = document.getElementById("ai-analyzer-form");
+    if (!form) return;
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      
+      const resultPanel = document.getElementById("ai-result-panel");
+      const errorPanel = document.getElementById("ai-error-panel");
+      const submitBtn = document.getElementById("ai-submit-btn");
+      const submitText = submitBtn ? submitBtn.querySelector("span") : null;
+      const spinner = document.getElementById("ai-spinner");
+      
+      const file = window.lastUploadedDatasetFile;
+      
+      resultPanel.classList.add("hidden");
+      errorPanel.classList.add("hidden");
+
+      if (!file || !currentAnalysisResult) {
+        document.getElementById("ai-error-text").textContent = "Please upload a dataset and run the Dataset Audit first.";
+        errorPanel.classList.remove("hidden");
+        return;
+      }
+      
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.textContent = "Analyzing...";
+      if (spinner) {
+        spinner.classList.remove("hidden");
+        spinner.classList.add("animate-spin");
+      }
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("analysis_json", JSON.stringify(currentAnalysisResult));
+      
+      try {
+        const result = await postForm("/ai-analyze", formData);
+        
+        if (result.error) {
+          document.getElementById("ai-error-text").textContent = result.error;
+          errorPanel.classList.remove("hidden");
+        } else {
+          document.getElementById("ai-model-name").textContent = result.model || "Unknown Model";
+          document.getElementById("ai-row-count").textContent = result.row_count || "0";
+          document.getElementById("ai-response-text").textContent = result.ai_response || "";
+          resultPanel.classList.remove("hidden");
+        }
+      } catch (error) {
+        document.getElementById("ai-error-text").textContent = error.message || String(error);
+        errorPanel.classList.remove("hidden");
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.textContent = "Generate Detailed AI Report";
+        if (spinner) {
+          spinner.classList.add("hidden");
+          spinner.classList.remove("animate-spin");
+        }
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     bindSimpleForm();
     bindDatasetForm();
+    bindAiAnalyzerForm();
     bindSimulator();
   });
 })();

@@ -231,6 +231,7 @@ def create_app() -> Flask:
         return response
 
     @app.route("/analyze", methods=["OPTIONS"])
+    @app.route("/ai-analyze", methods=["OPTIONS"])
     @app.route("/upload", methods=["OPTIONS"])
     @app.route("/simulate", methods=["OPTIONS"])
     @app.route("/api/auth/login", methods=["OPTIONS"])
@@ -421,6 +422,109 @@ def create_app() -> Flask:
             return jsonify({"error": str(exc)}), 400
 
         return jsonify(clean_for_json(response))
+
+    @app.post("/ai-analyze")
+    def ai_analyze():
+        import urllib.request
+        import urllib.error
+
+        file = request.files.get("file")
+        if file is None:
+            return jsonify({"error": "A file upload is required."}), 400
+
+        analysis_json = request.form.get("analysis_json", "{}")
+        try:
+            analysis_data = json.loads(analysis_json)
+        except:
+            analysis_data = {}
+
+        groq_api_key = "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"
+
+        try:
+            df = load_dataset(file)
+        except Exception as exc:
+            return jsonify({"error": f"File processing failed: {str(exc)}"}), 400
+
+        row_count = int(len(df))
+        columns = list(df.columns)
+
+        summary_lines = []
+        summary_lines.append(f"Row count: {row_count}")
+        summary_lines.append("Columns and Unique Counts:")
+        for col in columns:
+            unique_count = int(df[col].nunique())
+            top_vals = df[col].value_counts().head(3).index.tolist()
+            summary_lines.append(f" - {col}: {unique_count} unique (top: {top_vals})")
+
+        summary_lines.append("\nSample Data:")
+        sample_df = df.head(80)
+        summary_lines.append(sample_df.to_csv(index=False))
+
+        dataset_summary = "\n".join(summary_lines)
+        if len(dataset_summary) > 4000:
+            dataset_summary = dataset_summary[:4000] + "\n...[TRUNCATED]"
+
+        ml_summary = json.dumps(analysis_data, indent=2)
+        if len(ml_summary) > 4000:
+            ml_summary = ml_summary[:4000] + "\n...[TRUNCATED]"
+
+        prompt = (
+            "You are an expert AI bias detector and data scientist. You have been provided with two contexts:\n"
+            "1. A structural summary and sample rows of the dataset.\n"
+            "2. The deterministic Machine Learning Fairness Analysis output (including Disparate Impact Ratio, Bias Scores, Hotspots, and Feature Impacts).\n\n"
+            "Synthesize both sources of information to generate a comprehensive, plain-English bias analysis report.\n"
+            "Your report must be structured exactly into these sections:\n"
+            "## Overall Assessment\n"
+            "## Key Bias Findings\n"
+            "## Affected Groups & Root Causes\n"
+            "## Recommended Remediation Steps\n\n"
+            "=== DATASET CONTEXT ===\n"
+            f"{dataset_summary}\n\n"
+            "=== ML FAIRNESS ANALYSIS ===\n"
+            f"{ml_summary}\n"
+        )
+
+        req = urllib.request.Request(
+            "https://api.groq.com/openai/v1/chat/completions",
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            },
+            data=json.dumps({
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}]
+            }).encode("utf-8")
+        )
+
+        try:
+            with urllib.request.urlopen(req) as response:
+                resp_data = json.loads(response.read().decode("utf-8"))
+                ai_text = resp_data["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as e:
+            if e.code == 401:
+                return jsonify({"error": "Invalid Groq API Key."}), 401
+            elif e.code == 403:
+                # specifically catching 403 to return text and debug
+                try:
+                    err_msg = e.read().decode("utf-8")
+                except:
+                    err_msg = e.reason
+                return jsonify({"error": f"Groq API Error: 403 - Forbidden ({err_msg})"}), 403
+            elif e.code == 429:
+                return jsonify({"error": "Rate limit exceeded on Groq API."}), 429
+            else:
+                return jsonify({"error": f"Groq API Error: {e.code} - {e.reason}"}), 500
+        except Exception as e:
+            return jsonify({"error": f"Request failed: {str(e)}"}), 500
+
+        return jsonify({
+            "model": "llama-3.3-70b-versatile",
+            "row_count": row_count,
+            "columns": columns,
+            "ai_response": ai_text
+        })
 
     return app
 
