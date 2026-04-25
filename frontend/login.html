@@ -6,7 +6,6 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-fixed-variant": "#474747", "surface-container-high": "#e7e8e8", "on-secondary-fixed-variant": "#214e4a", "tertiary-container": "#3d050b", "surface-bright": "#f9f9f9", "on-background": "#191c1c", "tertiary-fixed-dim": "#ffb3b2", primary: "#000000", "surface-variant": "#e1e3e3", "primary-fixed-dim": "#c6c6c6", background: "#f9f9f9", secondary: "#3a6662", "surface-container": "#edeeee", "on-primary": "#ffffff", outline: "#7e7576", "on-tertiary-fixed-variant": "#763032", tertiary: "#000000", "on-error-container": "#93000a", "outline-variant": "#cfc4c5", "inverse-on-surface": "#f0f1f1", "on-error": "#ffffff", error: "#ba1a1a", "on-tertiary-fixed": "#3d050b", "on-surface": "#191c1c", "inverse-primary": "#c6c6c6", "on-secondary-container": "#406c68", "surface-container-low": "#f3f4f4", "primary-fixed": "#e2e2e2", "secondary-fixed-dim": "#a2cfca", "tertiary-fixed": "#ffdad9", "surface-container-highest": "#e1e3e3", "inverse-surface": "#2e3131", "on-secondary-fixed": "#00201e", "on-secondary": "#ffffff", "on-primary-fixed": "#1b1b1b", "on-primary-container": "#848484", "primary-container": "#1b1b1b", "surface-tint": "#5e5e5e", "surface-dim": "#d9dada", surface: "#f9f9f9", "secondary-fixed": "#bdece6", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#c16b6c", "error-container": "#ffdad6", "secondary-container": "#bdece6", "on-tertiary": "#ffffff", "on-surface-variant": "#4c4546"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "16px", xs: "4px", xl: "32px", unit: "4px", sm: "8px", lg: "24px", "container-margin": "40px", gutter: "16px", base: "8px"}, fontFamily: {"label-sm": ["Inter"], "mono-data": ["Inter"], h3: ["Inter"], h2: ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], h1: ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "body-sm": ["Inter"]}, fontSize: {"label-sm": ["12px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600"}], "mono-data": ["13px", {lineHeight: "1", letterSpacing: "-0.01em", fontWeight: "500"}], h3: ["18px", {lineHeight: "1.4", letterSpacing: "0", fontWeight: "600"}], h2: ["24px", {lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "body-md": ["14px", {lineHeight: "1.5", letterSpacing: "0", fontWeight: "400"}], h1: ["36px", {lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["12px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "500"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "body-sm": ["14px", {lineHeight: "1.5", fontWeight: "400"}]}}}};</script>
 <style>
         .material-symbols-outlined {
@@ -19,103 +18,103 @@
         }
     </style>
 </head>
-<body class="bg-surface-container-low min-h-screen flex flex-col" data-page="login">
-<!-- Top Navigation Anchor - Suppressed according to Shell Visibility Rule for Transactional Screens -->
+<body class="bg-surface-container-low min-h-screen flex flex-col transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="login">
+<!-- Top Navigation Anchor -->
 <header class="w-full flex justify-between items-center px-10 py-4 max-w-7xl mx-auto bg-transparent">
-<a class="text-xl font-black tracking-tighter text-teal-600" data-nav-label="bAIsed" href="/app">bAIsed</a>
+<a class="text-xl font-black tracking-tighter text-teal-600 dark:text-teal-400" data-nav-label="bAIsed" href="/app">bAIsed</a>
 <div class="flex items-center gap-4">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Don't have an account?</span>
-<button class="font-label-sm text-label-sm text-primary hover:underline transition-all" data-action="Sign Up">Sign Up</button>
+<span class="font-label-sm text-label-sm text-on-surface-variant dark:text-zinc-500">Don't have an account?</span>
+<button class="font-label-sm text-label-sm text-primary dark:text-teal-400 hover:underline transition-all" data-action="Sign Up">Sign Up</button>
 </div>
 </header>
 <main class="flex-grow flex items-center justify-center px-container-margin py-xl">
 <div class="w-full max-w-[440px]">
 <!-- Login Card -->
-<div class="bg-surface-container-lowest border border-outline-variant p-xl shadow-sm">
+<div class="bg-surface-container-lowest dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 p-xl shadow-sm rounded-xl transition-colors">
 <div class="flex flex-col gap-sm mb-lg">
-<h1 class="font-h2 text-h2 text-on-surface">Welcome back</h1>
-<p class="font-body-md text-body-md text-on-surface-variant">Enter your credentials to access your bAIsed fairness analysis workspace.</p>
+<h1 class="font-h2 text-h2 text-on-surface dark:text-white">Welcome back</h1>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-zinc-400">Enter your credentials to access your bAIsed fairness analysis workspace.</p>
 </div>
 <!-- Social Authentication Cluster -->
 <div class="grid grid-cols-2 gap-md mb-lg">
-<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150">
-<span class="material-symbols-outlined text-[20px]" data-icon="google">google</span>
-<span class="font-label-sm text-label-sm text-on-surface">Google</span>
+<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant dark:border-zinc-700 hover:bg-surface-container-high dark:hover:bg-zinc-800 transition-all active:scale-95 duration-150 rounded-lg">
+<span class="material-symbols-outlined text-[20px] dark:text-white" data-icon="google">google</span>
+<span class="font-label-sm text-label-sm text-on-surface dark:text-zinc-300">Google</span>
 </button>
-<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150">
-<span class="material-symbols-outlined text-[20px]" data-icon="terminal">terminal</span>
-<span class="font-label-sm text-label-sm text-on-surface">GitHub</span>
+<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant dark:border-zinc-700 hover:bg-surface-container-high dark:hover:bg-zinc-800 transition-all active:scale-95 duration-150 rounded-lg">
+<span class="material-symbols-outlined text-[20px] dark:text-white" data-icon="terminal">terminal</span>
+<span class="font-label-sm text-label-sm text-on-surface dark:text-zinc-300">GitHub</span>
 </button>
 </div>
 <!-- Divider -->
 <div class="flex items-center gap-md mb-lg">
-<div class="h-[1px] flex-grow bg-outline-variant"></div>
-<span class="font-label-sm text-label-sm text-outline">OR CONTINUE WITH EMAIL</span>
-<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<div class="h-[1px] flex-grow bg-outline-variant dark:bg-zinc-800"></div>
+<span class="font-label-sm text-label-sm text-outline dark:text-zinc-600">OR CONTINUE WITH EMAIL</span>
+<div class="h-[1px] flex-grow bg-outline-variant dark:bg-zinc-800"></div>
 </div>
 <!-- Form -->
 <form class="space-y-lg" id="login-form">
 <div class="space-y-xs">
-<label class="font-label-sm text-label-sm text-on-surface-variant" for="email">WORK EMAIL</label>
+<label class="font-label-sm text-label-sm text-on-surface-variant dark:text-zinc-400" for="email">WORK EMAIL</label>
 <div class="relative">
-<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[20px]" data-icon="mail">mail</span>
-<input class="w-full pl-10 pr-md py-sm bg-surface-container-lowest border border-outline-variant focus:ring-2 focus:ring-secondary focus:border-transparent outline-none font-body-md text-body-md text-on-surface placeholder:text-outline-variant" id="email" placeholder="name@company.com" type="email"/>
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[20px] dark:text-zinc-500" data-icon="mail">mail</span>
+<input class="w-full pl-10 pr-md py-sm bg-surface-container-lowest dark:bg-zinc-800 border border-outline-variant dark:border-zinc-700 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none font-body-md text-body-md text-on-surface dark:text-white placeholder:text-outline-variant dark:placeholder:text-zinc-600 rounded-lg" id="email" placeholder="name@company.com" type="email"/>
 </div>
 </div>
 <div class="space-y-xs">
 <div class="flex justify-between items-center">
-<label class="font-label-sm text-label-sm text-on-surface-variant" for="password">PASSWORD</label>
-<button class="font-label-sm text-label-sm text-primary hover:underline" type="button">Forgot password?</button>
+<label class="font-label-sm text-label-sm text-on-surface-variant dark:text-zinc-400" for="password">PASSWORD</label>
+<button class="font-label-sm text-label-sm text-primary dark:text-teal-400 hover:underline" type="button">Forgot password?</button>
 </div>
 <div class="relative">
-<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[20px]" data-icon="lock">lock</span>
-<input class="w-full pl-10 pr-md py-sm bg-surface-container-lowest border border-outline-variant focus:ring-2 focus:ring-secondary focus:border-transparent outline-none font-body-md text-body-md text-on-surface placeholder:text-outline-variant" id="password" placeholder="••••••••" type="password"/>
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[20px] dark:text-zinc-500" data-icon="lock">lock</span>
+<input class="w-full pl-10 pr-md py-sm bg-surface-container-lowest dark:bg-zinc-800 border border-outline-variant dark:border-zinc-700 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none font-body-md text-body-md text-on-surface dark:text-white placeholder:text-outline-variant dark:placeholder:text-zinc-600 rounded-lg" id="password" placeholder="••••••••" type="password"/>
 </div>
 </div>
 <div class="flex items-center gap-sm">
-<input class="w-4 h-4 text-primary border-outline-variant focus:ring-primary" id="remember" type="checkbox"/>
-<label class="font-body-md text-body-md text-on-surface-variant" for="remember">Remember me for 30 days</label>
+<input class="w-4 h-4 text-primary dark:text-teal-500 border-outline-variant dark:border-zinc-700 focus:ring-primary dark:bg-zinc-800" id="remember" type="checkbox"/>
+<label class="font-body-md text-body-md text-on-surface-variant dark:text-zinc-400" for="remember">Remember me for 30 days</label>
 </div>
-<button class="w-full bg-primary py-md font-h3 text-h3 text-on-primary hover:bg-on-primary-fixed-variant transition-all active:scale-[0.98] duration-150 flex justify-center items-center gap-sm" type="submit">
+<button class="w-full bg-primary dark:bg-teal-600 py-md font-h3 text-h3 text-on-primary hover:opacity-90 transition-all active:scale-[0.98] duration-150 flex justify-center items-center gap-sm rounded-lg" type="submit">
                         Sign In
                         <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
 </button>
 </form>
-<p class="mt-4 text-sm text-on-surface-variant" id="login-status">Use demo@baised.ai with password demo123 to test the wired login flow.</p>
+<p class="mt-4 text-sm text-on-surface-variant dark:text-zinc-500" id="login-status">Use demo@baised.ai with password demo123 to test the wired login flow.</p>
 <!-- Security Indicator -->
 <div class="mt-xl flex items-center justify-center gap-xs">
-<span class="material-symbols-outlined text-outline text-[16px]" data-icon="verified_user">verified_user</span>
-<span class="font-label-sm text-label-sm text-outline">SECURE ENCRYPTED AUTHENTICATION</span>
+<span class="material-symbols-outlined text-outline text-[16px] dark:text-zinc-600" data-icon="verified_user">verified_user</span>
+<span class="font-label-sm text-label-sm text-outline dark:text-zinc-600">SECURE ENCRYPTED AUTHENTICATION</span>
 </div>
 </div>
 <!-- Supporting Text -->
-<p class="mt-lg text-center font-body-md text-body-md text-outline">
+<p class="mt-lg text-center font-body-md text-body-md text-outline dark:text-zinc-600">
                 By signing in, you agree to our 
-                <a class="text-primary hover:underline" href="#">Terms of Service</a> and 
-                <a class="text-primary hover:underline" href="#">Privacy Policy</a>.
+                <a class="text-primary dark:text-teal-400 hover:underline" href="#">Terms of Service</a> and 
+                <a class="text-primary dark:text-teal-400 hover:underline" href="#">Privacy Policy</a>.
             </p>
 </div>
 </main>
 <!-- Footer - Lab Grade Style -->
-<footer class="w-full border-t border-slate-200 bg-slate-50 mt-auto">
+<footer class="w-full border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-slate-950 mt-auto transition-colors">
 <div class="flex flex-col md:flex-row justify-between items-center px-10 py-8 max-w-7xl mx-auto gap-md">
-<div class="font-bold text-slate-900">bAIsed</div>
-<div class="font-sans text-xs text-slate-500">
+<div class="font-bold text-slate-900 dark:text-white">bAIsed</div>
+<div class="font-sans text-xs text-slate-500 dark:text-zinc-400">
                 © 2024 BiasAnalytica AI. Lab-grade analysis for ethical AI.
             </div>
 <div class="flex gap-lg">
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all" href="#">Privacy Policy</a>
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all" href="#">Terms of Service</a>
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 hover:underline transition-all" href="#">Security</a>
+<a class="font-sans text-xs text-slate-500 dark:text-zinc-400 hover:text-teal-600 transition-all" href="#">Privacy Policy</a>
+<a class="font-sans text-xs text-slate-500 dark:text-zinc-400 hover:text-teal-600 transition-all" href="#">Terms of Service</a>
+<a class="font-sans text-xs text-slate-500 dark:text-zinc-400 hover:text-teal-600 transition-all" href="#">Security</a>
 </div>
 </div>
 </footer>
-<!-- Background Decoration for Sophistication -->
+<!-- Background Decoration -->
 <div class="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-<div class="absolute top-0 right-0 w-[600px] h-[600px] bg-secondary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3"></div>
-<div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/4"></div>
+<div class="absolute top-0 right-0 w-[600px] h-[600px] bg-secondary/5 dark:bg-teal-900/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3"></div>
+<div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 dark:bg-teal-900/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/4"></div>
 <!-- Grid pattern overlay -->
-<div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#000 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
+<div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style="background-image: radial-gradient(#000 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
 </div>
 <script src="/frontend/site.js"></script>
 </body></html>

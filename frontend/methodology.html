@@ -7,7 +7,6 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary-fixed-variant": "#474747", "surface-container-high": "#e7e8e8", "on-secondary-fixed-variant": "#214e4a", "tertiary-container": "#3d050b", "surface-bright": "#f9f9f9", "on-background": "#191c1c", "tertiary-fixed-dim": "#ffb3b2", primary: "#000000", "surface-variant": "#e1e3e3", "primary-fixed-dim": "#c6c6c6", background: "#f9f9f9", secondary: "#3a6662", "surface-container": "#edeeee", "on-primary": "#ffffff", outline: "#7e7576", "on-tertiary-fixed-variant": "#763032", tertiary: "#000000", "on-error-container": "#93000a", "outline-variant": "#cfc4c5", "inverse-on-surface": "#f0f1f1", "on-error": "#ffffff", error: "#ba1a1a", "on-tertiary-fixed": "#3d050b", "on-surface": "#191c1c", "inverse-primary": "#c6c6c6", "on-secondary-container": "#406c68", "surface-container-low": "#f3f4f4", "primary-fixed": "#e2e2e2", "secondary-fixed-dim": "#a2cfca", "tertiary-fixed": "#ffdad9", "surface-container-highest": "#e1e3e3", "inverse-surface": "#2e3131", "on-secondary-fixed": "#00201e", "on-secondary": "#ffffff", "on-primary-fixed": "#1b1b1b", "on-primary-container": "#848484", "primary-container": "#1b1b1b", "surface-tint": "#5e5e5e", "surface-dim": "#d9dada", surface: "#f9f9f9", "secondary-fixed": "#bdece6", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#c16b6c", "error-container": "#ffdad6", "secondary-container": "#bdece6", "on-tertiary": "#ffffff", "on-surface-variant": "#4c4546"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {md: "16px", xs: "4px", xl: "32px", unit: "4px", sm: "8px", lg: "24px", "container-margin": "40px", gutter: "16px", base: "8px"}, fontFamily: {"label-sm": ["Inter"], "mono-data": ["Inter"], h3: ["Inter"], h2: ["Inter"], "body-lg": ["Inter"], "body-md": ["Inter"], h1: ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "body-sm": ["Inter"]}, fontSize: {"label-sm": ["12px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600"}], "mono-data": ["13px", {lineHeight: "1", letterSpacing: "-0.01em", fontWeight: "500"}], h3: ["18px", {lineHeight: "1.4", letterSpacing: "0", fontWeight: "600"}], h2: ["24px", {lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "body-md": ["14px", {lineHeight: "1.5", letterSpacing: "0", fontWeight: "400"}], h1: ["36px", {lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700"}], "label-md": ["12px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "500"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "body-sm": ["14px", {lineHeight: "1.5", fontWeight: "400"}]}}}};</script>
 <style>
         .material-symbols-outlined {
@@ -16,9 +15,9 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-background text-on-surface" data-page="methodology">
+<body class="bg-background text-on-surface transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="methodology">
 <!-- TopNavBar -->
-<header class="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 fixed top-0 w-full z-50">
+<header class="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 fixed top-0 w-full z-50 transition-colors">
 <nav class="flex justify-between items-center w-full px-10 py-4 max-w-7xl mx-auto">
 <a class="text-xl font-black tracking-tighter text-teal-600 dark:text-teal-400" data-nav-label="bAIsed" href="/app">bAIsed</a>
 <div class="hidden md:flex items-center space-x-8">
@@ -29,8 +28,8 @@
 <a class="font-sans text-sm font-medium tracking-tight text-slate-600 dark:text-slate-400 hover:text-teal-600 transition-colors" href="#">Docs</a>
 </div>
 <div class="flex items-center space-x-4" data-auth-container>
-<button class="px-4 py-2 font-sans text-sm font-medium text-teal-600 hover:bg-slate-50 transition-all active:scale-95 duration-150" data-action="Login">Login</button>
-<button class="px-5 py-2 bg-primary text-on-primary rounded font-sans text-sm font-medium active:scale-95 duration-150" data-action="Get Started">Get Started</button>
+<button class="px-4 py-2 font-sans text-sm font-medium text-teal-600 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all active:scale-95 duration-150" data-action="Login">Login</button>
+<button class="px-5 py-2 bg-primary text-on-primary rounded font-sans text-sm font-medium active:scale-95 duration-150 dark:bg-teal-600" data-action="Get Started">Get Started</button>
 </div>
 </nav>
 </header>
@@ -39,13 +38,13 @@
 <section class="mb-20">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 <div>
-<span class="font-label-sm text-label-sm text-primary mb-4 block uppercase tracking-widest">Fairness Debugger Framework</span>
-<h1 class="font-h1 text-h1 text-on-surface mb-6">How bAIsed Detects, Localizes, Simulates, and Repairs Bias.</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+<span class="font-label-sm text-label-sm text-primary mb-4 block uppercase tracking-widest dark:text-teal-400">Fairness Debugger Framework</span>
+<h1 class="font-h1 text-h1 text-on-surface mb-6 dark:text-white">How bAIsed Detects, Localizes, Simulates, and Repairs Bias.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl dark:text-zinc-400">
                         bAIsed is not just a bias scorecard. Our backend combines deterministic fairness metrics, subgroup hotspot analysis, root-cause ranking, counterfactual simulation, and repair guidance so teams can debug why unfair outcomes happen and what change fixes them fastest.
                     </p>
 </div>
-<div class="bg-surface-container rounded-xl p-8 border border-outline-variant relative overflow-hidden">
+<div class="bg-surface-container rounded-xl p-8 border border-outline-variant relative overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
 <img alt="Abstract visualization" class="w-full h-64 object-cover rounded shadow-lg grayscale hover:grayscale-0 transition-all duration-700" data-alt="Abstract 3D rendering of complex mathematical nodes and connected data points in a clean white environment with teal highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCa9K_3_B2Tde4-zkwmmhEWT9XmFO3Ji9SyGgZijQdUzCzjZO2CWOfJToBpJtqPMBe4skKQCnSYV2pxueHl9aN3nUdDN4tKh7CtgtKM5uRKNq2L9VJat_XiqBzcD93PSMt3y31I__5XwMECkN5MIOVuojfYWDRyfnMFUIHMJsToXOuZGkVmgUtGtxBBc6IuI7j8jHbl069i-Ix_5hbvXy0F_plQgXF14u5u46ZVDqERAEpetT6Pzonw0ShVx5AxALECu6A4bJKpmQE"/>
 </div>
 </div>
@@ -53,162 +52,162 @@
 <!-- Bento Grid Methodology Sections -->
 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-20">
 <!-- Disparate Impact Ratio -->
-<div class="md:col-span-8 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow">
+<div class="md:col-span-8 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow dark:bg-zinc-900 dark:border-zinc-800">
 <div class="flex items-center space-x-3 mb-6">
-<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-on-primary-container dark:bg-primary/20">
 <span class="material-symbols-outlined" data-icon="calculate">calculate</span>
 </div>
-<h2 class="font-h2 text-h2">Disparate Impact Ratio (DIR)</h2>
+<h2 class="font-h2 text-h2 dark:text-white">Disparate Impact Ratio (DIR)</h2>
 </div>
 <div class="grid md:grid-cols-2 gap-8">
 <div>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">
-                            DIR remains the primary compliance-facing metric in the engine. We compute it from observed selection rates and use the 0.8 threshold to classify whether protected groups are falling behind the highest-performing reference group.
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 dark:text-zinc-400">
+                             DIR remains the primary compliance-facing metric in the engine. We compute it from observed selection rates and use the 0.8 threshold to classify whether protected groups are falling behind the highest-performing reference group.
                         </p>
-<div class="bg-surface-container-low p-6 rounded border-l-4 border-primary font-mono-data text-mono-data">
-<div class="text-xs text-outline mb-2">Equation</div>
-<span class="text-lg" id="methodology-dir-equation">DIR = P(Y=1 | D=p) / P(Y=1 | D=u)</span>
+<div class="bg-surface-container-low p-6 rounded border-l-4 border-primary font-mono-data text-mono-data dark:bg-zinc-800 dark:border-teal-600">
+<div class="text-xs text-outline mb-2 dark:text-zinc-500">Equation</div>
+<span class="text-lg dark:text-teal-400" id="methodology-dir-equation">DIR = P(Y=1 | D=p) / P(Y=1 | D=u)</span>
 </div>
 </div>
-<div class="bg-surface-bright p-6 rounded border border-outline-variant">
-<h3 class="font-h3 text-h3 mb-3" id="methodology-threshold-title">Threshold 0.8</h3>
-<p class="text-sm text-on-surface-variant mb-4" id="methodology-threshold-copy">According to the EEOC's "Four-Fifths Rule," a selection rate for any group which is less than 80% of the rate for the highest group will generally be regarded as evidence of adverse impact.</p>
-<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary w-[80%]"></div>
+<div class="bg-surface-bright p-6 rounded border border-outline-variant dark:bg-zinc-800 dark:border-zinc-700">
+<h3 class="font-h3 text-h3 mb-3 dark:text-white" id="methodology-threshold-title">Threshold 0.8</h3>
+<p class="text-sm text-on-surface-variant mb-4 dark:text-zinc-400" id="methodology-threshold-copy">According to the EEOC's "Four-Fifths Rule," a selection rate for any group which is less than 80% of the rate for the highest group will generally be regarded as evidence of adverse impact.</p>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden dark:bg-zinc-700">
+<div class="h-full bg-primary dark:bg-teal-500 w-[80%]"></div>
 </div>
 </div>
 </div>
 </div>
 <!-- Statistical Parity -->
-<div class="md:col-span-4 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow">
-<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center text-on-secondary-container mb-6">
+<div class="md:col-span-4 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow dark:bg-zinc-900 dark:border-zinc-800">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center text-on-secondary-container mb-6 dark:bg-secondary/20">
 <span class="material-symbols-outlined" data-icon="balance">balance</span>
 </div>
-<h2 class="font-h2 text-h2 mb-4">Selection Rate Difference</h2>
-<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+<h2 class="font-h2 text-h2 mb-4 dark:text-white">Selection Rate Difference</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 dark:text-zinc-400">
                     We compare observed selection rates directly to expose the raw gap behind the ratio. This difference is one of the fastest ways to see whether groups are diverging in absolute terms.
                 </p>
 <div class="space-y-4">
-<div class="flex items-center justify-between p-3 bg-surface-container-low rounded">
-<span class="text-sm font-semibold">Highest Group</span>
-<span class="text-sm font-mono-data text-primary" id="methodology-statistical-parity-a">0.45 Selection</span>
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded dark:bg-zinc-800">
+<span class="text-sm font-semibold dark:text-zinc-300">Highest Group</span>
+<span class="text-sm font-mono-data text-primary dark:text-teal-400" id="methodology-statistical-parity-a">0.45 Selection</span>
 </div>
-<div class="flex items-center justify-between p-3 bg-surface-container-low rounded">
-<span class="text-sm font-semibold">Lowest Group</span>
-<span class="text-sm font-mono-data text-primary" id="methodology-statistical-parity-b">0.45 Selection</span>
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded dark:bg-zinc-800">
+<span class="text-sm font-semibold dark:text-zinc-300">Lowest Group</span>
+<span class="text-sm font-mono-data text-primary dark:text-teal-400" id="methodology-statistical-parity-b">0.45 Selection</span>
 </div>
 </div>
 </div>
 <!-- Equalized Odds -->
-<div class="md:col-span-6 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow">
-<h2 class="font-h2 text-h2 mb-4">Multi-Metric Fairness Engine</h2>
-<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+<div class="md:col-span-6 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow dark:bg-zinc-900 dark:border-zinc-800">
+<h2 class="font-h2 text-h2 mb-4 dark:text-white">Multi-Metric Fairness Engine</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 dark:text-zinc-400">
                     The detection engine does not rely on DIR alone. We compute Equal Opportunity Difference and Average Odds Difference to detect fairness failures that only appear when qualified candidates or error tradeoffs are considered.
                 </p>
 <div class="grid grid-cols-2 gap-4">
-<div class="p-4 border border-outline-variant rounded">
-<div class="text-label-sm font-label-sm text-outline mb-1">Equal Opportunity Difference</div>
+<div class="p-4 border border-outline-variant rounded dark:border-zinc-700">
+<div class="text-label-sm font-label-sm text-outline mb-1 dark:text-zinc-500">Equal Opportunity Difference</div>
 <div class="text-2xl font-bold text-teal-600" id="methodology-equalized-odds-tpr">92%</div>
 </div>
-<div class="p-4 border border-outline-variant rounded">
-<div class="text-label-sm font-label-sm text-outline mb-1">Average Odds Difference</div>
+<div class="p-4 border border-outline-variant rounded dark:border-zinc-700">
+<div class="text-label-sm font-label-sm text-outline mb-1 dark:text-zinc-500">Average Odds Difference</div>
 <div class="text-2xl font-bold text-error" id="methodology-equalized-odds-fpr">4%</div>
 </div>
 </div>
 </div>
 <!-- Root Cause Ranking -->
-<div class="md:col-span-6 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow">
-<h2 class="font-h2 text-h2 mb-4">Root Cause Analysis</h2>
-<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+<div class="md:col-span-6 bg-white border border-outline-variant p-8 rounded shadow-sm hover:shadow-md transition-shadow dark:bg-zinc-900 dark:border-zinc-800">
+<h2 class="font-h2 text-h2 mb-4 dark:text-white">Root Cause Analysis</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 dark:text-zinc-400">
                     We rank non-protected features by disparity impact. For each candidate feature, the engine measures variance in outcome rates across its groups and scores how strongly it contributes to unfair outcomes.
                 </p>
 <div class="space-y-4">
 <div>
 <div class="flex justify-between mb-2">
-<span class="text-sm font-medium">experience_level</span>
-<span class="text-sm font-mono-data">impact 0.42</span>
+<span class="text-sm font-medium dark:text-zinc-300">experience_level</span>
+<span class="text-sm font-mono-data dark:text-zinc-500">impact 0.42</span>
 </div>
-<div class="h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-3 bg-surface-container rounded-full overflow-hidden dark:bg-zinc-800">
 <div class="h-full bg-secondary w-[42%]"></div>
 </div>
 </div>
 <div>
 <div class="flex justify-between mb-2">
-<span class="text-sm font-medium">region</span>
-<span class="text-sm font-mono-data">impact 0.21</span>
+<span class="text-sm font-medium dark:text-zinc-300">region</span>
+<span class="text-sm font-mono-data dark:text-zinc-500">impact 0.21</span>
 </div>
-<div class="h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-3 bg-surface-container rounded-full overflow-hidden dark:bg-zinc-800">
 <div class="h-full bg-primary w-[21%]"></div>
 </div>
 </div>
-<div class="rounded bg-surface-container-low p-3 text-xs text-on-surface-variant">
+<div class="rounded bg-surface-container-low p-3 text-xs text-on-surface-variant dark:bg-zinc-800 dark:text-zinc-400">
 Most influential features are then used by the simulation engine to generate deterministic “what if we remove this influence?” scenarios.
 </div>
 </div>
 </div>
 </div>
 <!-- Technical Deep Dive -->
-<section class="bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden">
+<section class="bg-surface-container-low rounded-xl border border-outline-variant overflow-hidden dark:bg-zinc-900/50 dark:border-zinc-800">
 <div class="grid md:grid-cols-3">
-<div class="md:col-span-1 p-10 bg-white border-r border-outline-variant">
-<h3 class="font-h2 text-h2 mb-4">Debugger Modules</h3>
-<p class="text-body-md text-on-surface-variant mb-6">The methodology page now reflects the deterministic modules in the backend fairness debugger.</p>
+<div class="md:col-span-1 p-10 bg-white border-r border-outline-variant dark:bg-zinc-900 dark:border-zinc-800">
+<h3 class="font-h2 text-h2 mb-4 dark:text-white">Debugger Modules</h3>
+<p class="text-body-md text-on-surface-variant mb-6 dark:text-zinc-400">The methodology page now reflects the deterministic modules in the backend fairness debugger.</p>
 <ul class="space-y-4">
 <li class="flex items-start space-x-3">
-<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
-<span class="text-sm font-medium">Bias Detection: DIR, SPD, EOD, and AOD</span>
+<span class="material-symbols-outlined text-primary mt-1 dark:text-teal-400" data-icon="check_circle">check_circle</span>
+<span class="text-sm font-medium dark:text-zinc-300">Bias Detection: DIR, SPD, EOD, and AOD</span>
 </li>
 <li class="flex items-start space-x-3">
-<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
-<span class="text-sm font-medium">Bias Localization: subgroup hotspot detection across protected + secondary attributes</span>
+<span class="material-symbols-outlined text-primary mt-1 dark:text-teal-400" data-icon="check_circle">check_circle</span>
+<span class="text-sm font-medium dark:text-zinc-300">Bias Localization: subgroup hotspot detection across protected + secondary attributes</span>
 </li>
 <li class="flex items-start space-x-3">
-<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
-<span class="text-sm font-medium">Counterfactual Simulation: rate uplift, influence removal, and equalized probabilities</span>
+<span class="material-symbols-outlined text-primary mt-1 dark:text-teal-400" data-icon="check_circle">check_circle</span>
+<span class="text-sm font-medium dark:text-zinc-300">Counterfactual Simulation: rate uplift, influence removal, and equalized probabilities</span>
 </li>
 <li class="flex items-start space-x-3">
-<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
-<span class="text-sm font-medium">Bias Repair: minimum-change suggestions to reach DIR ≥ 0.8</span>
+<span class="material-symbols-outlined text-primary mt-1 dark:text-teal-400" data-icon="check_circle">check_circle</span>
+<span class="text-sm font-medium dark:text-zinc-300">Bias Repair: minimum-change suggestions to reach DIR ≥ 0.8</span>
 </li>
 <li class="flex items-start space-x-3">
-<span class="material-symbols-outlined text-primary mt-1" data-icon="check_circle">check_circle</span>
-<span class="text-sm font-medium">Reliability Checks: low sample, missing values, and imbalanced groups</span>
+<span class="material-symbols-outlined text-primary mt-1 dark:text-teal-400" data-icon="check_circle">check_circle</span>
+<span class="text-sm font-medium dark:text-zinc-300">Reliability Checks: low sample, missing values, and imbalanced groups</span>
 </li>
 </ul>
 </div>
 <div class="md:col-span-2 p-10">
-<div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm h-full flex flex-col justify-center">
+<div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm h-full flex flex-col justify-center dark:bg-zinc-900 dark:border-zinc-800">
 <div class="flex justify-between items-center mb-8">
-<h4 class="font-h3 text-h3">Simulation and Repair Impact</h4>
-<span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed text-[10px] rounded font-bold uppercase">Simulation Results</span>
+<h4 class="font-h3 text-h3 dark:text-white">Simulation and Repair Impact</h4>
+<span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed text-[10px] rounded font-bold uppercase dark:bg-teal-600 dark:text-white">Simulation Results</span>
 </div>
 <div class="space-y-8">
 <div>
 <div class="flex justify-between mb-2">
-<span class="text-sm font-medium">Observed Baseline</span>
-<span class="text-sm font-mono-data" id="methodology-baseline-dir">DIR 0.62</span>
+<span class="text-sm font-medium dark:text-zinc-300">Observed Baseline</span>
+<span class="text-sm font-mono-data dark:text-zinc-500" id="methodology-baseline-dir">DIR 0.62</span>
 </div>
-<div class="h-4 bg-surface-container rounded-full overflow-hidden">
+<div class="h-4 bg-surface-container rounded-full overflow-hidden dark:bg-zinc-800">
 <div class="h-full bg-error w-[62%]" id="methodology-baseline-bar"></div>
 </div>
 </div>
 <div>
 <div class="flex justify-between mb-2">
-<span class="text-sm font-medium">After Minimal Repair / Reweighting Scenario</span>
-<span class="text-sm font-mono-data" id="methodology-remediated-dir">DIR 0.89</span>
+<span class="text-sm font-medium dark:text-zinc-300">After Minimal Repair / Reweighting Scenario</span>
+<span class="text-sm font-mono-data dark:text-teal-400" id="methodology-remediated-dir">DIR 0.89</span>
 </div>
-<div class="h-4 bg-surface-container rounded-full overflow-hidden">
-<div class="h-full bg-primary w-[89%]" id="methodology-remediated-bar"></div>
+<div class="h-4 bg-surface-container rounded-full overflow-hidden dark:bg-zinc-800">
+<div class="h-full bg-primary dark:bg-teal-500 w-[89%]" id="methodology-remediated-bar"></div>
 </div>
 </div>
 <div class="grid md:grid-cols-2 gap-4">
-<div class="rounded-lg bg-surface-container-low p-4">
-<div class="text-[10px] uppercase font-bold text-outline mb-2">Hidden Bias Rule</div>
-<p class="text-sm text-on-surface-variant">If global severity is LOW but any subgroup hotspot is HIGH, the engine raises <span class="font-mono-data text-on-surface">hidden_bias_detected = true</span>.</p>
+<div class="rounded-lg bg-surface-container-low p-4 dark:bg-zinc-800/50">
+<div class="text-[10px] uppercase font-bold text-outline mb-2 dark:text-zinc-500">Hidden Bias Rule</div>
+<p class="text-sm text-on-surface-variant dark:text-zinc-400">If global severity is LOW but any subgroup hotspot is HIGH, the engine raises <span class="font-mono-data text-on-surface dark:text-white">hidden_bias_detected = true</span>.</p>
 </div>
-<div class="rounded-lg bg-surface-container-low p-4">
-<div class="text-[10px] uppercase font-bold text-outline mb-2">Counterfactual Goal</div>
-<p class="text-sm text-on-surface-variant">Each simulation recomputes fairness metrics after a deterministic intervention so teams can compare repair effectiveness before changing production policy.</p>
+<div class="rounded-lg bg-surface-container-low p-4 dark:bg-zinc-800/50">
+<div class="text-[10px] uppercase font-bold text-outline mb-2 dark:text-zinc-500">Counterfactual Goal</div>
+<p class="text-sm text-on-surface-variant dark:text-zinc-400">Each simulation recomputes fairness metrics after a deterministic intervention so teams can compare repair effectiveness before changing production policy.</p>
 </div>
 </div>
 </div>
@@ -221,14 +220,14 @@ Most influential features are then used by the simulation engine to generate det
 <footer class="w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 mt-20">
 <div class="flex flex-col md:flex-row justify-between items-center px-10 py-8 max-w-7xl mx-auto">
 <div class="font-bold text-slate-900 dark:text-slate-100 mb-4 md:mb-0">bAIsed</div>
-<div class="font-sans text-xs text-slate-500 mb-6 md:mb-0">
+<div class="font-sans text-xs text-slate-500 dark:text-slate-400 mb-6 md:mb-0">
                 © 2024 bAIsed. Lab-grade analysis for ethical AI.
             </div>
 <div class="flex space-x-6">
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 transition-all hover:underline" href="#">Privacy Policy</a>
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 transition-all hover:underline" href="#">Terms of Service</a>
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 transition-all hover:underline" href="#">Contact</a>
-<a class="font-sans text-xs text-slate-500 hover:text-teal-600 transition-all hover:underline" href="#">Security</a>
+<a class="font-sans text-xs text-slate-500 dark:text-slate-400 hover:text-teal-600 transition-all hover:underline" href="#">Privacy Policy</a>
+<a class="font-sans text-xs text-slate-500 dark:text-slate-400 hover:text-teal-600 transition-all hover:underline" href="#">Terms of Service</a>
+<a class="font-sans text-xs text-slate-500 dark:text-slate-400 hover:text-teal-600 transition-all hover:underline" href="#">Contact</a>
+<a class="font-sans text-xs text-slate-500 dark:text-slate-400 hover:text-teal-600 transition-all hover:underline" href="#">Security</a>
 </div>
 </div>
 </footer>

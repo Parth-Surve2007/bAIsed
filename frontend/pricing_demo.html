@@ -19,9 +19,9 @@
         }
     </style>
 </head>
-<body class="bg-background font-body-md text-on-surface antialiased" data-page="pricing_demo">
+<body class="bg-background font-body-md text-on-surface antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="pricing_demo">
 <!-- TopNavBar Shell -->
-<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 dark:bg-black/90 dark:border-zinc-800 transition-colors">
 <div class="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between h-16">
 <a class="text-xl font-black tracking-tighter text-teal-600" data-nav-label="bAIsed" href="/app">bAIsed</a>
 <nav class="hidden md:flex items-center gap-8 font-['Inter'] antialiased text-sm font-medium">
@@ -112,9 +112,9 @@
 <button class="w-full py-3 bg-primary text-on-primary font-semibold hover:opacity-90 transition-opacity rounded-md active:scale-95" data-action="Start 14-Day Free Trial">Get Everything Free</button>
 </div>
 <!-- Enterprise -->
-<div class="bg-white border border-outline-variant p-8 flex flex-col hover:shadow-lg transition-shadow duration-300">
+<div class="bg-white border border-outline-variant p-8 flex flex-col hover:shadow-lg transition-shadow duration-300 dark:bg-zinc-900 dark:border-zinc-800">
 <div class="mb-8">
-<h3 class="font-h3 text-h3 text-on-background mb-2">Enterprise</h3>
+<h3 class="font-h3 text-h3 text-on-background mb-2 dark:text-white">Enterprise</h3>
 <p class="text-on-surface-variant text-body-md mb-6">Lab-grade compliance and global scale.</p>
 <div class="flex items-baseline gap-1">
 <span class="text-4xl font-bold text-on-background" id="pricing-enterprise-price">Free</span>
@@ -142,10 +142,10 @@
 </div>
 </section>
 <section class="max-w-4xl mx-auto px-4 md:px-8 mb-24">
-<div class="bg-white border border-outline-variant p-8 rounded-xl shadow-sm">
+<div class="bg-white border border-outline-variant p-8 rounded-xl shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 <div class="mb-6">
-<h2 class="font-h2 text-h2 text-on-background mb-3">Request A Live Demo</h2>
-<p class="text-body-md text-on-surface-variant">This form now posts to Flask and records a real demo request payload.</p>
+<h2 class="font-h2 text-h2 text-on-background mb-3 dark:text-white">Request A Live Demo</h2>
+<p class="text-body-md text-on-surface-variant dark:text-zinc-400">This form now posts to Flask and records a real demo request payload.</p>
 </div>
 <form class="grid grid-cols-1 md:grid-cols-2 gap-4" id="demo-request-form">
 <input class="rounded-md border border-outline-variant px-4 py-3" id="demo-name" placeholder="Your name" required type="text"/>
@@ -161,10 +161,10 @@
 </section>
 <!-- Feature Comparison Table -->
 <section class="max-w-7xl mx-auto px-4 md:px-8 mb-24 overflow-x-auto">
-<h2 class="font-h2 text-h2 text-on-background mb-8 text-center">Feature Matrix</h2>
-<div class="inline-block min-w-full align-middle border border-outline-variant">
-<table class="min-w-full divide-y divide-slate-200">
-<thead class="bg-slate-50">
+<h2 class="font-h2 text-h2 text-on-background mb-8 text-center dark:text-white">Feature Matrix</h2>
+<div class="inline-block min-w-full align-middle border border-outline-variant dark:border-zinc-800">
+<table class="min-w-full divide-y divide-slate-200 dark:divide-zinc-800">
+<thead class="bg-slate-50 dark:bg-zinc-800/50">
 <tr>
 <th class="px-6 py-4 text-left text-label-sm text-slate-500 uppercase tracking-wider" scope="col">Features</th>
 <th class="px-6 py-4 text-center text-label-sm text-slate-500 uppercase tracking-wider" scope="col">Researcher</th>

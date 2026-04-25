@@ -104,6 +104,10 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
+        .dark .glass-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
         .hero-score-card {
             transform-style: preserve-3d;
             transition: transform 220ms ease, box-shadow 220ms ease;
@@ -134,7 +138,7 @@
         }
     </style>
 </head>
-<body class="bg-background text-on-background font-body-lg" data-page="landing">
+<body class="bg-background text-on-background font-body-lg transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="landing">
 <!-- TopNavBar -->
 <nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-zinc-800">
 <div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-16 font-['Inter'] antialiased tracking-tight">
@@ -161,8 +165,8 @@
     <span class="text-[100px] md:text-[140px] font-black tracking-[-0.05em] leading-none italic bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-500 to-primary glitch-text">bAIsed</span>
 </div>
 <span class="inline-block py-1 px-3 rounded-full bg-secondary-container text-on-secondary-container text-label-md mb-6 relative z-20">NEW: V2.0 ENGINE RELEASED</span>
-<h1 class="font-headline-lg text-6xl md:text-7xl mb-6 tracking-tight relative z-20">Detect Bias.<br/><span class="text-secondary">Ensure Fairness.</span></h1>
-<p class="text-body-lg text-on-surface-variant max-w-xl mb-10 text-xl leading-relaxed">
+<h1 class="font-headline-lg text-6xl md:text-7xl mb-6 tracking-tight relative z-20 dark:text-white">Detect Bias.<br/><span class="text-secondary">Ensure Fairness.</span></h1>
+<p class="text-body-lg text-on-surface-variant max-w-xl mb-10 text-xl leading-relaxed dark:text-zinc-400">
                         Quantify algorithmic integrity with high-precision transparent metrics. Audit your models for disparate impact before they hit production.
                     </p>
 <div class="flex flex-wrap gap-4">
@@ -226,11 +230,11 @@
 </div>
 </section>
 <!-- Problem Section: The Inheritance of Inequity -->
-<section class="py-24 bg-surface-container-low px-6">
+<section class="py-24 bg-surface-container-low px-6 dark:bg-zinc-900/50">
 <div class="max-w-7xl mx-auto">
 <div class="text-center mb-20">
-<h2 class="font-headline-lg text-4xl mb-4">The Inheritance of Inequity</h2>
-<p class="text-on-surface-variant max-w-2xl mx-auto text-lg">AI doesn't just process data; it mirrors history. Without active intervention, historical biases in lending, hiring, and healthcare become automated systemic failures.</p>
+<h2 class="font-headline-lg text-4xl mb-4 dark:text-white">The Inheritance of Inequity</h2>
+<p class="text-on-surface-variant max-w-2xl mx-auto text-lg dark:text-zinc-400">AI doesn't just process data; it mirrors history. Without active intervention, historical biases in lending, hiring, and healthcare become automated systemic failures.</p>
 </div>
 <div class="grid lg:grid-cols-2 gap-12 items-center">
 <div class="space-y-8">
@@ -262,8 +266,8 @@
 </div>
 </div>
 </div>
-<div class="bg-white rounded-xl p-8 shadow-sm border border-outline-variant/20">
-<h4 class="font-headline-md text-lg mb-6">Outcome Imbalance (Hiring Model)</h4>
+<div class="bg-white rounded-xl p-8 shadow-sm border border-outline-variant/20 dark:bg-zinc-900 dark:border-zinc-800">
+<h4 class="font-headline-md text-lg mb-6 dark:text-white">Outcome Imbalance (Hiring Model)</h4>
 <div class="space-y-6">
 <div>
 <div class="flex justify-between text-body-sm mb-2">
@@ -293,11 +297,11 @@
 </div>
 </section>
 <!-- Solution Diagram -->
-<section class="py-24 px-6 overflow-hidden">
+<section class="py-24 px-6 overflow-hidden dark:bg-zinc-950">
 <div class="max-w-7xl mx-auto">
 <div class="text-center mb-16">
-<h2 class="font-headline-lg text-4xl mb-4">The Pipeline to Fairness</h2>
-<p class="text-on-surface-variant">Our end-to-end framework bridges the gap between raw data and ethical AI.</p>
+<h2 class="font-headline-lg text-4xl mb-4 dark:text-white">The Pipeline to Fairness</h2>
+<p class="text-on-surface-variant dark:text-zinc-400">Our end-to-end framework bridges the gap between raw data and ethical AI.</p>
 </div>
 <div class="relative">
 <!-- Connector line -->
@@ -336,14 +340,14 @@
 </div>
 </section>
 <!-- Features Grid (Bento Style) -->
-<section class="py-24 px-6 bg-surface">
+<section class="py-24 px-6 bg-surface dark:bg-zinc-900">
 <div class="max-w-7xl mx-auto">
 <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6">
 <div class="md:col-span-2 glass-card rounded-xl p-10 flex flex-col justify-between border-outline-variant/30 shadow-md">
 <div>
 <span class="material-symbols-outlined text-4xl text-secondary mb-6">bolt</span>
-<h3 class="font-headline-md text-3xl mb-4">Bias Detection Engine</h3>
-<p class="text-body-lg text-on-surface-variant max-w-md">Our proprietary algorithm scans trillions of data points to identify 40+ types of cognitive and historical bias in under 3 seconds.</p>
+<h3 class="font-headline-md text-3xl mb-4 dark:text-white">Bias Detection Engine</h3>
+<p class="text-body-lg text-on-surface-variant max-w-md dark:text-zinc-400">Our proprietary algorithm scans trillions of data points to identify 40+ types of cognitive and historical bias in under 3 seconds.</p>
 </div>
 <img class="w-full h-48 object-cover rounded-lg mt-10" data-alt="Abstract visualization of flowing digital data streams in shades of teal and dark gray representing neural networks" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKUzmNCKTe4nD5c4gA7y_w118asLHZgABxz-T7DlrYqmq7T_BCOQoUZa6J6xzLqMeymVI4g-ZliOUAHk3wI4mcC0jVxU5X9GwDLV6ZzGDZAUntuOp3thT1JEpHxtLEzXOjvdmdV-tC0FOJjBFjmlDCelsBcxrmKUTuxtu9kJNZDgE_BNDOwXgZaFzUsGaHN0y7BElSlwMsVLO35XTbELVbkRa--Eej8poX16lP2l9QMK_qselVsSJIkbyPtaINEDPKC4Tz-VXz8Kv1"/>
 </div>
@@ -373,9 +377,9 @@
 </div>
 <div class="md:col-span-2 glass-card rounded-xl p-10 flex flex-col md:flex-row gap-10 items-center border-outline-variant/30 shadow-md">
 <div class="flex-1">
-<span class="material-symbols-outlined text-4xl text-tertiary mb-6">science</span>
-<h3 class="font-headline-md text-2xl mb-4">What-If Simulator</h3>
-<p class="text-body-sm text-on-surface-variant">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
+<span class="material-symbols-outlined text-4xl text-tertiary mb-6 dark:text-zinc-300">science</span>
+<h3 class="font-headline-md text-2xl mb-4 dark:text-white">What-If Simulator</h3>
+<p class="text-body-sm text-on-surface-variant dark:text-zinc-400">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
 </div>
 <div class="flex-1 bg-surface-container rounded-lg p-6 w-full">
   <div class="flex items-center justify-between gap-4">

@@ -781,7 +781,65 @@
     }
   }
 
+  function bindDarkMode() {
+    const html = document.documentElement;
+    const isDark = localStorage.getItem("baised_theme") === "dark";
+    
+    if (isDark) {
+      html.classList.add("dark");
+    }
+
+    // Global Dark Mode Overrides for pages not fully themed yet
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .dark body { background-color: #09090b !important; color: #f4f4f5 !important; }
+      .dark header { background-color: rgba(0, 0, 0, 0.8) !important; border-color: #27272a !important; }
+      .dark nav a { color: #a1a1aa !important; }
+      .dark nav a:hover { color: #13eed3 !important; }
+      .dark .bg-white, .dark .bg-surface { background-color: #18181b !important; }
+      .dark .text-black, .dark .text-slate-900, .dark .text-on-surface { color: #ffffff !important; }
+      .dark .text-slate-600, .dark .text-on-surface-variant, .dark .text-gray-600 { color: #a1a1aa !important; }
+      .dark .border-slate-200, .dark .border-outline-variant, .dark .border-gray-100 { border-color: #27272a !important; }
+      .dark .bg-surface-container-low, .dark .bg-slate-50, .dark .bg-zinc-50 { background-color: #111113 !important; }
+      .dark footer { background-color: #09090b !important; border-color: #27272a !important; }
+      .dark .glass-card { background: rgba(0, 0, 0, 0.6) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+    `;
+    document.head.appendChild(style);
+
+    // Create the Saturn toggle button
+    const toggleBtn = document.createElement("button");
+    toggleBtn.id = "theme-toggle";
+    toggleBtn.className = "relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 p-0 text-slate-600 transition-all hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 active:scale-95 z-[60] ml-2";
+    toggleBtn.title = "Toggle Dark Mode";
+    toggleBtn.innerHTML = `
+      <svg class="h-7 w-7 transform transition-transform duration-700 dark:rotate-[360deg]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <circle cx="12" cy="12" r="4.5" fill="currentColor" fill-opacity="0.1" />
+        <ellipse cx="12" cy="12" rx="10" ry="2.5" transform="rotate(-20 12 12)" />
+        <path d="M7 13.5C7 13.5 8.5 12 12 12C15.5 12 17 13.5 17 13.5" stroke-dasharray="1 1" />
+      </svg>
+    `;
+
+    // Inject into headers
+    const findHeaderContainer = () => {
+      const auth = document.querySelector("[data-auth-container]");
+      if (auth) return auth;
+      return document.querySelector("header div") || document.querySelector("nav div");
+    };
+
+    const container = findHeaderContainer();
+    if (container) {
+      container.append(toggleBtn);
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      const isNowDark = html.classList.toggle("dark");
+      localStorage.setItem("baised_theme", isNowDark ? "dark" : "light");
+      showToast(`${isNowDark ? "Dark" : "Light"} mode activated.`);
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
+    bindDarkMode();
     normalizeBranding();
     renderAuthState();
     bindElements();
