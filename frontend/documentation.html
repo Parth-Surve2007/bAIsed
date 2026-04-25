@@ -5,7 +5,6 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <style>
         .material-symbols-outlined {
@@ -102,37 +101,37 @@
         }
     </script>
 </head>
-<body class="bg-background text-on-surface" data-page="documentation">
+<body class="bg-background text-on-surface transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="documentation">
 <!-- TopAppBar -->
-<header class="bg-white/80 backdrop-blur-md text-zinc-900 font-['Inter'] antialiased fixed top-0 w-full z-50 border-b border-zinc-200 shadow-sm">
+<header class="bg-white/80 dark:bg-black/80 backdrop-blur-md text-zinc-900 font-['Inter'] antialiased fixed top-0 w-full z-50 border-b border-zinc-200 dark:border-zinc-800 transition-colors shadow-sm">
 <div class="flex items-center justify-between px-6 h-16 w-full max-w-[1920px] mx-auto">
 <div class="flex items-center gap-8">
-<a class="text-2xl font-black tracking-tighter text-black" data-nav-label="bAIsed" href="/app">bAIsed</a>
+<a class="text-2xl font-black tracking-tighter text-black dark:text-white" data-nav-label="bAIsed" href="/app">bAIsed</a>
 <nav class="hidden md:flex items-center gap-6">
-<a class="text-zinc-500 hover:text-black transition-colors font-body-sm" href="#">Product</a>
+<a class="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors font-body-sm" href="#">Product</a>
 <a class="text-teal-600 font-semibold border-b-2 border-teal-500 font-body-sm" href="#">Dashboard</a>
-<a class="text-zinc-500 hover:text-black transition-colors font-body-sm" href="#">Support</a>
+<a class="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors font-body-sm" href="#">Support</a>
 </nav>
 </div>
 <div class="flex items-center gap-4" data-auth-container>
 <div class="relative hidden sm:block">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" data-icon="search">search</span>
-<input class="pl-10 pr-4 py-1.5 bg-zinc-100 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-accent-teal transition-all" id="docs-search-input" placeholder="Search documentation..." type="text"/>
+<input class="pl-10 pr-4 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-accent-teal transition-all dark:text-white" id="docs-search-input" placeholder="Search documentation..." type="text"/>
 </div>
-<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:opacity-90 transition-all" data-action="Sign In">Sign In</button>
+<button class="bg-primary text-on-primary dark:bg-teal-600 px-4 py-2 rounded-lg font-label-md hover:opacity-90 transition-all" data-action="Sign In">Sign In</button>
 </div>
 </div>
 </header>
 <div class="flex pt-16 min-h-screen">
 <!-- SideNavBar -->
-<aside class="bg-white border-r border-zinc-200 fixed left-0 h-[calc(100vh-64px)] w-64 hidden md:flex flex-col py-6 gap-2">
+<aside class="bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 fixed left-0 h-[calc(100vh-64px)] w-64 hidden md:flex flex-col py-6 gap-2 transition-colors">
 <div class="px-6 mb-6">
 <div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center">
+<div class="w-8 h-8 rounded-lg bg-black dark:bg-teal-600 flex items-center justify-center">
 <span class="material-symbols-outlined text-white text-lg" data-icon="shield">shield</span>
 </div>
 <div>
-<h3 class="font-headline-md text-sm font-bold tracking-tight">Core Docs</h3>
+<h3 class="font-headline-md text-sm font-bold tracking-tight dark:text-white">Core Docs</h3>
 <p class="text-[10px] text-zinc-400 uppercase font-bold tracking-widest" id="docs-version">v1.0.4-beta</p>
 </div>
 </div>
@@ -140,93 +139,93 @@
 <nav class="flex-1 overflow-y-auto px-2 space-y-1">
 <!-- Getting Started -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-teal-600 bg-teal-50/50 border-r-4 border-teal-500 rounded-r-lg font-label-md cursor-pointer">
+<div class="flex items-center gap-3 px-4 py-2 text-teal-600 bg-teal-50/50 dark:bg-teal-900/20 border-r-4 border-teal-500 rounded-r-lg font-label-md cursor-pointer">
 <span class="material-symbols-outlined text-sm" data-icon="rocket_launch">rocket_launch</span>
 <span>Getting Started</span>
 </div>
 <div class="ml-11 mt-2 space-y-1" data-api-reference-anchor>
-<a class="block py-1.5 text-zinc-600 hover:text-black font-body-sm transition-colors" href="#">Introduction</a>
-<a class="block py-1.5 text-zinc-600 hover:text-black font-body-sm transition-colors" href="#">Quickstart Guide</a>
-<a class="block py-1.5 text-zinc-600 hover:text-black font-body-sm transition-colors" href="#">Architecture Overview</a>
+<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Introduction</a>
+<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Quickstart Guide</a>
+<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Architecture Overview</a>
 </div>
 </div>
 <!-- API Reference -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-zinc-600 hover:bg-zinc-50 rounded-lg mx-2 font-label-md cursor-pointer transition-transform hover:scale-[1.02]">
+<div class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md cursor-pointer transition-transform hover:scale-[1.02]">
 <span class="material-symbols-outlined text-sm" data-icon="code">code</span>
 <span>API Reference</span>
 </div>
 <div class="ml-11 mt-2 space-y-1">
-<a class="block py-1.5 text-zinc-400 hover:text-black font-body-sm transition-colors" href="#">Authentication</a>
-<a class="block py-1.5 text-zinc-400 hover:text-black font-body-sm transition-colors" href="#">Endpoints</a>
-<a class="block py-1.5 text-zinc-400 hover:text-black font-body-sm transition-colors" href="#">Rate Limits</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Authentication</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Endpoints</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Rate Limits</a>
 </div>
 </div>
 <!-- Metrics -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-zinc-600 hover:bg-zinc-50 rounded-lg mx-2 font-label-md cursor-pointer transition-transform hover:scale-[1.02]">
+<div class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md cursor-pointer transition-transform hover:scale-[1.02]">
 <span class="material-symbols-outlined text-sm" data-icon="analytics">analytics</span>
 <span>Metrics</span>
 </div>
 <div class="ml-11 mt-2 space-y-1">
-<a class="block py-1.5 text-zinc-400 hover:text-black font-body-sm transition-colors" href="#">Bias Detection</a>
-<a class="block py-1.5 text-zinc-400 hover:text-black font-body-sm transition-colors" href="#">Drift Analytics</a>
-<a class="block py-1.5 text-zinc-400 hover:text-black font-body-sm transition-colors" href="#">Fairness Ratios</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Bias Detection</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Drift Analytics</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Fairness Ratios</a>
 </div>
 </div>
 </nav>
-<div class="mt-auto px-2 border-t border-zinc-100 pt-4 space-y-1">
-<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 hover:bg-zinc-50 rounded-lg mx-2 font-label-md transition-all" href="#">
+<div class="mt-auto px-2 border-t border-zinc-100 dark:border-zinc-800 pt-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md transition-all" href="#">
 <span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
 <span>Settings</span>
 </a>
-<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 hover:bg-zinc-50 rounded-lg mx-2 font-label-md transition-all" href="#">
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md transition-all" href="#">
 <span class="material-symbols-outlined text-sm" data-icon="help">help</span>
 <span>Help</span>
 </a>
 </div>
 </aside>
 <!-- Main Content Area -->
-<main class="flex-1 md:ml-64 bg-background">
+<main class="flex-1 md:ml-64 bg-background dark:bg-zinc-950 transition-colors">
 <div class="max-w-4xl mx-auto px-8 py-12">
 <!-- Header -->
 <header class="mb-12">
-<nav class="flex items-center gap-2 text-zinc-400 font-label-md mb-4">
+<nav class="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-label-md mb-4">
 <span>Docs</span>
 <span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
 <span>Getting Started</span>
 <span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
 <span class="text-accent-teal">Introduction</span>
 </nav>
-<h1 class="font-headline-lg text-black mb-6">Introduction to bAIsed</h1>
-<p class="font-body-lg text-zinc-600 leading-relaxed max-w-2xl">
+<h1 class="font-headline-lg text-black dark:text-white mb-6">Introduction to bAIsed</h1>
+<p class="font-body-lg text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl">
                         bAIsed is a high-precision fairness auditing framework for modern AI models. It provides developers with the toolset needed to detect, measure, and mitigate algorithmic bias throughout the entire machine learning lifecycle.
                     </p>
 </header>
 <!-- Feature Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-<div class="bg-white border border-zinc-200 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-zinc-50 rounded-lg flex items-center justify-center mb-6 group-hover:bg-teal-50 transition-colors">
-<span class="material-symbols-outlined text-black group-hover:text-accent-teal transition-colors" data-icon="tune">tune</span>
+<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
+<div class="w-12 h-12 bg-zinc-50 dark:bg-zinc-800 rounded-lg flex items-center justify-center mb-6 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/30 transition-colors">
+<span class="material-symbols-outlined text-black dark:text-white group-hover:text-accent-teal transition-colors" data-icon="tune">tune</span>
 </div>
-<h3 class="font-headline-md text-lg mb-2">Precision Control</h3>
-<p class="font-body-sm text-zinc-500">Audit your models with granular control over sensitive attributes and intersectional parity checks.</p>
+<h3 class="font-headline-md text-lg mb-2 dark:text-white">Precision Control</h3>
+<p class="font-body-sm text-zinc-500 dark:text-zinc-400">Audit your models with granular control over sensitive attributes and intersectional parity checks.</p>
 </div>
-<div class="bg-white border border-zinc-200 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-zinc-50 rounded-lg flex items-center justify-center mb-6 group-hover:bg-teal-50 transition-colors">
-<span class="material-symbols-outlined text-black group-hover:text-accent-teal transition-colors" data-icon="waves">waves</span>
+<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
+<div class="w-12 h-12 bg-zinc-50 dark:bg-zinc-800 rounded-lg flex items-center justify-center mb-6 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/30 transition-colors">
+<span class="material-symbols-outlined text-black dark:text-white group-hover:text-accent-teal transition-colors" data-icon="waves">waves</span>
 </div>
-<h3 class="font-headline-md text-lg mb-2">Real-time Drift</h3>
-<p class="font-body-sm text-zinc-500">Monitor statistical parity in flight with live alerts when model performance begins to skew across cohorts.</p>
+<h3 class="font-headline-md text-lg mb-2 dark:text-white">Real-time Drift</h3>
+<p class="font-body-sm text-zinc-500 dark:text-zinc-400">Monitor statistical parity in flight with live alerts when model performance begins to skew across cohorts.</p>
 </div>
 </div>
 <!-- Quick Start -->
 <section class="mb-16">
 <div class="flex items-center gap-4 mb-6">
 <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-<h2 class="font-headline-lg text-2xl">Quick Start</h2>
+<h2 class="font-headline-lg text-2xl dark:text-white">Quick Start</h2>
 </div>
-<p class="font-body-lg text-zinc-600 mb-6">
+<p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
                         Get started by installing the bAIsed core CLI. Ensure you have Node.js 16+ installed in your development environment.
                     </p>
 <div class="bg-zinc-950 rounded-xl overflow-hidden shadow-xl border border-zinc-800">
@@ -252,51 +251,51 @@
 </section>
 <!-- Metrics Engine Deep Dive -->
 <section class="mb-16">
-<div class="bg-teal-50 rounded-2xl p-10 border border-teal-100/50">
+<div class="bg-teal-50 dark:bg-teal-900/10 rounded-2xl p-10 border border-teal-100/50 dark:border-teal-900/30">
 <div class="flex flex-col md:flex-row gap-8 items-center">
 <div class="flex-1">
-<h2 class="font-headline-lg text-2xl mb-4 text-zinc-900">Metrics Engine Section</h2>
-<p class="font-body-lg text-zinc-600 mb-6">
-                                    Our proprietary fairness engine calculates the Disparate Impact Ratio (DIR) across multidimensional vectors using a modified Four-Fifths rule algorithm.
-                                </p>
-<div class="bg-white/60 p-4 rounded-lg font-mono text-sm text-black inline-block border border-teal-200">
-                                    DIR = P(Y=1 | D=unprivileged) / P(Y=1 | D=privileged)
-                                </div>
+<h2 class="font-headline-lg text-2xl mb-4 text-zinc-900 dark:text-white">Metrics Engine Section</h2>
+<p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+                                     Our proprietary fairness engine calculates the Disparate Impact Ratio (DIR) across multidimensional vectors using a modified Four-Fifths rule algorithm.
+                                 </p>
+<div class="bg-white/60 dark:bg-black/60 p-4 rounded-lg font-mono text-sm text-black dark:text-teal-400 inline-block border border-teal-200 dark:border-teal-900">
+                                     DIR = P(Y=1 | D=unprivileged) / P(Y=1 | D=privileged)
+                                 </div>
 </div>
-<div class="w-full md:w-64 aspect-square bg-white rounded-xl shadow-inner border border-teal-100 flex items-center justify-center p-6">
-<img alt="Data visualization" class="w-full h-full object-contain" data-alt="minimalist abstract 3D visualization of data clusters and neural pathways in soft mint green and monochrome white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIACu5Rx05ub8dfsFVgAmTgYY8Dz2rKtJbt0tVDESTmRZznW6qf4DA20Q4ykwaV9jZKpzfnW-3k1uACcOcqopVUtv3v0nUeO_5LOngbDujONCGWNjEAPCWTvf4al3abMqmC_3C6YWfNfHvwhQgg6JcegMynlJ4cr67EjlmHy3r5TTQhU6zIQ28lghmvwUWMvMs14fNjjP1oi0lkLcN_AGm55_bfyqlY8pByPAk97AxwUyC38dBza8uhin_l-DATieJhWRGJvm3GVDu"/>
+<div class="w-full md:w-64 aspect-square bg-white dark:bg-zinc-800 rounded-xl shadow-inner border border-teal-100 dark:border-teal-900 flex items-center justify-center p-6">
+<img alt="Data visualization" class="w-full h-full object-contain dark:opacity-80" data-alt="minimalist abstract 3D visualization of data clusters and neural pathways in soft mint green and monochrome white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIACu5Rx05ub8dfsFVgAmTgYY8Dz2rKtJbt0tVDESTmRZznW6qf4DA20Q4ykwaV9jZKpzfnW-3k1uACcOcqopVUtv3v0nUeO_5LOngbDujONCGWNjEAPCWTvf4al3abMqmC_3C6YWfNfHvwhQgg6JcegMynlJ4cr67EjlmHy3r5TTQhU6zIQ28lghmvwUWMvMs14fNjjP1oi0lkLcN_AGm55_bfyqlY8pByPAk97AxwUyC38dBza8uhin_l-DATieJhWRGJvm3GVDu"/>
 </div>
 </div>
 </div>
 </section>
 <!-- Footer Navigation -->
-<footer class="pt-12 border-t border-zinc-200 flex justify-between">
+<footer class="pt-12 border-t border-zinc-200 dark:border-zinc-800 flex justify-between">
 <div></div>
 <a class="group text-right" href="#">
-<p class="text-zinc-400 font-label-md mb-1 uppercase tracking-wider">Next Up</p>
-<p class="font-headline-md text-black group-hover:text-accent-teal transition-colors flex items-center justify-end gap-2">
+<p class="text-zinc-400 dark:text-zinc-500 font-label-md mb-1 uppercase tracking-wider">Next Up</p>
+<p class="font-headline-md text-black dark:text-white group-hover:text-accent-teal transition-colors flex items-center justify-end gap-2">
                             Quickstart Guide
                             <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
 </p>
 </a>
 </footer>
-<section class="mt-10 rounded-2xl border border-outline-variant bg-white p-6">
+<section class="mt-10 rounded-2xl border border-outline-variant dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
 <div class="flex items-center justify-between gap-4">
 <div>
-<h3 class="font-headline-md text-lg">Backend Search Results</h3>
-<p class="text-sm text-zinc-500">Type in the docs search box to query Flask-backed topics.</p>
+<h3 class="font-headline-md text-lg dark:text-white">Backend Search Results</h3>
+<p class="text-sm text-zinc-500 dark:text-zinc-400">Type in the docs search box to query Flask-backed topics.</p>
 </div>
-<button class="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-zinc-700" data-action="Deploy Audit">Deploy Audit</button>
+<button class="rounded-lg border border-outline-variant dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors" data-action="Deploy Audit">Deploy Audit</button>
 </div>
 <div class="mt-4 space-y-3" id="docs-search-results">
-<div class="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-4 text-sm text-zinc-500">Search results will appear here.</div>
+<div class="rounded-xl border border-dashed border-outline-variant dark:border-zinc-800 bg-surface-container-low dark:bg-zinc-800/50 px-4 py-4 text-sm text-zinc-500 dark:text-zinc-400">Search results will appear here.</div>
 </div>
 </section>
 </div>
 </main>
 </div>
 <!-- Floating Action Button -->
-<button class="fixed bottom-8 right-8 bg-black text-white p-4 rounded-full shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform z-40 group" data-action="Deploy Audit">
+<button class="fixed bottom-8 right-8 bg-black dark:bg-teal-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform z-40 group" data-action="Deploy Audit">
 <span class="material-symbols-outlined" data-icon="bolt" data-weight="fill" style="font-variation-settings: 'FILL' 1;">bolt</span>
 <span class="pr-2 font-label-md">Deploy Audit</span>
 </button>

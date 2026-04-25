@@ -1,6 +1,110 @@
 (function () {
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
+  let puppyPetCount = 0;
+
+  function movePuppy() {
+    const puppy = document.getElementById("the-puppy");
+    const field = document.getElementById("puppy-field");
+    if (!puppy || !field) return;
+
+    const maxX = field.clientWidth - puppy.clientWidth;
+    const currentX = parseFloat(puppy.style.left) || 0;
+    const randomX = Math.random() * maxX;
+    
+    // Flip based on direction
+    if (randomX > currentX) {
+      puppy.style.transform = "scaleX(1)";
+    } else {
+      puppy.style.transform = "scaleX(-1)";
+    }
+
+    puppy.style.left = `${randomX}px`;
+    
+    // Tail wag speedup when moving
+    const tail = document.getElementById("puppy-tail");
+    if (tail) tail.style.animationDuration = "0.2s";
+    setTimeout(() => {
+      if (tail) tail.style.animationDuration = "0.8s";
+    }, 700);
+  }
+
+  function setupPuppyInteractions() {
+    const puppy = document.getElementById("the-puppy");
+    const svg = document.getElementById("puppy-svg");
+    const counter = document.getElementById("pet-count");
+    
+    if (!puppy) return;
+
+    puppy.addEventListener("click", (e) => {
+      e.stopPropagation();
+      puppyPetCount++;
+      if (counter) counter.textContent = puppyPetCount;
+      
+      // Bark/Jump Animation (Animation change)
+      if (svg) {
+        svg.style.transform = "translateY(-15px) rotate(-5deg)";
+        setTimeout(() => {
+          svg.style.transform = "translateY(0) rotate(0deg)";
+        }, 300);
+      }
+      
+      // Excited wag
+      const tail = document.getElementById("puppy-tail");
+      if (tail) tail.style.animationDuration = "0.1s";
+      setTimeout(() => {
+        if (tail) tail.style.animationDuration = "0.8s";
+      }, 1200);
+      
+      movePuppy(); 
+    });
+    
+    // Random roaming
+    const roamInterval = setInterval(() => {
+      const overlay = document.getElementById("puppy-overlay");
+      if (overlay && !overlay.classList.contains("hidden")) {
+        movePuppy();
+      }
+    }, 2500);
+  }
+
+  async function triggerPuppyDelay(taskFn) {
+    const overlay = document.getElementById("puppy-overlay");
+    const timer = document.getElementById("puppy-timer");
+    const counter = document.getElementById("pet-count");
+    
+    if (!overlay) return await taskFn();
+
+    // Reset state
+    puppyPetCount = 0;
+    if (counter) counter.textContent = "0";
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+    
+    let secondsLeft = 5;
+    if (timer) timer.textContent = `${secondsLeft}s`;
+
+    // Start task immediately in background
+    const taskPromise = taskFn();
+    
+    // Force wait for at least 5 seconds
+    await new Promise((resolve) => {
+      const countdown = setInterval(() => {
+        secondsLeft--;
+        if (timer) timer.textContent = `${secondsLeft}s`;
+        
+        if (secondsLeft <= 0) {
+          clearInterval(countdown);
+          resolve();
+        }
+      }, 1000);
+    });
+
+    const result = await taskPromise;
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+    return result;
+  }
 
   function persistLastResult(result) {
     try {
@@ -531,10 +635,10 @@
           submitBtn.textContent = "Analyzing...";
         }
 
-        const result = await postJson("/analyze", {
+        const result = await triggerPuppyDelay(() => postJson("/analyze", {
           groupA: document.getElementById("group-a-input").value,
           groupB: document.getElementById("group-b-input").value,
-        });
+        }));
 
         if (result.error) {
           renderError(result.error);
@@ -607,7 +711,7 @@
           submitBtn.textContent = "Uploading & Analyzing...";
         }
 
-        const result = await postForm("/upload", formData);
+        const result = await triggerPuppyDelay(() => postForm("/upload", formData));
         if (result.error) {
           renderError(result.error);
           return;
@@ -669,7 +773,7 @@
       formData.append("analysis_json", JSON.stringify(currentAnalysisResult));
       
       try {
-        const result = await postForm("/ai-analyze", formData);
+        const result = await triggerPuppyDelay(() => postForm("/ai-analyze", formData));
         
         if (result.error) {
           document.getElementById("ai-error-text").textContent = result.error;
@@ -807,5 +911,6 @@
     bindAiAnalyzerForm();
     bindDownloadReport();
     bindSimulator();
+    setupPuppyInteractions();
   });
 })();
