@@ -791,5 +791,54 @@
     bindDemoRequestForm();
     await hydratePage();
     await bindDocsSearch();
+    
+    // Fun interactive pricing page logic
+    if (getCurrentPage() === "pricing_demo") {
+      const escapingBtn = document.getElementById("escaping-button");
+      if (escapingBtn) {
+        escapingBtn.addEventListener("mouseover", () => {
+          const x = Math.random() * (window.innerWidth - escapingBtn.offsetWidth);
+          const y = Math.random() * (window.innerHeight - escapingBtn.offsetHeight);
+          escapingBtn.style.position = "fixed";
+          escapingBtn.style.zIndex = "9999";
+          escapingBtn.style.left = `${x}px`;
+          escapingBtn.style.top = `${y}px`;
+          escapingBtn.style.width = "200px";
+        });
+      }
+
+      const smileBtn = document.getElementById("smile-button");
+      if (smileBtn) {
+        smileBtn.addEventListener("click", () => {
+          const confettiCount = 100;
+          const colors = ["#13eed3", "#000000", "#3a6662", "#f59e0b"];
+          
+          for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement("div");
+            confetti.style.position = "fixed";
+            confetti.style.zIndex = "10000";
+            confetti.style.width = "10px";
+            confetti.style.height = "10px";
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = `${Math.random() * 100}vw`;
+            confetti.style.top = "-10px";
+            confetti.style.borderRadius = "2px";
+            confetti.style.pointerEvents = "none";
+            document.body.appendChild(confetti);
+
+            const animation = confetti.animate([
+              { transform: "translateY(0) rotate(0deg)", opacity: 1 },
+              { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+            ], {
+              duration: 2000 + Math.random() * 3000,
+              easing: "cubic-bezier(0, .9, .57, 1)"
+            });
+
+            animation.onfinish = () => confetti.remove();
+          }
+          showToast("Thanks for the smile! You're awesome. 😊");
+        });
+      }
+    }
   });
 })();

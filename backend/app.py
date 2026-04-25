@@ -89,15 +89,15 @@ SITE_CONTENT: dict[str, dict[str, Any]] = {
     },
     "pricing_demo": {
         "plans": {
-            "researcher": "$49",
-            "pro_team": "$199",
-            "enterprise": "Custom",
+            "researcher": "$0",
+            "pro_team": "$0",
+            "enterprise": "Free",
         },
         "cta": {
-            "headline": "Eliminate bias before it scales.",
+            "headline": "Wait, you actually want to pay? haha ntothing to see here.",
             "body": (
-                "Deploy your models with confidence using our lab-grade auditing toolkit. "
-                "Join 200+ organizations building fair AI."
+                "We believe in contributing to open source. Code for all. "
+                "Enjoy full access to our lab-grade auditing toolkit at no cost."
             ),
         },
     },

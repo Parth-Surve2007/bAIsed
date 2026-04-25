@@ -119,6 +119,19 @@
             background: rgba(255, 255, 255, 0.88);
             border-color: rgba(58, 102, 98, 0.2);
         }
+        @keyframes glitch {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-1deg); }
+            40% { transform: skew(1deg); }
+            60% { transform: skew(-0.5deg); }
+            80% { transform: skew(0.5deg); }
+            100% { transform: skew(0deg); }
+        }
+        .glitch-text {
+            display: inline-block;
+            animation: glitch 0.5s step-end infinite;
+            text-shadow: 2px 0 #13eed3, -2px 0 #ff00ff;
+        }
     </style>
 </head>
 <body class="bg-background text-on-background font-body-lg" data-page="landing">
@@ -143,9 +156,12 @@
 <!-- Hero Section -->
 <section class="relative overflow-hidden pt-20 pb-32 px-6">
 <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-<div class="z-10">
-<span class="inline-block py-1 px-3 rounded-full bg-secondary-container text-on-secondary-container text-label-md mb-6">NEW: V2.0 ENGINE RELEASED</span>
-<h1 class="font-headline-lg text-6xl md:text-7xl mb-6 tracking-tight">Detect Bias.<br/><span class="text-secondary">Ensure Fairness.</span></h1>
+<div class="z-10 relative">
+<div class="absolute -top-48 md:-top-56 -left-4 select-none pointer-events-none opacity-[0.25] dark:opacity-[0.3] whitespace-nowrap">
+    <span class="text-[100px] md:text-[140px] font-black tracking-[-0.05em] leading-none italic bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-500 to-primary glitch-text">bAIsed</span>
+</div>
+<span class="inline-block py-1 px-3 rounded-full bg-secondary-container text-on-secondary-container text-label-md mb-6 relative z-20">NEW: V2.0 ENGINE RELEASED</span>
+<h1 class="font-headline-lg text-6xl md:text-7xl mb-6 tracking-tight relative z-20">Detect Bias.<br/><span class="text-secondary">Ensure Fairness.</span></h1>
 <p class="text-body-lg text-on-surface-variant max-w-xl mb-10 text-xl leading-relaxed">
                         Quantify algorithmic integrity with high-precision transparent metrics. Audit your models for disparate impact before they hit production.
                     </p>
