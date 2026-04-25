@@ -677,7 +677,7 @@
         } else {
           document.getElementById("ai-model-name").textContent = result.model || "Unknown Model";
           document.getElementById("ai-row-count").textContent = result.row_count || "0";
-          document.getElementById("ai-response-text").textContent = result.ai_response || "";
+          document.getElementById("ai-response-text").innerHTML = marked.parse(result.ai_response || "");
           resultPanel.classList.remove("hidden");
         }
       } catch (error) {
@@ -694,10 +694,118 @@
     });
   }
 
+  function generateReportWindow() {
+    if (!currentAnalysisResult) return;
+    
+    const reportWindow = window.open("", "_blank");
+    const aiContent = document.getElementById("ai-response-text").innerHTML;
+    const rankings = (currentAnalysisResult.stats && currentAnalysisResult.stats.group_rankings) || [];
+    
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>Bias Analysis Report - bAIsed</title>
+        <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+          @media print { .no-print { display: none; } }
+          body { background: #f8fafc; padding: 40px; font-family: sans-serif; }
+          .report-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 40px; max-width: 900px; margin: 0 auto; }
+        </style>
+      </head>
+      <body>
+        <div class="no-print mb-8 text-center">
+          <button onclick="window.print()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-semibold hover:bg-slate-800 transition">Print / Save as PDF</button>
+        </div>
+        
+        <div class="report-card">
+          <div class="flex justify-between items-start border-b pb-8 mb-8">
+            <div>
+              <h1 class="text-3xl font-black text-slate-900">bAIsed</h1>
+              <p class="text-slate-500 uppercase tracking-widest text-xs font-bold mt-1">Bias Audit Report</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium text-slate-600">Generated on ${new Date().toLocaleDateString()}</p>
+              <p class="text-xs text-slate-400 mt-1">ID: BA-${Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-8 mb-12">
+            <div class="bg-teal-50 p-6 rounded-2xl border border-teal-100">
+              <p class="text-xs font-bold uppercase tracking-widest text-teal-600 mb-2">Most Advantaged Group</p>
+              <p class="text-2xl font-black text-slate-900">${currentAnalysisResult.most_advantaged_group}</p>
+            </div>
+            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+              <p class="text-xs font-bold uppercase tracking-widest text-red-600 mb-2">Least Advantaged Group</p>
+              <p class="text-2xl font-black text-slate-900">${currentAnalysisResult.least_advantaged_group}</p>
+            </div>
+          </div>
+
+          <div class="mb-12">
+            <h2 class="text-xl font-bold text-slate-900 mb-6">Group Selection Rate Comparison</h2>
+            <div style="height: 300px;">
+              <canvas id="reportChart"></canvas>
+            </div>
+          </div>
+
+          <div class="prose prose-slate max-w-none prose-headings:text-slate-900 prose-strong:text-slate-900 prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50 prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-r-xl">
+            ${aiContent}
+          </div>
+
+          <div class="mt-12 pt-8 border-t text-center text-xs text-slate-400 italic">
+            This report was generated using bAIsed deterministic metrics and AI synthesis. 
+            Final decisions should involve human oversight.
+          </div>
+        </div>
+
+        <script>
+          const ctx = document.getElementById('reportChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ${JSON.stringify(rankings.map(r => r.group))},
+              datasets: [{
+                label: 'Selection Rate',
+                data: ${JSON.stringify(rankings.map(r => r.selection_rate))},
+                backgroundColor: ${JSON.stringify(rankings.map(r => 
+                  r.group === currentAnalysisResult.most_advantaged_group ? '#14b8a6' : 
+                  r.group === currentAnalysisResult.least_advantaged_group ? '#ef4444' : '#64748b'
+                ))},
+                borderRadius: 8
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true, max: 1, ticks: { format: { style: 'percent' } } }
+              }
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `;
+    
+    reportWindow.document.write(html);
+    reportWindow.document.close();
+  }
+
+  function bindDownloadReport() {
+    const btn = document.getElementById("download-report-btn");
+    if (btn) {
+      btn.addEventListener("click", generateReportWindow);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     bindSimpleForm();
     bindDatasetForm();
     bindAiAnalyzerForm();
+    bindDownloadReport();
     bindSimulator();
   });
 })();
