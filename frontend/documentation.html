@@ -102,29 +102,31 @@
     </script>
 </head>
 <body class="bg-background text-on-surface transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="documentation">
-<!-- TopAppBar -->
-<header class="bg-white/80 dark:bg-black/80 backdrop-blur-md text-zinc-900 font-['Inter'] antialiased fixed top-0 w-full z-50 border-b border-zinc-200 dark:border-zinc-800 transition-colors shadow-sm">
-<div class="flex items-center justify-between px-6 h-16 w-full max-w-[1920px] mx-auto">
-<div class="flex items-center gap-8">
-<a class="text-2xl font-black tracking-tighter text-black dark:text-white" data-nav-label="bAIsed" href="/app">bAIsed</a>
-<nav class="hidden md:flex items-center gap-6">
-<a class="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors font-body-sm" href="#">Product</a>
-<a class="text-teal-600 font-semibold border-b-2 border-teal-500 font-body-sm" href="#">Dashboard</a>
-<a class="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors font-body-sm" href="#">Support</a>
-</nav>
-</div>
-<div class="flex items-center gap-4" data-auth-container>
-<div class="relative hidden sm:block">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" data-icon="search">search</span>
-<input class="pl-10 pr-4 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-accent-teal transition-all dark:text-white" id="docs-search-input" placeholder="Search documentation..." type="text"/>
-</div>
-<button class="bg-primary text-on-primary dark:bg-teal-600 px-4 py-2 rounded-lg font-label-md hover:opacity-90 transition-all" data-action="Sign In">Sign In</button>
-</div>
-</div>
+<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md transition-colors duration-300 dark:border-zinc-800 dark:bg-black/85">
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+    <div class="flex items-center gap-8">
+      <a class="text-2xl font-black tracking-tighter text-teal-600" href="/app">bAIsed</a>
+      <nav class="hidden items-center gap-6 md:flex">
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/solutions">Solutions</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/workbench">Workbench</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/methodology">Methodology</a>
+        <a class="border-b-2 border-teal-600 pb-1 text-sm font-semibold text-teal-600" href="/app/documentation">Docs</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-3" data-auth-container>
+      <div class="relative hidden sm:block">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" data-icon="search">search</span>
+        <input class="pl-10 pr-4 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-accent-teal transition-all dark:text-white" id="docs-search-input" placeholder="Search documentation..." type="text"/>
+      </div>
+      <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/app/case_study">Impact Reports</a>
+      <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/app/login">Sign In</a>
+      <a class="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white" href="/app/pricing_demo">Request Demo</a>
+    </div>
+  </div>
 </header>
-<div class="flex pt-16 min-h-screen">
+<div class="mx-auto flex w-full max-w-7xl pt-16 min-h-screen">
 <!-- SideNavBar -->
-<aside class="bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 fixed left-0 h-[calc(100vh-64px)] w-64 hidden md:flex flex-col py-6 gap-2 transition-colors">
+<aside class="sticky top-16 h-[calc(100vh-64px)] w-64 hidden md:flex flex-col py-6 gap-2 border-r border-slate-200 bg-white transition-colors dark:border-zinc-800 dark:bg-zinc-950">
 <div class="px-6 mb-6">
 <div class="flex items-center gap-3">
 <div class="w-8 h-8 rounded-lg bg-black dark:bg-teal-600 flex items-center justify-center">
@@ -132,21 +134,21 @@
 </div>
 <div>
 <h3 class="font-headline-md text-sm font-bold tracking-tight dark:text-white">Core Docs</h3>
-<p class="text-[10px] text-zinc-400 uppercase font-bold tracking-widest" id="docs-version">v1.0.4-beta</p>
+<span class="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-widest" id="docs-version">v1.0.4-beta</span>
 </div>
 </div>
 </div>
 <nav class="flex-1 overflow-y-auto px-2 space-y-1">
 <!-- Getting Started -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-teal-600 bg-teal-50/50 dark:bg-teal-900/20 border-r-4 border-teal-500 rounded-r-lg font-label-md cursor-pointer">
+<div class="flex items-center gap-3 px-4 py-2 text-teal-800 bg-teal-100 dark:bg-teal-900/40 dark:text-teal-200 rounded-full mx-2 font-label-md cursor-pointer">
 <span class="material-symbols-outlined text-sm" data-icon="rocket_launch">rocket_launch</span>
 <span>Getting Started</span>
 </div>
 <div class="ml-11 mt-2 space-y-1" data-api-reference-anchor>
-<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Introduction</a>
-<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Quickstart Guide</a>
-<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Architecture Overview</a>
+<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#introduction">Introduction</a>
+<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#quick-start">Quickstart Guide</a>
+<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#architecture">Architecture Overview</a>
 </div>
 </div>
 <!-- API Reference -->
@@ -156,9 +158,9 @@
 <span>API Reference</span>
 </div>
 <div class="ml-11 mt-2 space-y-1">
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Authentication</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Endpoints</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Rate Limits</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#authentication">Authentication</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#endpoints">Endpoints</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#rate-limits">Rate Limits</a>
 </div>
 </div>
 <!-- Metrics -->
@@ -168,9 +170,9 @@
 <span>Metrics</span>
 </div>
 <div class="ml-11 mt-2 space-y-1">
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Bias Detection</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Drift Analytics</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#">Fairness Ratios</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#bias-detection">Bias Detection</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#drift-analytics">Drift Analytics</a>
+<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#fairness-ratios">Fairness Ratios</a>
 </div>
 </div>
 </nav>
@@ -186,11 +188,11 @@
 </div>
 </aside>
 <!-- Main Content Area -->
-<main class="flex-1 md:ml-64 bg-background dark:bg-zinc-950 transition-colors">
+<main class="flex-1 bg-background dark:bg-zinc-950 transition-colors">
 <div class="max-w-4xl mx-auto px-8 py-12">
 <!-- Header -->
-<header class="mb-12">
-<nav class="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-label-md mb-4">
+<header class="mb-12 pt-6 mt-[-24px]" id="introduction">
+<nav class="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-label-md mb-8">
 <span>Docs</span>
 <span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
 <span>Getting Started</span>
@@ -203,24 +205,31 @@
                     </p>
 </header>
 <!-- Feature Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-zinc-50 dark:bg-zinc-800 rounded-lg flex items-center justify-center mb-6 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/30 transition-colors">
-<span class="material-symbols-outlined text-black dark:text-white group-hover:text-accent-teal transition-colors" data-icon="tune">tune</span>
+<div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-6 transition-colors">
+<span class="material-symbols-outlined text-teal-600 dark:text-teal-400 transition-colors" data-icon="tune">tune</span>
 </div>
 <h3 class="font-headline-md text-lg mb-2 dark:text-white">Precision Control</h3>
 <p class="font-body-sm text-zinc-500 dark:text-zinc-400">Audit your models with granular control over sensitive attributes and intersectional parity checks.</p>
 </div>
 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-zinc-50 dark:bg-zinc-800 rounded-lg flex items-center justify-center mb-6 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/30 transition-colors">
-<span class="material-symbols-outlined text-black dark:text-white group-hover:text-accent-teal transition-colors" data-icon="waves">waves</span>
+<div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-6 transition-colors">
+<span class="material-symbols-outlined text-teal-600 dark:text-teal-400 transition-colors" data-icon="waves">waves</span>
 </div>
 <h3 class="font-headline-md text-lg mb-2 dark:text-white">Real-time Drift</h3>
 <p class="font-body-sm text-zinc-500 dark:text-zinc-400">Monitor statistical parity in flight with live alerts when model performance begins to skew across cohorts.</p>
 </div>
+<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
+<div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-6 transition-colors">
+<span class="material-symbols-outlined text-teal-600 dark:text-teal-400 transition-colors" data-icon="shield">shield</span>
+</div>
+<h3 class="font-headline-md text-lg mb-2 dark:text-white">Compliance Ready</h3>
+<p class="font-body-sm text-zinc-500 dark:text-zinc-400">Generate automated fairness reports designed to meet strict algorithmic accountability regulations.</p>
+</div>
 </div>
 <!-- Quick Start -->
-<section class="mb-16">
+<section class="mb-16 pt-24 mt-[-96px]" id="quick-start">
 <div class="flex items-center gap-4 mb-6">
 <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
 <h2 class="font-headline-lg text-2xl dark:text-white">Quick Start</h2>
@@ -235,7 +244,12 @@
 <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
 <div class="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
 </div>
+<div class="flex items-center gap-3">
 <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">terminal</span>
+<button class="text-zinc-500 hover:text-white transition-colors" title="Copy to clipboard">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
 </div>
 <div class="p-6 font-mono text-sm">
 <div class="flex gap-4">
@@ -250,11 +264,14 @@
 </div>
 </section>
 <!-- Metrics Engine Deep Dive -->
-<section class="mb-16">
+<section class="mb-16 pt-24 mt-[-96px]" id="architecture">
 <div class="bg-teal-50 dark:bg-teal-900/10 rounded-2xl p-10 border border-teal-100/50 dark:border-teal-900/30">
 <div class="flex flex-col md:flex-row gap-8 items-center">
 <div class="flex-1">
-<h2 class="font-headline-lg text-2xl mb-4 text-zinc-900 dark:text-white">Metrics Engine Section</h2>
+<div class="flex items-center gap-4 mb-4">
+<div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+<h2 class="font-headline-lg text-2xl text-zinc-900 dark:text-white">Metrics Engine Section</h2>
+</div>
 <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
                                      Our proprietary fairness engine calculates the Disparate Impact Ratio (DIR) across multidimensional vectors using a modified Four-Fifths rule algorithm.
                                  </p>
@@ -267,6 +284,75 @@
 </div>
 </div>
 </div>
+</section>
+
+<!-- Authentication -->
+<section class="mb-16 pt-24 mt-[-96px]" id="authentication">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+        <h2 class="font-headline-lg text-2xl dark:text-white">Authentication</h2>
+    </div>
+    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+        bAIsed uses API keys to authenticate requests. You can view and manage your API keys in the settings dashboard. Include your API key in the `Authorization` header as a Bearer token.
+    </p>
+    <div class="bg-zinc-950 rounded-xl overflow-hidden shadow-xl border border-zinc-800 p-6 font-mono text-sm text-zinc-300">
+        Authorization: Bearer <span class="text-accent-teal">sk_test_12345</span>
+    </div>
+</section>
+
+<!-- Endpoints -->
+<section class="mb-16 pt-24 mt-[-96px]" id="endpoints">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+        <h2 class="font-headline-lg text-2xl dark:text-white">Endpoints</h2>
+    </div>
+    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+        The primary endpoint for fairness analysis is <code>/analyze</code>. The API expects a JSON payload containing dataset metadata and model predictions.
+    </p>
+</section>
+
+<!-- Rate Limits -->
+<section class="mb-16 pt-24 mt-[-96px]" id="rate-limits">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+        <h2 class="font-headline-lg text-2xl dark:text-white">Rate Limits</h2>
+    </div>
+    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+        Free tier users are limited to 100 requests per minute. Pro and Enterprise users have unlimited API access.
+    </p>
+</section>
+
+<!-- Bias Detection -->
+<section class="mb-16 pt-24 mt-[-96px]" id="bias-detection">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+        <h2 class="font-headline-lg text-2xl dark:text-white">Bias Detection</h2>
+    </div>
+    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+        Our bias detection algorithm automatically scans features for correlation with protected classes using Disparate Impact and Equal Opportunity metrics.
+    </p>
+</section>
+
+<!-- Drift Analytics -->
+<section class="mb-16 pt-24 mt-[-96px]" id="drift-analytics">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+        <h2 class="font-headline-lg text-2xl dark:text-white">Drift Analytics</h2>
+    </div>
+    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+        Monitor real-time changes in dataset distribution and parity metrics over time with continuous integration.
+    </p>
+</section>
+
+<!-- Fairness Ratios -->
+<section class="mb-16 pt-24 mt-[-96px]" id="fairness-ratios">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
+        <h2 class="font-headline-lg text-2xl dark:text-white">Fairness Ratios</h2>
+    </div>
+    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+        bAIsed provides a suite of fairness ratios including Statistical Parity Difference, Average Odds Difference, and Predictive Equality.
+    </p>
 </section>
 <!-- Footer Navigation -->
 <footer class="pt-12 border-t border-zinc-200 dark:border-zinc-800 flex justify-between">
