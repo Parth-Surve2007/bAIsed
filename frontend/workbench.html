@@ -87,7 +87,8 @@
     </div>
     <div class="flex items-center gap-3" data-auth-container>
       <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/app/case_study">Impact Reports</a>
-      <a class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary" href="/app/pricing_demo">Request Demo</a>
+      <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/app/login">Sign In</a>
+      <a class="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white" href="/app/pricing_demo">Request Demo</a>
     </div>
   </div>
 </header>
@@ -103,12 +104,12 @@
         <h1 class="max-w-3xl text-4xl font-black tracking-tight text-black md:text-5xl dark:text-white">Upload data, analyze disparity, and review deterministic fairness evidence.</h1>
         <p class="mt-4 max-w-3xl text-lg text-on-surface-variant dark:text-zinc-400">This workspace runs your backend fairness engine directly. Use simple percentages for a quick test or upload a CSV/XLSX dataset for multi-group disparity analysis with DIR, bias score, and explainable recommendations.</p>
       </div>
-      <div class="grid grid-cols-2 gap-4 rounded-2xl border border-outline-variant bg-white p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-        <div>
+      <div class="flex gap-4">
+        <div class="rounded-2xl border border-outline-variant bg-white px-6 py-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-500">DIR Threshold</p>
           <p class="mt-2 text-2xl font-black text-black dark:text-white">0.80</p>
         </div>
-        <div>
+        <div class="rounded-2xl border border-outline-variant bg-white px-6 py-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-500">Bias Score</p>
           <p class="mt-2 text-2xl font-black text-black dark:text-white">0 to 100</p>
         </div>
@@ -152,10 +153,18 @@
             <div class="rounded-full bg-primary-fixed px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Main Feature</div>
           </div>
           <form class="space-y-5" id="dataset-analysis-form">
-            <label class="block">
+            <div>
               <span class="mb-2 block text-sm font-semibold text-slate-700">Dataset File</span>
-              <input accept=".csv,.xlsx" class="w-full rounded-xl border border-dashed border-outline bg-surface-container-low px-4 py-4 text-sm" id="dataset-file-input" required type="file"/>
-            </label>
+              <div id="file-drop-zone" class="group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-secondary/40 bg-secondary/5 px-6 py-8 transition-colors hover:border-secondary hover:bg-secondary/10" onclick="document.getElementById('dataset-file-input').click()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-secondary/60 transition group-hover:text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                <div class="text-center">
+                  <p class="text-sm font-semibold text-secondary">Click to browse or drag & drop</p>
+                  <p class="mt-1 text-xs text-slate-500">Supports CSV and XLSX files</p>
+                </div>
+                <p class="text-xs font-medium text-secondary/80" id="file-name-display">No file selected</p>
+                <input accept=".csv,.xlsx" class="absolute inset-0 cursor-pointer opacity-0" id="dataset-file-input" required type="file" onchange="var name = this.files.length ? this.files[0].name : 'No file selected'; document.getElementById('file-name-display').textContent = name; if(this.files.length) { document.getElementById('file-drop-zone').classList.add('border-secondary','bg-secondary/10'); document.getElementById('file-drop-zone').classList.remove('border-secondary/40','bg-secondary/5'); }"/>
+              </div>
+            </div>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="mb-2 block text-sm font-semibold text-slate-700">Protected Attribute Column</span>
@@ -176,139 +185,6 @@
               <button class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-surface-container-low dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" id="dataset-reset" type="button">Clear File</button>
             </div>
           </form>
-        </section>
-
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm" id="ai-analyzer-section">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Groq API.</p>
-            </div>
-            <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
-          </div>
-          <form class="space-y-5" id="ai-analyzer-form">
-            <p class="text-sm text-slate-700">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
-            <div class="flex flex-wrap gap-3">
-              <button class="flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed" id="ai-submit-btn" type="submit">
-                <svg class="h-4 w-4 hidden" id="ai-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span>Generate Detailed AI Report</span>
-              </button>
-            </div>
-          </form>
-          
-          <!-- Results Area -->
-          <div id="ai-result-panel" class="mt-6 hidden rounded-2xl border border-secondary bg-secondary/5 p-5 dark:bg-secondary/10 dark:border-secondary/30">
-            <h3 class="mb-3 text-lg font-bold text-on-secondary-container dark:text-secondary">AI Analysis Result</h3>
-            <p class="mb-4 text-xs font-medium text-secondary"><span id="ai-model-name"></span> • <span id="ai-row-count"></span> rows analyzed</p>
-            <div class="prose prose-sm prose-slate max-w-none prose-headings:font-bold prose-headings:text-secondary prose-a:text-secondary prose-strong:text-slate-900 dark:prose-invert prose-blockquote:border-l-4 prose-blockquote:border-secondary prose-blockquote:bg-secondary/5 prose-blockquote:px-4 prose-blockquote:py-1 prose-blockquote:not-italic prose-blockquote:font-medium prose-blockquote:rounded-r-lg prose-ul:my-2" id="ai-response-text"></div>
-            <div class="mt-6 border-t border-secondary/20 pt-5">
-              <button id="download-report-btn" type="button" class="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary shadow-sm transition hover:opacity-90 active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                Download Full Bias Report
-              </button>
-              <p class="mt-2 text-xs text-slate-400 dark:text-zinc-500">Opens a styled PDF-ready report combining engine metrics and AI insights.</p>
-            </div>
-          </div>
-          
-          <div id="ai-error-panel" class="mt-6 hidden rounded-2xl border border-red-200 bg-red-50 p-5">
-            <h3 class="mb-2 text-lg font-bold text-red-900">Analysis Failed</h3>
-            <p class="text-sm text-red-700 whitespace-pre-wrap" id="ai-error-text"></p>
-          </div>
-        </section>
-
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
-          <div class="grid gap-8 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
-            <div>
-              <span class="material-symbols-outlined text-4xl text-slate-900 dark:text-white">science</span>
-              <h2 class="mt-6 text-4xl font-light tracking-tight text-slate-900 dark:text-white">What-If Simulator</h2>
-              <p class="mt-4 max-w-md text-lg leading-8 text-on-surface-variant dark:text-zinc-400">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
-
-              <div class="mt-8 space-y-6">
-                <div>
-                  <div class="mb-3 flex items-center justify-between gap-4">
-                    <label class="text-sm font-semibold text-slate-900" for="simulator-diversity-weight">Group Diversity Weight</label>
-                    <span class="font-mono text-sm text-secondary" id="simulator-diversity-value">0.75</span>
-                  </div>
-                  <input class="w-full accent-secondary" id="simulator-diversity-weight" max="1" min="0" step="0.01" type="range" value="0.75"/>
-                </div>
-
-                <div>
-                  <div class="mb-3 flex items-center justify-between gap-4">
-                    <label class="text-sm font-semibold text-slate-900">Fairness Constraint</label>
-                    <span class="font-mono text-sm text-secondary" id="simulator-constraint-text">Optimal</span>
-                  </div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Loose" type="button">Loose</button>
-                    <button class="rounded-xl border border-secondary bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition" data-simulator-constraint="Optimal" type="button">Optimal</button>
-                    <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Strict" type="button">Strict</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="rounded-3xl bg-surface-container p-6 dark:bg-zinc-800/50">
-              <div class="flex items-center justify-between gap-4 border-b border-outline-variant pb-4 dark:border-zinc-700">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-600 dark:text-zinc-400">Scenario Preview</p>
-                <span class="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-secondary" id="simulator-instant-label">Instant</span>
-              </div>
-
-              <div class="mt-5 rounded-2xl border border-outline-variant bg-white p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Change</p>
-                <p class="mt-2 text-sm leading-6 text-slate-700" id="simulator-change-text">Increase diversity weight to 0.75 and apply mild reweighting.</p>
-              </div>
-
-              <div class="mt-4 grid grid-cols-3 gap-3">
-                <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                  <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
-                  <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-dir-text">0.92</p>
-                </div>
-                <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                  <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">SPD</p>
-                  <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-spd-text">-0.03</p>
-                </div>
-                <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                  <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Accuracy</p>
-                  <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-accuracy-text">93.4%</p>
-                </div>
-              </div>
-
-              <div class="mt-4 rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                <div class="mb-3 flex items-center justify-between gap-4">
-                  <p class="text-sm font-semibold text-slate-900 dark:text-white">Parity Improvement</p>
-                  <span class="text-sm font-semibold text-secondary" id="simulator-improvement-text">+8.1%</span>
-                </div>
-                <div class="h-3 rounded-full bg-slate-200 overflow-hidden dark:bg-zinc-800">
-                  <div class="meter-fill h-3 rounded-full bg-secondary" id="simulator-improvement-bar" style="width: 81%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-black dark:text-white">Bias Hotspots</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Strongest subgroup-level disparity areas.</p>
-            </div>
-            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="hotspot-count-chip">0 Hotspots</div>
-          </div>
-          <div class="space-y-3 workbench-list-container" id="hotspots-list">
-            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Hotspots appear after dataset analysis.</div>
-          </div>
-        </section>
-
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-black dark:text-white">Counterfactual Simulations</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Deterministic what-if scenarios.</p>
-            </div>
-            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="simulation-count-chip">0 Scenarios</div>
-          </div>
-          <div class="space-y-3 workbench-list-container" id="simulations-list">
-            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Simulation scenarios appear after analysis.</div>
-          </div>
         </section>
       </div>
 
@@ -340,31 +216,33 @@
               </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+            <div class="grid gap-4 grid-cols-2 md:grid-cols-3">
               <div class="rounded-2xl bg-white p-5 text-slate-900">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
-                <p class="mt-3 text-3xl font-black" id="dir-text">0.0000</p>
-                <p class="mt-2 text-sm text-slate-500">Formula: min(rate) / max(rate)</p>
+                <p class="mt-3 text-2xl md:text-3xl font-black" id="dir-text">0.0000</p>
+                <p class="mt-2 text-xs md:text-sm text-slate-500">Formula: min(rate) / max(rate)</p>
               </div>
               <div class="rounded-2xl bg-white p-5 text-slate-900">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Difference</p>
-                <p class="mt-3 text-3xl font-black" id="difference-text">0.0000</p>
-                <p class="mt-2 text-sm text-slate-500">Absolute selection gap</p>
+                <p class="mt-3 text-2xl md:text-3xl font-black" id="difference-text">0.0000</p>
+                <p class="mt-2 text-xs md:text-sm text-slate-500">Absolute selection gap</p>
               </div>
               <div class="rounded-2xl bg-white p-5 text-slate-900">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Parity %</p>
-                <p class="mt-3 text-3xl font-black" id="parity-text">0.0%</p>
-                <p class="mt-2 text-sm text-slate-500">DIR shown as percentage</p>
+                <p class="mt-3 text-2xl md:text-3xl font-black" id="parity-text">0.0%</p>
+                <p class="mt-2 text-xs md:text-sm text-slate-500">DIR shown as percentage</p>
               </div>
+            </div>
+            <div class="mt-4 grid gap-4 grid-cols-2">
               <div class="rounded-2xl bg-white p-5 text-slate-900">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">EOD</p>
-                <p class="mt-3 text-3xl font-black" id="eod-text">0.0000</p>
-                <p class="mt-2 text-sm text-slate-500">Equal opportunity difference</p>
+                <p class="mt-3 text-2xl md:text-3xl font-black" id="eod-text">0.0000</p>
+                <p class="mt-2 text-xs md:text-sm text-slate-500">Equal opportunity difference</p>
               </div>
               <div class="rounded-2xl bg-white p-5 text-slate-900">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">AOD</p>
-                <p class="mt-3 text-3xl font-black" id="aod-text">0.0000</p>
-                <p class="mt-2 text-sm text-slate-500">Average odds difference</p>
+                <p class="mt-3 text-2xl md:text-3xl font-black" id="aod-text">0.0000</p>
+                <p class="mt-2 text-xs md:text-sm text-slate-500">Average odds difference</p>
               </div>
             </div>
 
@@ -375,103 +253,245 @@
           </div>
         </section>
 
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-black">Comparative Group Stats</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">The workbench sorts groups by selection rate so the most and least advantaged cohorts are immediately visible.</p>
-            </div>
-            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="group-count-chip">0 Groups</div>
-          </div>
-          <div class="space-y-4" id="group-bars">
-            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">No group data yet.</div>
-          </div>
-        </section>
+      </div>
+    </div>
 
-        <section class="grid gap-6 lg:grid-cols-2">
-          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 class="text-2xl font-bold text-black font-semibold dark:text-white">Key Stats</h2>
-            <div class="mt-5 grid gap-4 workbench-list-container">
-              <div class="rounded-2xl bg-surface-container-low p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Advantaged Group</p>
-                <p class="mt-2 text-xl font-bold text-black" id="advantaged-group-text">-</p>
-              </div>
-              <div class="rounded-2xl bg-surface-container-low p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Least Advantaged Group</p>
-                <p class="mt-2 text-xl font-bold text-black" id="disadvantaged-group-text">-</p>
-              </div>
-              <div class="rounded-2xl bg-surface-container-low p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Selection Gap %</p>
-                <p class="mt-2 text-xl font-bold text-black" id="selection-gap-percent-text">0%</p>
-              </div>
-              <div class="rounded-2xl bg-surface-container-low p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Influential Feature</p>
-                <p class="mt-2 text-xl font-bold text-black" id="influential-feature-text">-</p>
-              </div>
-              <div class="rounded-2xl bg-surface-container-low p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hidden Bias</p>
-                <p class="mt-2 text-xl font-bold text-black" id="hidden-bias-text">No</p>
-              </div>
-              <div class="rounded-2xl bg-surface-container-low p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dataset Metadata</p>
-                <p class="mt-2 text-sm leading-6 text-slate-600" id="dataset-meta-text">No dataset uploaded.</p>
-              </div>
-            </div>
+    <!-- AI Analyzer (full-width) -->
+    <div class="mt-6">
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm" id="ai-analyzer-section">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
+            <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Groq API.</p>
           </div>
-          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 class="text-2xl font-bold text-black dark:text-white">Suggestions</h2>
-            <div class="mt-5 space-y-3 workbench-list-container" id="recommendations-list">
-              <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Recommendations appear after analysis.</div>
-            </div>
+          <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
+        </div>
+        <form class="space-y-5" id="ai-analyzer-form">
+          <p class="text-sm text-slate-700">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
+          <div class="flex flex-wrap gap-3">
+            <button class="flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed" id="ai-submit-btn" type="submit">
+              <svg class="h-4 w-4 hidden" id="ai-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <span>Generate Detailed AI Report</span>
+            </button>
           </div>
-        </section>
+        </form>
+        
+        <!-- Results Area -->
+        <div id="ai-result-panel" class="mt-6 hidden rounded-2xl border border-secondary bg-secondary/5 p-5 dark:bg-secondary/10 dark:border-secondary/30">
+          <h3 class="mb-3 text-lg font-bold text-on-secondary-container dark:text-secondary">AI Analysis Result</h3>
+          <p class="mb-4 text-xs font-medium text-secondary"><span id="ai-model-name"></span> • <span id="ai-row-count"></span> rows analyzed</p>
+          <div class="prose prose-sm prose-slate max-w-none prose-headings:font-bold prose-headings:text-secondary prose-a:text-secondary prose-strong:text-slate-900 dark:prose-invert prose-blockquote:border-l-4 prose-blockquote:border-secondary prose-blockquote:bg-secondary/5 prose-blockquote:px-4 prose-blockquote:py-1 prose-blockquote:not-italic prose-blockquote:font-medium prose-blockquote:rounded-r-lg prose-ul:my-2" id="ai-response-text"></div>
+          <div class="mt-6 border-t border-secondary/20 pt-5">
+            <button id="download-report-btn" type="button" class="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary shadow-sm transition hover:opacity-90 active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              Download Full Bias Report
+            </button>
+            <p class="mt-2 text-xs text-slate-400 dark:text-zinc-500">Opens a styled PDF-ready report combining engine metrics and AI insights.</p>
+          </div>
+        </div>
+        
+        <div id="ai-error-panel" class="mt-6 hidden rounded-2xl border border-red-200 bg-red-50 p-5">
+          <h3 class="mb-2 text-lg font-bold text-red-900">Analysis Failed</h3>
+          <p class="text-sm text-red-700 whitespace-pre-wrap" id="ai-error-text"></p>
+        </div>
+      </section>
+    </div>
 
+    <!-- Row 2: Comparative Group Stats (full-width) -->
+    <div class="mt-6">
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black">Comparative Group Stats</h2>
+            <p class="mt-1 text-sm text-on-surface-variant">The workbench sorts groups by selection rate so the most and least advantaged cohorts are immediately visible.</p>
+          </div>
+          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="group-count-chip">0 Groups</div>
+        </div>
+        <div class="space-y-4" id="group-bars">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">No group data yet.</div>
+        </div>
+      </section>
+    </div>
 
+    <!-- Row 3: Key Stats | Suggestions (equal 2-col) -->
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 class="text-2xl font-bold text-black dark:text-white">Key Stats</h2>
+        <div class="mt-5 grid gap-4 workbench-list-container">
+          <div class="rounded-2xl bg-surface-container-low p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Advantaged Group</p>
+            <p class="mt-2 text-xl font-bold text-black" id="advantaged-group-text">-</p>
+          </div>
+          <div class="rounded-2xl bg-surface-container-low p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Least Advantaged Group</p>
+            <p class="mt-2 text-xl font-bold text-black" id="disadvantaged-group-text">-</p>
+          </div>
+          <div class="rounded-2xl bg-surface-container-low p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Selection Gap %</p>
+            <p class="mt-2 text-xl font-bold text-black" id="selection-gap-percent-text">0%</p>
+          </div>
+          <div class="rounded-2xl bg-surface-container-low p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Influential Feature</p>
+            <p class="mt-2 text-xl font-bold text-black" id="influential-feature-text">-</p>
+          </div>
+          <div class="rounded-2xl bg-surface-container-low p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hidden Bias</p>
+            <p class="mt-2 text-xl font-bold text-black" id="hidden-bias-text">No</p>
+          </div>
+          <div class="rounded-2xl bg-surface-container-low p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dataset Metadata</p>
+            <p class="mt-2 text-sm leading-6 text-slate-600" id="dataset-meta-text">No dataset uploaded.</p>
+          </div>
+        </div>
+      </div>
+      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 class="text-2xl font-bold text-black dark:text-white">Suggestions</h2>
+        <div class="mt-5 space-y-3 workbench-list-container" id="recommendations-list">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Recommendations appear after analysis.</div>
+        </div>
+      </div>
+    </div>
 
-        <section class="grid gap-6 xl:grid-cols-2">
-          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="mb-5 flex items-center justify-between">
+    <!-- Row 4: Repair Suggestions | Feature Impact (equal 2-col) -->
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black dark:text-white">Repair Suggestions</h2>
+            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Minimal remediation steps to move toward the fairness threshold.</p>
+          </div>
+          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="repair-count-chip">0 Suggestions</div>
+        </div>
+        <div class="space-y-3 workbench-list-container" id="repairs-list">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Repair suggestions appear after analysis.</div>
+        </div>
+      </div>
+      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black dark:text-white">Feature Impact Ranking</h2>
+            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Ranked root-cause features contributing most to disparity.</p>
+          </div>
+          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="feature-count-chip">0 Features</div>
+        </div>
+        <div class="space-y-3 workbench-list-container" id="feature-impact-list">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Feature impact rankings appear after analysis.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 5: Bias Hotspots | Counterfactual Simulations (equal 2-col) -->
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black dark:text-white">Bias Hotspots</h2>
+            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Strongest subgroup-level disparity areas.</p>
+          </div>
+          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="hotspot-count-chip">0 Hotspots</div>
+        </div>
+        <div class="space-y-3 workbench-list-container" id="hotspots-list">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Hotspots appear after dataset analysis.</div>
+        </div>
+      </section>
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black dark:text-white">Counterfactual Simulations</h2>
+            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Deterministic what-if scenarios.</p>
+          </div>
+          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="simulation-count-chip">0 Scenarios</div>
+        </div>
+        <div class="space-y-3 workbench-list-container" id="simulations-list">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Simulation scenarios appear after analysis.</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 6: What-If Simulator (full-width) -->
+    <div class="mt-6">
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+        <div class="grid gap-8 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
+          <div>
+            <span class="material-symbols-outlined text-4xl text-slate-900 dark:text-white">science</span>
+            <h2 class="mt-6 text-4xl font-light tracking-tight text-slate-900 dark:text-white">What-If Simulator</h2>
+            <p class="mt-4 max-w-md text-lg leading-8 text-on-surface-variant dark:text-zinc-400">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
+            <div class="mt-8 space-y-6">
               <div>
-                <h2 class="text-2xl font-bold text-black dark:text-white">Repair Suggestions</h2>
-                <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Minimal remediation steps to move toward the fairness threshold.</p>
+                <div class="mb-3 flex items-center justify-between gap-4">
+                  <label class="text-sm font-semibold text-slate-900" for="simulator-diversity-weight">Group Diversity Weight</label>
+                  <span class="font-mono text-sm text-secondary" id="simulator-diversity-value">0.75</span>
+                </div>
+                <input class="w-full accent-secondary" id="simulator-diversity-weight" max="1" min="0" step="0.01" type="range" value="0.75"/>
               </div>
-              <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="repair-count-chip">0 Suggestions</div>
-            </div>
-            <div class="space-y-3 workbench-list-container" id="repairs-list">
-              <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Repair suggestions appear after analysis.</div>
-            </div>
-          </div>
-          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="mb-5 flex items-center justify-between">
               <div>
-                <h2 class="text-2xl font-bold text-black dark:text-white">Feature Impact Ranking</h2>
-                <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Ranked root-cause features contributing most to disparity.</p>
+                <div class="mb-3 flex items-center justify-between gap-4">
+                  <label class="text-sm font-semibold text-slate-900">Fairness Constraint</label>
+                  <span class="font-mono text-sm text-secondary" id="simulator-constraint-text">Optimal</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Loose" type="button">Loose</button>
+                  <button class="rounded-xl border border-secondary bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition" data-simulator-constraint="Optimal" type="button">Optimal</button>
+                  <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Strict" type="button">Strict</button>
+                </div>
               </div>
-              <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="feature-count-chip">0 Features</div>
-            </div>
-            <div class="space-y-3 workbench-list-container" id="feature-impact-list">
-              <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Feature impact rankings appear after analysis.</div>
             </div>
           </div>
-        </section>
+          <div class="rounded-3xl bg-surface-container p-6 dark:bg-zinc-800/50">
+            <div class="flex items-center justify-between gap-4 border-b border-outline-variant pb-4 dark:border-zinc-700">
+              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-600 dark:text-zinc-400">Scenario Preview</p>
+              <span class="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-secondary" id="simulator-instant-label">Instant</span>
+            </div>
+            <div class="mt-5 rounded-2xl border border-outline-variant bg-white p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Change</p>
+              <p class="mt-2 text-sm leading-6 text-slate-700" id="simulator-change-text">Increase diversity weight to 0.75 and apply mild reweighting.</p>
+            </div>
+            <div class="mt-4 grid grid-cols-3 gap-3">
+              <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-dir-text">0.92</p>
+              </div>
+              <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">SPD</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-spd-text">-0.03</p>
+              </div>
+              <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Accuracy</p>
+                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-accuracy-text">93.4%</p>
+              </div>
+            </div>
+            <div class="mt-4 rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+              <div class="mb-3 flex items-center justify-between gap-4">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">Parity Improvement</p>
+                <span class="text-sm font-semibold text-secondary" id="simulator-improvement-text">+8.1%</span>
+              </div>
+              <div class="h-3 rounded-full bg-slate-200 overflow-hidden dark:bg-zinc-800">
+                <div class="meter-fill h-3 rounded-full bg-secondary" id="simulator-improvement-bar" style="width: 81%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-black dark:text-white">Reliability Warnings</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Data quality and sample-size caveats that affect interpretation.</p>
-            </div>
-            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="warning-count-chip">0 Warnings</div>
+    <!-- Row 7: Reliability Warnings | Formula Reference (equal 2-col) -->
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black dark:text-white">Reliability Warnings</h2>
+            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Data quality and sample-size caveats that affect interpretation.</p>
           </div>
-          <div class="space-y-3 workbench-list-container" id="warnings-list">
-            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Warnings appear after analysis when reliability issues are detected.</div>
-          </div>
-        </section>
-
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 class="text-2xl font-bold text-black dark:text-white">Formula Reference</h2>
-          <div class="workbench-list-container mt-5">
-            <div class="grid gap-4 md:grid-cols-3">
+          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="warning-count-chip">0 Warnings</div>
+        </div>
+        <div class="space-y-3 workbench-list-container" id="warnings-list">
+          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Warnings appear after analysis when reliability issues are detected.</div>
+        </div>
+      </section>
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 class="text-2xl font-bold text-black dark:text-white">Formula Reference</h2>
+        <div class="workbench-list-container mt-5">
+          <div class="grid gap-4 md:grid-cols-3">
             <div class="rounded-2xl border border-outline-variant p-4">
               <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Normalize</p>
               <p class="mt-3 font-mono text-sm text-slate-900">rateA = groupA / 100</p>
@@ -490,8 +510,8 @@
           </div>
         </div>
       </section>
-      </div>
     </div>
+
   </section>
 </main>
 <script src="/frontend/site.js"></script>
