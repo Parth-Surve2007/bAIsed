@@ -797,6 +797,46 @@
     });
   }
 
+  function bindDragAndDrop() {
+    const dropZone = document.getElementById("file-drop-zone");
+    const fileInput = document.getElementById("dataset-file-input");
+    if (!dropZone || !fileInput) return;
+
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.add("border-secondary", "bg-secondary/10");
+        dropZone.classList.remove("border-secondary/40", "bg-secondary/5");
+      }, false);
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, () => {
+        // Only remove if it's not the currently selected file state
+        if (!fileInput.files || fileInput.files.length === 0) {
+          dropZone.classList.remove("border-secondary", "bg-secondary/10");
+          dropZone.classList.add("border-secondary/40", "bg-secondary/5");
+        }
+      }, false);
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        fileInput.files = files;
+        // Trigger the change event manually since setting .files doesn't trigger it
+        fileInput.dispatchEvent(new Event("change"));
+      }
+    }, false);
+  }
+
   function populateDropdowns(columns, profile = {}) {
     const protectedSelect = document.getElementById("protected-attribute-input");
     const outcomeSelect = document.getElementById("outcome-column-input");
@@ -909,6 +949,22 @@
 
     reset.addEventListener("click", () => {
       form.reset();
+      
+      // Reset file display
+      const fileNameDisplay = document.getElementById('file-name-display');
+      if (fileNameDisplay) fileNameDisplay.textContent = "No file selected";
+      
+      const dropZone = document.getElementById('file-drop-zone');
+      if (dropZone) {
+        dropZone.classList.remove('border-secondary', 'bg-secondary/10');
+        dropZone.classList.add('border-secondary/40', 'bg-secondary/5');
+      }
+
+      // Reset internal state
+      currentDatasetId = null;
+      currentAnalysisResult = null;
+      window.lastUploadedDatasetFile = null;
+
       // Also reset selects
       document.getElementById("protected-attribute-input").innerHTML = '<option value="">Auto-detect</option>';
       document.getElementById("outcome-column-input").innerHTML = '<option value="">Auto-detect</option>';
@@ -1121,6 +1177,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     bindSimpleForm();
     bindScanOnSelect();
+    bindDragAndDrop();
     bindDatasetForm();
     bindAiAnalyzerForm();
     bindDownloadReport();
