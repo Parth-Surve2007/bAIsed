@@ -458,7 +458,7 @@
     setText("parity-text", formatPercent(result.stats.parity_percent));
     setText("eod-text", formatDecimal(result.metrics?.EOD || 0, 4));
     setText("aod-text", formatDecimal(result.metrics?.AOD || 0, 4));
-    setText("explanation-text", result.explanation);
+    renderExplanation(result.explanation);
     setText("advantaged-group-text", result.most_advantaged_group);
     setText("disadvantaged-group-text", result.least_advantaged_group);
     setText("selection-gap-percent-text", formatPercent(result.stats.selection_gap_percent));
@@ -520,6 +520,48 @@
     renderFeatureImpact(result);
     renderWarnings(result);
     persistLastResult(result);
+
+    // Color-code DIR bar and metric values
+    const dirValue = Number(result.DIR || 0);
+    const dirBar = document.getElementById("dir-bar");
+    const dirText = document.getElementById("dir-text");
+    if (dirBar) {
+      const width = Math.max(2, Math.min(100, dirValue * 100));
+      dirBar.style.width = `${width}%`;
+      dirBar.style.backgroundColor = dirValue < 0.5 ? "#ef4444" : dirValue < 0.8 ? "#f59e0b" : "#10b981";
+    }
+    if (dirText) {
+      dirText.style.color = dirValue < 0.5 ? "#ef4444" : dirValue < 0.8 ? "#f59e0b" : "#10b981";
+    }
+
+    const diffValue = Number(result.difference || 0);
+    const diffBar = document.getElementById("difference-bar");
+    if (diffBar) {
+      diffBar.style.width = `${Math.min(100, diffValue * 100)}%`;
+      diffBar.style.backgroundColor = diffValue > 0.2 ? "#ef4444" : diffValue > 0.1 ? "#f59e0b" : "#10b981";
+    }
+
+    const parityValue = Number(result.stats?.parity_percent || 0) / 100;
+    const parityBar = document.getElementById("parity-bar");
+    if (parityBar) {
+      parityBar.style.width = `${Math.min(100, parityValue * 100)}%`;
+      parityBar.style.backgroundColor = parityValue < 0.5 ? "#ef4444" : parityValue < 0.8 ? "#f59e0b" : "#10b981";
+    }
+
+    const eodValue = Math.abs(Number(result.metrics?.EOD || 0));
+    const eodBar = document.getElementById("eod-bar");
+    if (eodBar) {
+      eodBar.style.width = `${Math.min(100, eodValue * 100)}%`;
+      eodBar.style.backgroundColor = eodValue > 0.2 ? "#ef4444" : eodValue > 0.1 ? "#f59e0b" : "#10b981";
+    }
+
+    const aodValue = Math.abs(Number(result.metrics?.AOD || 0));
+    const aodBar = document.getElementById("aod-bar");
+    if (aodBar) {
+      aodBar.style.width = `${Math.min(100, aodValue * 100)}%`;
+      aodBar.style.backgroundColor = aodValue > 0.2 ? "#ef4444" : aodValue > 0.1 ? "#f59e0b" : "#10b981";
+    }
+
     requestSimulatorPreview();
   }
 
@@ -528,7 +570,7 @@
     setText("result-mode-chip", "Error");
     setText("severity-text", "Unable To Analyze");
     setText("bias-detected-text", "The request did not complete.");
-    setText("explanation-text", message);
+    renderExplanation(message);
     setText("dataset-meta-text", "Check your input and try again.");
     setText("bias-score-text", "0");
     setText("dir-text", "0.0000");
@@ -586,9 +628,39 @@
         const width = Math.max(0, Math.min(100, Number(preview.metrics?.parity_improvement_percent || 0) * 10));
         improvementBar.style.width = `${width}%`;
       }
-    } catch (error) {
-      // Keep the simulator card stable if preview generation fails.
+    } catch (e) {
+      console.warn("Preview failed", e);
     }
+  }
+
+  function renderExplanation(explanation) {
+    const container = document.getElementById("explanation-container");
+    if (!container) return;
+
+    if (!explanation) {
+      container.innerHTML = `<p class="text-sm italic text-slate-500">Explanation data not available.</p>`;
+      return;
+    }
+
+    if (typeof explanation === 'string') {
+      container.innerHTML = `<p class="text-sm leading-7 text-slate-700">${explanation}</p>`;
+      return;
+    }
+
+    const bulletsHtml = (explanation.bullets || [])
+      .map(b => `<li class="ml-4 list-disc text-sm text-slate-700">${b}</li>`)
+      .join("");
+
+    container.innerHTML = `
+      <p class="font-semibold text-indigo-900 mb-2">${explanation.headline || ""}</p>
+      <ul class="space-y-1 mb-3">
+        ${bulletsHtml}
+      </ul>
+      <div class="mt-3 rounded-lg border border-indigo-200 bg-indigo-100/50 p-3">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-800 mb-1">Recommended Fix</p>
+        <p class="text-sm font-medium text-indigo-900">${explanation.fix || "None"}</p>
+      </div>
+    `;
   }
 
   function bindSimulator() {

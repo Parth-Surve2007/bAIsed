@@ -29,6 +29,7 @@
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/workbench">Workbench</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/methodology">Methodology</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/documentation">Docs</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/about">About</a>
       </nav>
     </div>
     <div class="flex items-center gap-3" data-auth-container>
@@ -215,8 +216,110 @@
 </div>
 </div>
 </section>
+<!-- Persona Tabs -->
+<section class="max-w-7xl mx-auto px-4 md:px-8 mt-20 mb-20">
+<h2 class="font-h2 text-h2 text-center mb-10 dark:text-white">Built for Your Role</h2>
+<div class="flex justify-center gap-2 mb-10" id="persona-tabs">
+  <button class="persona-tab px-6 py-3 rounded-xl text-sm font-semibold transition-all bg-primary text-on-primary dark:bg-teal-600" data-persona="ds">Data Scientist</button>
+  <button class="persona-tab px-6 py-3 rounded-xl text-sm font-semibold transition-all border border-outline-variant hover:bg-surface-container dark:border-zinc-700 dark:hover:bg-zinc-800" data-persona="co">Compliance Officer</button>
+  <button class="persona-tab px-6 py-3 rounded-xl text-sm font-semibold transition-all border border-outline-variant hover:bg-surface-container dark:border-zinc-700 dark:hover:bg-zinc-800" data-persona="ml">ML Engineer</button>
+</div>
+<div class="grid md:grid-cols-3 gap-6">
+  <div class="persona-panel rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="ds">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">science</span>
+    <h3 class="font-bold mb-2 dark:text-white">Statistical Rigor</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">DIR, SPD, EOD, AOD, Theil & Atkinson indices computed deterministically. Export raw JSON for your own pipelines.</p>
+  </div>
+  <div class="persona-panel rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="ds">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">query_stats</span>
+    <h3 class="font-bold mb-2 dark:text-white">Feature Impact Ranking</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">Identify which features drive the most disparity. Ranked root-cause analysis with actionable weight adjustments.</p>
+  </div>
+  <div class="persona-panel rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="ds">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">tune</span>
+    <h3 class="font-bold mb-2 dark:text-white">What-If Simulator</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">Adjust diversity weights and fairness constraints to test remediation strategies before retraining your model.</p>
+  </div>
+  <div class="persona-panel hidden rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="co">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">gavel</span>
+    <h3 class="font-bold mb-2 dark:text-white">Regulatory Mapping</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">Auto-map results to EU AI Act, EEOC, and NIST frameworks. Generate audit-trail documentation for regulators.</p>
+  </div>
+  <div class="persona-panel hidden rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="co">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">description</span>
+    <h3 class="font-bold mb-2 dark:text-white">Plain-English Reports</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">AI-generated narratives translate complex statistical outputs into clear, boardroom-ready summaries.</p>
+  </div>
+  <div class="persona-panel hidden rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="co">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">verified_user</span>
+    <h3 class="font-bold mb-2 dark:text-white">Fairness Scorecard</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">One-page bias verdict with severity, risk flags, and a remediation path. Ready for compliance review.</p>
+  </div>
+  <div class="persona-panel hidden rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="ml">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">api</span>
+    <h3 class="font-bold mb-2 dark:text-white">API-First Design</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">JSON endpoints for /analyze, /upload, /scan, /simulate. Integrate bias checks directly into your CI/CD pipeline.</p>
+  </div>
+  <div class="persona-panel hidden rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="ml">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">speed</span>
+    <h3 class="font-bold mb-2 dark:text-white">Sub-3s Scans</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">Optimized Pandas/NumPy engine processes large datasets in under 3 seconds. No GPU required.</p>
+  </div>
+  <div class="persona-panel hidden rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800" data-persona="ml">
+    <span class="material-symbols-outlined text-secondary text-2xl mb-4">deployed_code</span>
+    <h3 class="font-bold mb-2 dark:text-white">Auto Column Detection</h3>
+    <p class="text-sm text-on-surface-variant dark:text-zinc-400">Intelligent profiling identifies protected attributes, outcomes, and qualification columns automatically.</p>
+  </div>
+</div>
+</section>
+<!-- Comparison Table -->
+<section class="max-w-5xl mx-auto px-4 md:px-8 mb-20">
+<h2 class="font-h2 text-h2 text-center mb-10 dark:text-white">How bAIsed Compares</h2>
+<div class="overflow-x-auto rounded-xl border border-outline-variant dark:border-zinc-800">
+<table class="w-full text-sm">
+  <thead class="bg-surface-container-low dark:bg-zinc-900">
+    <tr>
+      <th class="text-left px-6 py-4 font-semibold text-on-surface dark:text-white">Feature</th>
+      <th class="px-6 py-4 font-semibold text-secondary text-center">bAIsed</th>
+      <th class="px-6 py-4 font-semibold text-on-surface-variant text-center dark:text-zinc-400">Manual Audit</th>
+      <th class="px-6 py-4 font-semibold text-on-surface-variant text-center dark:text-zinc-400">AIF360 / Fairlearn</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-outline-variant dark:divide-zinc-800 bg-white dark:bg-zinc-950">
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">Plain-English Reports</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td></tr>
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">Theil / Atkinson Indices</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td><td class="px-6 py-3 text-center text-amber-600">Partial</td></tr>
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">What-If Simulation</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td></tr>
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">Regulatory Mapping</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-amber-600">Manual</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td></tr>
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">Auto Column Detection</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td></tr>
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">Sub-3s Scan Speed</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td><td class="px-6 py-3 text-center text-amber-600">Varies</td></tr>
+    <tr><td class="px-6 py-3 text-on-surface dark:text-zinc-300">No-Code UI</td><td class="px-6 py-3 text-center text-secondary font-bold">✓</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td><td class="px-6 py-3 text-center text-on-surface-variant">✗</td></tr>
+  </tbody>
+</table>
+</div>
+</section>
+<!-- Regulatory Mapping -->
+<section class="max-w-7xl mx-auto px-4 md:px-8 mb-20">
+<h2 class="font-h2 text-h2 text-center mb-10 dark:text-white">Regulatory Use Cases</h2>
+<div class="grid md:grid-cols-3 gap-6">
+  <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+    <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary">gavel</span><span class="font-bold dark:text-white">EU AI Act</span></div>
+    <p class="text-sm text-on-surface-variant mb-4 dark:text-zinc-400">High-risk AI system classification and mandatory conformity assessments.</p>
+    <div class="flex flex-wrap gap-2"><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">DIR</span><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">SPD</span><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">Theil</span></div>
+  </div>
+  <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+    <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary">balance</span><span class="font-bold dark:text-white">EEOC Guidelines</span></div>
+    <p class="text-sm text-on-surface-variant mb-4 dark:text-zinc-400">Four-Fifths Rule enforcement for employment-related AI decisions.</p>
+    <div class="flex flex-wrap gap-2"><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">EOD</span><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">DIR</span></div>
+  </div>
+  <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+    <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary">security</span><span class="font-bold dark:text-white">NIST AI RMF</span></div>
+    <p class="text-sm text-on-surface-variant mb-4 dark:text-zinc-400">Risk identification, measurement, and governance for AI systems.</p>
+    <div class="flex flex-wrap gap-2"><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">AOD</span><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">Theil</span><span class="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full font-semibold">Atkinson</span></div>
+  </div>
+</div>
+</section>
 <!-- CTA -->
-<section class="max-w-5xl mx-auto px-4 md:px-8 mt-32 text-center bg-surface-container-lowest border border-outline-variant py-xl rounded-2xl shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+<section class="max-w-5xl mx-auto px-4 md:px-8 mt-12 text-center bg-surface-container-lowest border border-outline-variant py-xl rounded-2xl shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 <h2 class="font-h1 text-h2 mb-6 dark:text-white">Ready to audit your algorithms?</h2>
 <p class="text-body-lg text-on-surface-variant mb-10 max-w-xl mx-auto dark:text-zinc-400">
                 Join 200+ enterprise leaders building the next generation of equitable artificial intelligence.

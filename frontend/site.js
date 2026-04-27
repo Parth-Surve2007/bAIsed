@@ -781,6 +781,158 @@
     }
   }
 
+  /* ── Global Style Injection ── */
+  function injectGlobalStyles() {
+    const style = document.createElement("style");
+    style.id = "baised-global-styles";
+    style.innerHTML = `
+      /* Mobile Nav */
+      .mobile-nav-overlay { display:none; position:fixed; inset:0; z-index:90; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); }
+      .mobile-nav-overlay.active { display:block; }
+      .mobile-nav-panel { position:fixed; top:0; right:0; bottom:0; width:280px; z-index:91; background:#fff; box-shadow:-4px 0 24px rgba(0,0,0,0.12); transform:translateX(100%); transition:transform 0.3s ease; padding:24px; }
+      .mobile-nav-panel.active { transform:translateX(0); }
+      .dark .mobile-nav-panel { background:#18181b; }
+      .mobile-nav-panel a { display:block; padding:12px 0; font-size:16px; font-weight:500; color:#334155; border-bottom:1px solid #f1f5f9; text-decoration:none; }
+      .mobile-nav-panel a:hover { color:#3a6662; }
+      .mobile-nav-panel a.active-link { color:#3a6662; font-weight:700; }
+      .dark .mobile-nav-panel a { color:#a1a1aa; border-color:#27272a; }
+      .dark .mobile-nav-panel a:hover, .dark .mobile-nav-panel a.active-link { color:#13eed3; }
+      /* Severity colors */
+      .severity-high { color: #DC2626; }
+      .severity-moderate { color: #D97706; }
+      .severity-low, .severity-fair { color: #16A34A; }
+      .bg-severity-high { background: #FEF2F2; border-color: #FECACA; }
+      .bg-severity-moderate { background: #FFFBEB; border-color: #FDE68A; }
+      .bg-severity-low, .bg-severity-fair { background: #F0FDF4; border-color: #BBF7D0; }
+      /* Step Indicator */
+      .step-indicator { display:flex; align-items:center; gap:0; }
+      .step-item { display:flex; align-items:center; gap:12px; }
+      .step-circle { width:48px; height:48px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+      .step-connector { width:48px; height:2px; background:#e2e8f0; margin:0 4px; }
+      .dark .step-connector { background:#3f3f46; }
+      /* Hamburger button */
+      .hamburger-btn { display:none; }
+      @media (max-width:767px) { .hamburger-btn { display:flex; } }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /* ── Mobile Navigation ── */
+  function bindMobileNav() {
+    const header = document.querySelector("header");
+    if (!header || header.dataset.mobileNavBound === "true") return;
+    header.dataset.mobileNavBound = "true";
+
+    const hamburger = document.createElement("button");
+    hamburger.className = "hamburger-btn items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden";
+    hamburger.setAttribute("aria-label", "Open navigation menu");
+    hamburger.innerHTML = `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`;
+
+    const overlay = document.createElement("div");
+    overlay.className = "mobile-nav-overlay";
+    const panel = document.createElement("div");
+    panel.className = "mobile-nav-panel";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "mb-6 flex items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800";
+    closeBtn.setAttribute("aria-label", "Close navigation menu");
+    closeBtn.innerHTML = `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+
+    const page = getCurrentPage();
+    const navLinks = [
+      { label: "Home", href: "/app", page: "landing" },
+      { label: "Solutions", href: "/app/solutions", page: "solutions" },
+      { label: "Workbench", href: "/app/workbench", page: "workbench" },
+      { label: "Methodology", href: "/app/methodology", page: "methodology" },
+      { label: "Docs", href: "/app/documentation", page: "documentation" },
+      { label: "About", href: "/app/about", page: "about" },
+    ];
+
+    panel.appendChild(closeBtn);
+    navLinks.forEach(link => {
+      const a = document.createElement("a");
+      a.href = link.href;
+      a.textContent = link.label;
+      if (link.page === page) a.classList.add("active-link");
+      panel.appendChild(a);
+    });
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(panel);
+
+    const authContainer = header.querySelector("[data-auth-container]");
+    if (authContainer) {
+      authContainer.prepend(hamburger);
+    }
+
+    const openNav = () => { overlay.classList.add("active"); panel.classList.add("active"); };
+    const closeNav = () => { overlay.classList.remove("active"); panel.classList.remove("active"); };
+
+    hamburger.addEventListener("click", openNav);
+    overlay.addEventListener("click", closeNav);
+    closeBtn.addEventListener("click", closeNav);
+  }
+
+  /* ── Reusable Component Builders ── */
+  function createBadgePill(text, severity) {
+    const classes = {
+      HIGH: "bg-red-100 text-red-700 border border-red-200",
+      MODERATE: "bg-amber-100 text-amber-700 border border-amber-200",
+      LOW: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+      FAIR: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+    };
+    return `<span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${classes[severity] || classes.LOW}">${text}</span>`;
+  }
+
+  function createAlertBanner(message, type) {
+    const styles = {
+      info: "border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300",
+      warning: "border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300",
+      error: "border-red-200 bg-red-50 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300",
+      success: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300",
+    };
+    const icons = { info: "info", warning: "warning", error: "error", success: "check_circle" };
+    return `<div class="flex items-start gap-3 rounded-xl border p-4 text-sm ${styles[type] || styles.info}">
+      <span class="material-symbols-outlined text-lg mt-0.5">${icons[type] || "info"}</span>
+      <span class="leading-6">${message}</span>
+    </div>`;
+  }
+
+  function severityColor(severity) {
+    if (severity === "HIGH") return { text: "#DC2626", bg: "#FEF2F2", border: "#FECACA", meter: "#ef4444" };
+    if (severity === "MODERATE") return { text: "#D97706", bg: "#FFFBEB", border: "#FDE68A", meter: "#f59e0b" };
+    return { text: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", meter: "#10b981" };
+  }
+
+  // Expose for workbench.js
+  window.baisedUI = { createBadgePill, createAlertBanner, severityColor };
+
+  function bindPersonaTabs() {
+    const tabs = document.querySelectorAll(".persona-tab");
+    const panels = document.querySelectorAll(".persona-panel");
+    if (!tabs.length || !panels.length) return;
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const persona = tab.dataset.persona;
+        tabs.forEach(t => {
+          if (t.dataset.persona === persona) {
+            t.className = "persona-tab px-6 py-3 rounded-xl text-sm font-semibold transition-all bg-primary text-on-primary dark:bg-teal-600";
+          } else {
+            t.className = "persona-tab px-6 py-3 rounded-xl text-sm font-semibold transition-all border border-outline-variant hover:bg-surface-container dark:border-zinc-700 dark:hover:bg-zinc-800";
+          }
+        });
+        panels.forEach(p => {
+          if (p.dataset.persona === persona) {
+            p.classList.remove("hidden");
+          } else {
+            p.classList.add("hidden");
+          }
+        });
+      });
+    });
+  }
+
   function bindDarkMode() {
     const html = document.documentElement;
     const isDark = localStorage.getItem("baised_theme") === "dark";
@@ -839,7 +991,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
+    injectGlobalStyles();
     bindDarkMode();
+    bindMobileNav();
     normalizeBranding();
     renderAuthState();
     bindElements();
@@ -847,6 +1001,7 @@
     enhanceDocumentationAnchors();
     bindLoginFlow();
     bindDemoRequestForm();
+    bindPersonaTabs();
     await hydratePage();
     await bindDocsSearch();
     

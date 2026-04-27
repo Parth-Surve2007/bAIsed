@@ -138,6 +138,10 @@ SITE_CONTENT: dict[str, dict[str, Any]] = {
             },
         ],
     },
+    "about": {
+        "mission": "Algorithmic transparency for a fair future.",
+        "tagline": "Detect Bias. Ensure Fairness. Automate Integrity.",
+    },
 }
 
 VALID_LOGIN = {

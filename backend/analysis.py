@@ -32,7 +32,7 @@ class FairnessResult:
     most_advantaged_group: str
     least_advantaged_group: str
     most_influential_feature: str
-    explanation: str
+    explanation: dict[str, Any]
     bias_score: float
     recommendations: list[str]
     warnings: list[str]
@@ -81,35 +81,42 @@ def _build_explanation(
     hidden_bias_detected: bool = False,
     hotspot_summary: str | None = None,
     repair_summary: str | None = None,
-) -> str:
+) -> dict[str, Any]:
     dir_text = f"{_round(metrics['DIR']):.4f}".rstrip("0").rstrip(".")
     diff_text = f"{_round(metrics['SPD']):.4f}".rstrip("0").rstrip(".")
     eod_text = f"{_round(metrics['EOD']):.4f}".rstrip("0").rstrip(".")
     aod_text = f"{_round(metrics['AOD']):.4f}".rstrip("0").rstrip(".")
-    sentences = [
-        (
-            f"{severity.title()} bias detected because {low_group} has a lower selection rate than {high_group}. "
-            f"The disparate impact ratio is {dir_text}, the statistical parity difference is {diff_text}, "
-            f"the equal opportunity difference is {eod_text}, and the average odds difference is {aod_text}."
-        )
+    
+    headline = f"{severity.title()} bias detected because {low_group} has a lower selection rate than {high_group}."
+    if severity == "LOW":
+        headline = f"No significant bias detected. Selection rates for {low_group} and {high_group} are relatively balanced."
+    
+    bullets = [
+        f"Disparate impact ratio: {dir_text}",
+        f"Statistical parity difference: {diff_text}",
+        f"Equal opportunity difference: {eod_text}",
+        f"Average odds difference: {aod_text}",
     ]
 
     if subgroup_summary:
-        sentences.append(subgroup_summary)
+        bullets.append(subgroup_summary)
 
     if influential_feature:
-        sentences.append(f"The largest overall disparity is associated with the {influential_feature} feature.")
+        bullets.append(f"The largest overall disparity is associated with the {influential_feature} feature.")
 
     if hidden_bias_detected:
-        sentences.append("Hidden bias is present because at least one subgroup shows high-severity disparity despite the global score appearing less severe.")
+        bullets.append("Hidden bias is present because at least one subgroup shows high-severity disparity despite the global score appearing less severe.")
 
     if hotspot_summary:
-        sentences.append(hotspot_summary)
+        bullets.append(hotspot_summary)
 
-    if repair_summary:
-        sentences.append(repair_summary)
+    fix = repair_summary if repair_summary else "No immediate fix required or identified."
 
-    return " ".join(sentences)
+    return {
+        "headline": headline,
+        "bullets": bullets,
+        "fix": fix
+    }
 
 
 def _classify(dir_value: float) -> tuple[bool, str]:

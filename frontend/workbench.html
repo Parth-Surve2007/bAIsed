@@ -36,6 +36,38 @@
     background: #e2e8f0;
     border-radius: 10px;
   }
+  .wb-tab-panel { display: none; opacity: 0; transform: translateY(8px); }
+  .wb-tab-panel.active { display: block; animation: wbEnter 220ms ease-out forwards; }
+  @keyframes wbEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .dive-section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 32px;
+    margin-bottom: 14px;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 10px;
+  }
+  .dive-section-label::before {
+    content: "";
+    width: 3px;
+    height: 12px;
+    border-radius: 999px;
+    background: #0f766e;
+    flex: 0 0 auto;
+  }
+  .dive-section-label::after {
+    content: "";
+    height: 1px;
+    background: rgba(148, 163, 184, 0.6);
+    flex: 1 1 auto;
+  }
 </style>
 <script id="tailwind-config">
   tailwind.config = {
@@ -83,6 +115,7 @@
         <a class="border-b-2 border-teal-600 pb-1 text-sm font-semibold text-teal-600" href="/app/workbench">Workbench</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/methodology">Methodology</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/documentation">Docs</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/about">About</a>
       </nav>
     </div>
     <div class="flex items-center gap-3" data-auth-container>
@@ -116,443 +149,518 @@
       </div>
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-      <div class="space-y-6">
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-black">Simple Bias Check</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">Enter group selection percentages to compute normalized rates, DIR, difference, and severity.</p>
-            </div>
-            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">JSON Mode</div>
-          </div>
-          <form class="space-y-5" id="simple-analysis-form">
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="block">
-                <span class="mb-2 block text-sm font-semibold text-slate-700">Group A (%)</span>
-                <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="group-a-input" max="100" min="0" placeholder="80" required type="number"/>
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm font-semibold text-slate-700">Group B (%)</span>
-                <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="group-b-input" max="100" min="0" placeholder="30" required type="number"/>
-              </label>
-            </div>
-            <div class="flex flex-wrap gap-3">
-              <button class="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition hover:opacity-90" type="submit">Analyze Simple Input</button>
-              <button class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-surface-container-low dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" id="simple-reset" type="button">Reset</button>
-            </div>
-          </form>
-        </section>
+    <div class="mb-8 flex items-center justify-start">
+      <div class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 shadow-sm backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
+        <button
+          type="button"
+          class="wb-tab-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold bg-teal-50 text-teal-700"
+          data-wb-tab="quick"
+          onclick="
+            (()=>{const root=this.closest('section');const panels=root.querySelectorAll('.wb-tab-panel');const btns=root.querySelectorAll('.wb-tab-btn');btns.forEach(b=>{b.classList.remove('bg-teal-50','text-teal-700');b.classList.add('text-slate-500');});this.classList.add('bg-teal-50','text-teal-700');this.classList.remove('text-slate-500');panels.forEach(p=>p.classList.remove('active'));root.querySelector('[data-wb-panel=quick]').classList.add('active');})();
+          ">
+          <span class="inline-flex h-2 w-2 items-center justify-center rounded-full bg-teal-600"></span>
+          Quick Analysis
+        </button>
+        <button
+          type="button"
+          class="wb-tab-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50"
+          data-wb-tab="deep"
+          onclick="
+            (()=>{const root=this.closest('section');const panels=root.querySelectorAll('.wb-tab-panel');const btns=root.querySelectorAll('.wb-tab-btn');btns.forEach(b=>{b.classList.remove('bg-teal-50','text-teal-700');b.classList.add('text-slate-500');});this.classList.add('bg-teal-50','text-teal-700');this.classList.remove('text-slate-500');panels.forEach(p=>p.classList.remove('active'));root.querySelector('[data-wb-panel=deep]').classList.add('active');})();
+          ">
+          <span class="inline-flex h-2 w-2 items-center justify-center rounded-full border border-slate-400 bg-white"></span>
+          Deep Dive
+          <span class="ml-1 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">10 sections</span>
+        </button>
+      </div>
+    </div>
 
-        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+    <div class="wb-tab-panel active" data-wb-panel="quick">
+      <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div class="space-y-6">
+          <section class="rounded-3xl border border-outline-variant bg-white p-8 shadow-md relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-teal-600"></div>
+            <div class="mb-6 flex items-center justify-between">
+              <div>
+                <h2 class="text-3xl font-black text-black tracking-tight">Dataset Audit</h2>
+                <p class="mt-2 text-sm text-on-surface-variant">Upload a CSV or XLSX file. You can optionally specify the protected attribute and binary outcome columns.</p>
+              </div>
+            </div>
+            <form class="space-y-6" id="dataset-analysis-form">
+              <div>
+                <div id="file-drop-zone" class="group relative flex cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 px-6 py-10 transition-colors hover:border-teal-500 hover:bg-teal-50">
+                  <span class="material-symbols-outlined text-4xl text-teal-400 transition group-hover:text-teal-600">cloud_upload</span>
+                  <div class="text-center">
+                    <p class="text-base font-bold text-teal-900">Click to browse or drag & drop</p>
+                    <p class="mt-1 text-sm text-teal-700/70">Supports CSV and XLSX files</p>
+                  </div>
+                  <p class="mt-2 text-sm font-semibold text-teal-700" id="file-name-display">No file selected</p>
+                  <input accept=".csv,.xlsx" class="absolute inset-0 cursor-pointer opacity-0" id="dataset-file-input" required type="file" />
+                </div>
+              </div>
+              
+              <div class="pt-6 border-t border-slate-100">
+                <h3 class="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Column Configuration</h3>
+                <div class="grid gap-5 md:grid-cols-2">
+                  <label class="block">
+                    <span class="mb-2 block text-sm font-semibold text-slate-700">Protected Attribute Column</span>
+                    <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="protected-attribute-input">
+                      <option value="">Auto-detect</option>
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="mb-2 block text-sm font-semibold text-slate-700">Outcome Column</span>
+                    <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="outcome-column-input">
+                      <option value="">Auto-detect</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="block mt-5">
+                  <span class="mb-2 block text-sm font-semibold text-slate-700">Qualification Column</span>
+                  <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="qualification-column-input">
+                    <option value="">Auto-detect (Recommended)</option>
+                  </select>
+                  <span class="mt-2 block text-xs text-slate-500">Subgroup context, EOD/AOD, and hidden-bias detection.</span>
+                </label>
+              </div>
+              <div class="flex flex-wrap gap-3 pt-2">
+                <button class="rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700 hover:shadow" type="submit">Upload And Analyze</button>
+                <button class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" id="dataset-reset" type="button">Clear File</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="rounded-2xl border border-outline-variant bg-white p-5 shadow-sm">
+            <details class="group" id="simple-check-details">
+              <summary class="flex cursor-pointer items-center justify-between font-bold text-slate-800 list-none [&::-webkit-details-marker]:hidden">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-slate-400 group-open:text-teal-600 transition-colors">calculate</span>
+                  <span class="text-lg">Simple Bias Check</span>
+                </div>
+                <span class="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180">expand_more</span>
+              </summary>
+              <div class="mt-5 pt-5 border-t border-slate-100">
+                <p class="mb-4 text-sm text-slate-600">Enter group selection percentages to compute normalized rates, DIR, difference, and severity.</p>
+                <form class="space-y-4" id="simple-analysis-form">
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <label class="block">
+                      <span class="mb-2 block text-sm font-semibold text-slate-700">Group A (%)</span>
+                      <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="group-a-input" max="100" min="0" placeholder="80" required type="number"/>
+                    </label>
+                    <label class="block">
+                      <span class="mb-2 block text-sm font-semibold text-slate-700">Group B (%)</span>
+                      <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="group-b-input" max="100" min="0" placeholder="30" required type="number"/>
+                    </label>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <button class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800" type="submit">Analyze Input</button>
+                    <button class="rounded-xl border border-outline-variant px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" id="simple-reset" type="button">Reset</button>
+                  </div>
+                </form>
+              </div>
+            </details>
+          </section>
+        </div>
+
+        <div class="space-y-6">
+          <section>
+            <div class="mb-6 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+                </span>
+                <h2 class="text-2xl md:text-3xl font-black text-black tracking-tight">Bias Detection Summary</h2>
+                <div class="rounded-full bg-slate-200 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600" id="result-mode-chip">Waiting</div>
+              </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 mb-4">
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Severity</p>
+                <p class="mt-3 text-3xl font-black text-white" id="severity-text">No Analysis</p>
+                <div class="mt-4 h-1.5 rounded-full bg-slate-800">
+                    <div class="meter-fill h-1.5 rounded-full bg-slate-600" id="severity-bar" style="width: 0%"></div>
+                </div>
+                <p class="mt-3 text-sm text-slate-400" id="bias-detected-text">Run a check to see status.</p>
+              </div>
+              
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Bias Score</p>
+                <div class="mt-3 flex items-baseline gap-2">
+                  <span class="text-3xl font-black text-white" id="bias-score-text">0</span>
+                  <span class="text-sm font-semibold text-slate-500">/ 100</span>
+                </div>
+                <div class="mt-4 h-1.5 rounded-full bg-slate-800">
+                <div class="meter-fill h-1.5 rounded-full bg-teal-500" id="bias-score-bar" style="width: 0%"></div>
+                </div>
+                <p class="mt-3 text-sm text-slate-400">Overall risk assessment.</p>
+              </div>
+            </div>
+
+            <div class="grid gap-4 grid-cols-2 md:grid-cols-3 mb-4">
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+                <div class="flex items-center gap-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">DIR</p>
+                </div>
+                <p class="mt-2 text-2xl font-black text-white" id="dir-text">0.000</p>
+                <div class="mt-3 relative h-1.5 rounded-full bg-slate-800">
+                  <div class="absolute left-[80%] top-[-4px] w-0.5 h-[14px] bg-amber-500"></div>
+                  <div class="h-1.5 rounded-full bg-slate-600 transition-all" id="dir-bar" style="width:0%"></div>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-500">Threshold: ≥ 0.8</p>
+              </div>
+              
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+                <div class="flex items-center gap-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Difference</p>
+                </div>
+                <p class="mt-2 text-2xl font-black text-white" id="difference-text">0.000</p>
+                <div class="mt-3 h-1.5 rounded-full bg-slate-800">
+                  <div class="h-1.5 rounded-full bg-slate-600 transition-all" id="difference-bar" style="width:0%"></div>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-500">Statistical Parity Gap</p>
+              </div>
+
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+                <div class="flex items-center gap-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Parity %</p>
+                </div>
+                <p class="mt-2 text-2xl font-black text-white" id="parity-text">0.0%</p>
+                <div class="mt-3 h-1.5 rounded-full bg-slate-800">
+                  <div class="h-1.5 rounded-full bg-slate-600 transition-all" id="parity-bar" style="width:0%"></div>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-500">DIR Percentage</p>
+              </div>
+              
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+                <div class="flex items-center gap-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">EOD</p>
+                </div>
+                <p class="mt-2 text-2xl font-black text-white" id="eod-text">0.000</p>
+                <div class="mt-3 h-1.5 rounded-full bg-slate-800">
+                  <div class="h-1.5 rounded-full bg-slate-600 transition-all" id="eod-bar" style="width:0%"></div>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-500">Equal Opp Diff</p>
+              </div>
+
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+                <div class="flex items-center gap-2">
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">AOD</p>
+                </div>
+                <p class="mt-2 text-2xl font-black text-white" id="aod-text">0.000</p>
+                <div class="mt-3 h-1.5 rounded-full bg-slate-800">
+                  <div class="h-1.5 rounded-full bg-slate-600 transition-all" id="aod-bar" style="width:0%"></div>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-500">Avg Odds Diff</p>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-teal-200 bg-teal-50/50 p-6 shadow-sm">
+              <p class="text-xs font-bold uppercase tracking-widest text-teal-800">Explanation</p>
+              <div id="explanation-container" class="mt-4 text-slate-800">
+                <p class="text-sm italic text-slate-500">Upload a dataset or submit simple percentages to generate a deterministic fairness explanation.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="xl:col-span-2 rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 class="text-2xl font-bold text-black dark:text-white">Key Stats</h2>
+          <div class="mt-5 grid gap-4 workbench-list-container">
+            <div class="rounded-2xl bg-surface-container-low p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Advantaged Group</p>
+              <p class="mt-2 text-xl font-bold text-black" id="advantaged-group-text">-</p>
+            </div>
+            <div class="rounded-2xl bg-surface-container-low p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Least Advantaged Group</p>
+              <p class="mt-2 text-xl font-bold text-black" id="disadvantaged-group-text">-</p>
+            </div>
+            <div class="rounded-2xl bg-surface-container-low p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Selection Gap %</p>
+              <p class="mt-2 text-xl font-bold text-black" id="selection-gap-percent-text">0%</p>
+            </div>
+            <div class="rounded-2xl bg-surface-container-low p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Influential Feature</p>
+              <p class="mt-2 text-xl font-bold text-black" id="influential-feature-text">-</p>
+            </div>
+            <div class="rounded-2xl bg-surface-container-low p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hidden Bias</p>
+              <p class="mt-2 text-xl font-bold text-black" id="hidden-bias-text">No</p>
+            </div>
+            <div class="rounded-2xl bg-surface-container-low p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dataset Metadata</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600" id="dataset-meta-text">No dataset uploaded.</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="xl:col-span-2 rounded-3xl border border-outline-variant bg-white p-6 shadow-sm" id="ai-analyzer-section">
           <div class="mb-5 flex items-center justify-between">
             <div>
-              <h2 class="text-2xl font-bold text-black">Dataset Audit</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">Upload a CSV or XLSX file. You can optionally specify the protected attribute and binary outcome columns.</p>
+              <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
+              <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Groq API.</p>
             </div>
-            <div class="flex items-center gap-3">
-              <button id="global-reset-btn" type="button" class="group flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-600 transition hover:bg-red-100 active:scale-95">
-                <span class="material-symbols-outlined text-sm transition-transform group-hover:rotate-180">restart_alt</span>
-                Reset Server Cache
+            <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
+          </div>
+          <form class="space-y-5" id="ai-analyzer-form">
+            <p class="text-sm text-slate-700">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
+            <div class="flex flex-wrap gap-3">
+              <button class="flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed" id="ai-submit-btn" type="submit">
+                <svg class="h-4 w-4 hidden" id="ai-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Generate Detailed AI Report</span>
               </button>
-              <div class="rounded-full bg-primary-fixed px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Main Feature</div>
-            </div>
-          </div>
-          <form class="space-y-5" id="dataset-analysis-form">
-            <div>
-              <span class="mb-2 block text-sm font-semibold text-slate-700">Dataset File</span>
-              <div id="file-drop-zone" class="group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-secondary/40 bg-secondary/5 px-6 py-8 transition-colors hover:border-secondary hover:bg-secondary/10">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-secondary/60 transition group-hover:text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
-                <div class="text-center">
-                  <p class="text-sm font-semibold text-secondary">Click to browse or drag & drop</p>
-                  <p class="mt-1 text-xs text-slate-500">Supports CSV and XLSX files</p>
-                </div>
-                <p class="text-xs font-medium text-secondary/80" id="file-name-display">No file selected</p>
-                <input accept=".csv,.xlsx" class="absolute inset-0 cursor-pointer opacity-0" id="dataset-file-input" required type="file" />
-              </div>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="block">
-                <span class="mb-2 block text-sm font-semibold text-slate-700">Protected Attribute Column</span>
-                <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="protected-attribute-input">
-                  <option value="">Auto-detect</option>
-                </select>
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm font-semibold text-slate-700 dark:text-zinc-300">Outcome Column</span>
-                <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white" id="outcome-column-input">
-                  <option value="">Auto-detect</option>
-                </select>
-              </label>
-            </div>
-            <label class="block">
-              <span class="mb-2 block text-sm font-semibold text-slate-700">Qualification Column</span>
-              <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="qualification-column-input">
-                <option value="">Auto-detect (Recommended)</option>
-              </select>
-              <span class="mt-2 block text-xs text-slate-500">Subgroup context, EOD/AOD, and hidden-bias detection.</span>
-            </label>
-            <div class="flex flex-wrap gap-3">
-              <button class="rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90" type="submit">Upload And Analyze</button>
-              <button class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-surface-container-low dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800" id="dataset-reset" type="button">Clear File</button>
             </div>
           </form>
+          
+          <div id="ai-result-panel" class="mt-6 hidden rounded-2xl border border-secondary bg-secondary/5 p-5 dark:bg-secondary/10 dark:border-secondary/30">
+            <h3 class="mb-3 text-lg font-bold text-on-secondary-container dark:text-secondary">AI Analysis Result</h3>
+            <p class="mb-4 text-xs font-medium text-secondary"><span id="ai-model-name"></span> • <span id="ai-row-count"></span> rows analyzed</p>
+            <div class="prose prose-sm prose-slate max-w-none prose-headings:font-bold prose-headings:text-secondary prose-a:text-secondary prose-strong:text-slate-900 dark:prose-invert prose-blockquote:border-l-4 prose-blockquote:border-secondary prose-blockquote:bg-secondary/5 prose-blockquote:px-4 prose-blockquote:py-1 prose-blockquote:not-italic prose-blockquote:font-medium prose-blockquote:rounded-r-lg prose-ul:my-2" id="ai-response-text"></div>
+            <div class="mt-6 border-t border-secondary/20 pt-5">
+              <button id="download-report-btn" type="button" class="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary shadow-sm transition hover:opacity-90 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Download Full Bias Report
+              </button>
+              <p class="mt-2 text-xs text-slate-400 dark:text-zinc-500">Opens a styled PDF-ready report combining engine metrics and AI insights.</p>
+            </div>
+          </div>
+          
+          <div id="ai-error-panel" class="mt-6 hidden rounded-2xl border border-red-200 bg-red-50 p-5">
+            <h3 class="mb-2 text-lg font-bold text-red-900">Analysis Failed</h3>
+            <p class="text-sm text-red-700 whitespace-pre-wrap" id="ai-error-text"></p>
+          </div>
         </section>
       </div>
+    </div>
 
-      <div class="space-y-6">
-        <section class="overflow-hidden rounded-3xl border border-slate-900 bg-slate-950 text-white shadow-xl">
-          <div class="flex items-center justify-between border-b border-white/10 px-6 py-5">
+    <div class="wb-tab-panel" data-wb-panel="deep">
+      <div class="dive-section-label">Disparity Analysis</div>
+
+      <!-- Comparative Group Stats (full-width) -->
+      <div class="mt-6">
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+          <div class="mb-5 flex items-center justify-between">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Live Result</p>
-              <h2 class="mt-1 text-2xl font-bold">Bias Detection Summary</h2>
+              <h2 class="text-2xl font-bold text-black">Comparative Group Stats</h2>
+              <p class="mt-1 text-sm text-on-surface-variant">The workbench sorts groups by selection rate so the most and least advantaged cohorts are immediately visible.</p>
             </div>
-            <div class="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]" id="result-mode-chip">Waiting</div>
+            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="group-count-chip">0 Groups</div>
           </div>
-          <div class="p-6">
-            <div class="mb-6 grid gap-4 md:grid-cols-2">
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Severity</p>
-                <p class="mt-3 text-3xl font-black" id="severity-text">No Analysis Yet</p>
-                <p class="mt-2 text-sm text-white/65" id="bias-detected-text">Run a check to see whether bias is detected.</p>
-              </div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Bias Score</p>
-                <div class="mt-3 flex items-end gap-2">
-                  <span class="text-4xl font-black" id="bias-score-text">0</span>
-                  <span class="pb-1 text-white/50">/ 100</span>
-                </div>
-                <div class="mt-4 h-2 rounded-full bg-white/10">
-                  <div class="meter-fill h-2 rounded-full bg-teal-400" id="bias-score-bar" style="width: 0%"></div>
-                </div>
-              </div>
-            </div>
+          <div class="space-y-4" id="group-bars">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">No group data yet.</div>
+          </div>
+        </section>
+      </div>
 
-            <div class="grid gap-4 grid-cols-2 md:grid-cols-3">
-              <div class="rounded-2xl bg-white p-5 text-slate-900">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
-                <p class="mt-3 text-2xl md:text-3xl font-black" id="dir-text">0.0000</p>
-                <p class="mt-2 text-xs md:text-sm text-slate-500">Formula: min(rate) / max(rate)</p>
-              </div>
-              <div class="rounded-2xl bg-white p-5 text-slate-900">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Difference</p>
-                <p class="mt-3 text-2xl md:text-3xl font-black" id="difference-text">0.0000</p>
-                <p class="mt-2 text-xs md:text-sm text-slate-500">Absolute selection gap</p>
-              </div>
-              <div class="rounded-2xl bg-white p-5 text-slate-900">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Parity %</p>
-                <p class="mt-3 text-2xl md:text-3xl font-black" id="parity-text">0.0%</p>
-                <p class="mt-2 text-xs md:text-sm text-slate-500">DIR shown as percentage</p>
-              </div>
+      <!-- Dataset Field Analysis (full-width) -->
+      <div class="mt-6">
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black">Dataset Field Analysis</h2>
+              <p class="mt-1 text-sm text-on-surface-variant">Strict data-driven scanning of all columns and fields detected in your dataset.</p>
             </div>
-            <div class="mt-4 grid gap-4 grid-cols-2">
-              <div class="rounded-2xl bg-white p-5 text-slate-900">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">EOD</p>
-                <p class="mt-3 text-2xl md:text-3xl font-black" id="eod-text">0.0000</p>
-                <p class="mt-2 text-xs md:text-sm text-slate-500">Equal opportunity difference</p>
-              </div>
-              <div class="rounded-2xl bg-white p-5 text-slate-900">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">AOD</p>
-                <p class="mt-3 text-2xl md:text-3xl font-black" id="aod-text">0.0000</p>
-                <p class="mt-2 text-xs md:text-sm text-slate-500">Average odds difference</p>
-              </div>
-            </div>
+            <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container" id="field-count-chip">0 Fields</div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="border-b border-outline-variant text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th class="px-4 py-3">Column Name</th>
+                  <th class="px-4 py-3">Type</th>
+                  <th class="px-4 py-3">Unique</th>
+                  <th class="px-4 py-3">Missing</th>
+                  <th class="px-4 py-3">Analysis / Range</th>
+                </tr>
+              </thead>
+              <tbody id="field-analysis-body" class="divide-y divide-outline-variant">
+                <tr>
+                  <td colspan="5" class="px-4 py-8 text-center text-slate-500 italic">Upload a dataset to see column-wise analysis.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
 
-            <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Explanation</p>
-              <p class="mt-3 text-sm leading-7 text-white/85" id="explanation-text">Upload a dataset or submit simple percentages to generate a deterministic fairness explanation.</p>
+      <div class="dive-section-label">Root Cause</div>
+
+      <!-- Feature Impact Ranking | Bias Hotspots (equal 2-col) -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black dark:text-white">Feature Impact Ranking</h2>
+              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Ranked root-cause features contributing most to disparity.</p>
+            </div>
+            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="feature-count-chip">0 Features</div>
+          </div>
+          <div class="space-y-3 workbench-list-container" id="feature-impact-list">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Feature impact rankings appear after analysis.</div>
+          </div>
+        </div>
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black dark:text-white">Bias Hotspots</h2>
+              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Strongest subgroup-level disparity areas.</p>
+            </div>
+            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="hotspot-count-chip">0 Hotspots</div>
+          </div>
+          <div class="space-y-3 workbench-list-container" id="hotspots-list">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Hotspots appear after dataset analysis.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="dive-section-label">Remediation</div>
+
+      <!-- Suggestions | Repair Suggestions (equal 2-col) -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 class="text-2xl font-bold text-black dark:text-white">Suggestions</h2>
+          <div class="mt-5 space-y-3 workbench-list-container" id="recommendations-list">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Recommendations appear after analysis.</div>
+          </div>
+        </div>
+        <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black dark:text-white">Repair Suggestions</h2>
+              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Minimal remediation steps to move toward the fairness threshold.</p>
+            </div>
+            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="repair-count-chip">0 Suggestions</div>
+          </div>
+          <div class="space-y-3 workbench-list-container" id="repairs-list">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Repair suggestions appear after analysis.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Counterfactual Simulations (full-width) -->
+      <div class="mt-6">
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black dark:text-white">Counterfactual Simulations</h2>
+              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Deterministic what-if scenarios.</p>
+            </div>
+            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="simulation-count-chip">0 Scenarios</div>
+          </div>
+          <div class="space-y-3 workbench-list-container" id="simulations-list">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Simulation scenarios appear after analysis.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="dive-section-label">Simulation</div>
+
+      <!-- What-If Simulator (full-width) -->
+      <div class="mt-6">
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+          <div class="grid gap-8 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
+            <div>
+              <span class="material-symbols-outlined text-4xl text-slate-900 dark:text-white">science</span>
+              <h2 class="mt-6 text-4xl font-light tracking-tight text-slate-900 dark:text-white">What-If Simulator</h2>
+              <p class="mt-4 max-w-md text-lg leading-8 text-on-surface-variant dark:text-zinc-400">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
+              <div class="mt-8 space-y-6">
+                <div>
+                  <div class="mb-3 flex items-center justify-between gap-4">
+                    <label class="text-sm font-semibold text-slate-900" for="simulator-diversity-weight">Group Diversity Weight</label>
+                    <span class="font-mono text-sm text-secondary" id="simulator-diversity-value">0.75</span>
+                  </div>
+                  <input class="w-full accent-secondary" id="simulator-diversity-weight" max="1" min="0" step="0.01" type="range" value="0.75"/>
+                </div>
+                <div>
+                  <div class="mb-3 flex items-center justify-between gap-4">
+                    <label class="text-sm font-semibold text-slate-900">Fairness Constraint</label>
+                    <span class="font-mono text-sm text-secondary" id="simulator-constraint-text">Optimal</span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Loose" type="button">Loose</button>
+                    <button class="rounded-xl border border-secondary bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition" data-simulator-constraint="Optimal" type="button">Optimal</button>
+                    <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Strict" type="button">Strict</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-3xl bg-surface-container p-6 dark:bg-zinc-800/50">
+              <div class="flex items-center justify-between gap-4 border-b border-outline-variant pb-4 dark:border-zinc-700">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-600 dark:text-zinc-400">Scenario Preview</p>
+                <span class="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-secondary" id="simulator-instant-label">Instant</span>
+              </div>
+              <div class="mt-5 rounded-2xl border border-outline-variant bg-white p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Change</p>
+                <p class="mt-2 text-sm leading-6 text-slate-700" id="simulator-change-text">Increase diversity weight to 0.75 and apply mild reweighting.</p>
+              </div>
+              <div class="mt-4 grid grid-cols-3 gap-3">
+                <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                  <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
+                  <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-dir-text">0.92</p>
+                </div>
+                <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                  <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">SPD</p>
+                  <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-spd-text">-0.03</p>
+                </div>
+                <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                  <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Accuracy</p>
+                  <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-accuracy-text">93.4%</p>
+                </div>
+              </div>
+              <div class="mt-4 rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
+                <div class="mb-3 flex items-center justify-between gap-4">
+                  <p class="text-sm font-semibold text-slate-900 dark:text-white">Parity Improvement</p>
+                  <span class="text-sm font-semibold text-secondary" id="simulator-improvement-text">+8.1%</span>
+                </div>
+                <div class="h-3 rounded-full bg-slate-200 overflow-hidden dark:bg-zinc-800">
+                  <div class="meter-fill h-3 rounded-full bg-secondary" id="simulator-improvement-bar" style="width: 81%"></div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
-
       </div>
-    </div>
 
-    <!-- AI Analyzer (full-width) -->
-    <div class="mt-6">
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm" id="ai-analyzer-section">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
-            <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Groq API.</p>
-          </div>
-          <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
-        </div>
-        <form class="space-y-5" id="ai-analyzer-form">
-          <p class="text-sm text-slate-700">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
-          <div class="flex flex-wrap gap-3">
-            <button class="flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed" id="ai-submit-btn" type="submit">
-              <svg class="h-4 w-4 hidden" id="ai-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <span>Generate Detailed AI Report</span>
-            </button>
-          </div>
-        </form>
-        
-        <!-- Results Area -->
-        <div id="ai-result-panel" class="mt-6 hidden rounded-2xl border border-secondary bg-secondary/5 p-5 dark:bg-secondary/10 dark:border-secondary/30">
-          <h3 class="mb-3 text-lg font-bold text-on-secondary-container dark:text-secondary">AI Analysis Result</h3>
-          <p class="mb-4 text-xs font-medium text-secondary"><span id="ai-model-name"></span> • <span id="ai-row-count"></span> rows analyzed</p>
-          <div class="prose prose-sm prose-slate max-w-none prose-headings:font-bold prose-headings:text-secondary prose-a:text-secondary prose-strong:text-slate-900 dark:prose-invert prose-blockquote:border-l-4 prose-blockquote:border-secondary prose-blockquote:bg-secondary/5 prose-blockquote:px-4 prose-blockquote:py-1 prose-blockquote:not-italic prose-blockquote:font-medium prose-blockquote:rounded-r-lg prose-ul:my-2" id="ai-response-text"></div>
-          <div class="mt-6 border-t border-secondary/20 pt-5">
-            <button id="download-report-btn" type="button" class="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary shadow-sm transition hover:opacity-90 active:scale-95">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-              Download Full Bias Report
-            </button>
-            <p class="mt-2 text-xs text-slate-400 dark:text-zinc-500">Opens a styled PDF-ready report combining engine metrics and AI insights.</p>
-          </div>
-        </div>
-        
-        <div id="ai-error-panel" class="mt-6 hidden rounded-2xl border border-red-200 bg-red-50 p-5">
-          <h3 class="mb-2 text-lg font-bold text-red-900">Analysis Failed</h3>
-          <p class="text-sm text-red-700 whitespace-pre-wrap" id="ai-error-text"></p>
-        </div>
-      </section>
-    </div>
+      <div class="dive-section-label">Reference</div>
 
-    <!-- Row: Dataset Field Analysis (full-width) -->
-    <div class="mt-6">
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black">Dataset Field Analysis</h2>
-            <p class="mt-1 text-sm text-on-surface-variant">Strict data-driven scanning of all columns and fields detected in your dataset.</p>
+      <!-- Reliability Warnings | Formula Reference (equal 2-col) -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black dark:text-white">Reliability Warnings</h2>
+              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Data quality and sample-size caveats that affect interpretation.</p>
+            </div>
+            <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="warning-count-chip">0 Warnings</div>
           </div>
-          <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container" id="field-count-chip">0 Fields</div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="border-b border-outline-variant text-xs font-semibold uppercase tracking-wider text-slate-500">
-              <tr>
-                <th class="px-4 py-3">Column Name</th>
-                <th class="px-4 py-3">Type</th>
-                <th class="px-4 py-3">Unique</th>
-                <th class="px-4 py-3">Missing</th>
-                <th class="px-4 py-3">Analysis / Range</th>
-              </tr>
-            </thead>
-            <tbody id="field-analysis-body" class="divide-y divide-outline-variant">
-              <tr>
-                <td colspan="5" class="px-4 py-8 text-center text-slate-500 italic">Upload a dataset to see column-wise analysis.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-
-    <!-- Row 2: Comparative Group Stats (full-width) -->
-    <div class="mt-6">
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black">Comparative Group Stats</h2>
-            <p class="mt-1 text-sm text-on-surface-variant">The workbench sorts groups by selection rate so the most and least advantaged cohorts are immediately visible.</p>
+          <div class="space-y-3 workbench-list-container" id="warnings-list">
+            <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Warnings appear after analysis when reliability issues are detected.</div>
           </div>
-          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="group-count-chip">0 Groups</div>
-        </div>
-        <div class="space-y-4" id="group-bars">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">No group data yet.</div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Row 3: Key Stats | Suggestions (equal 2-col) -->
-    <div class="mt-6 grid gap-6 lg:grid-cols-2">
-      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 class="text-2xl font-bold text-black dark:text-white">Key Stats</h2>
-        <div class="mt-5 grid gap-4 workbench-list-container">
-          <div class="rounded-2xl bg-surface-container-low p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Advantaged Group</p>
-            <p class="mt-2 text-xl font-bold text-black" id="advantaged-group-text">-</p>
+        </section>
+        <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 class="text-2xl font-bold text-black dark:text-white">Formula Reference</h2>
+          <div class="workbench-list-container mt-5">
+            <div class="grid gap-4 md:grid-cols-3">
+              <div class="rounded-2xl border border-outline-variant p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Normalize</p>
+                <p class="mt-3 font-mono text-sm text-slate-900">rateA = groupA / 100</p>
+                <p class="font-mono text-sm text-slate-900">rateB = groupB / 100</p>
+              </div>
+              <div class="rounded-2xl border border-outline-variant p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
+                <p class="mt-3 font-mono text-sm text-slate-900">DIR = min(rate) / max(rate)</p>
+              </div>
+              <div class="rounded-2xl border border-outline-variant p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Decision</p>
+                <p class="mt-3 text-sm text-slate-700">DIR &lt; 0.5: HIGH</p>
+                <p class="text-sm text-slate-700">DIR &lt; 0.8: MODERATE</p>
+                <p class="text-sm text-slate-700">Else: LOW</p>
+              </div>
+            </div>
           </div>
-          <div class="rounded-2xl bg-surface-container-low p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Least Advantaged Group</p>
-            <p class="mt-2 text-xl font-bold text-black" id="disadvantaged-group-text">-</p>
-          </div>
-          <div class="rounded-2xl bg-surface-container-low p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Selection Gap %</p>
-            <p class="mt-2 text-xl font-bold text-black" id="selection-gap-percent-text">0%</p>
-          </div>
-          <div class="rounded-2xl bg-surface-container-low p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Most Influential Feature</p>
-            <p class="mt-2 text-xl font-bold text-black" id="influential-feature-text">-</p>
-          </div>
-          <div class="rounded-2xl bg-surface-container-low p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hidden Bias</p>
-            <p class="mt-2 text-xl font-bold text-black" id="hidden-bias-text">No</p>
-          </div>
-          <div class="rounded-2xl bg-surface-container-low p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dataset Metadata</p>
-            <p class="mt-2 text-sm leading-6 text-slate-600" id="dataset-meta-text">No dataset uploaded.</p>
-          </div>
-        </div>
+        </section>
       </div>
-      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 class="text-2xl font-bold text-black dark:text-white">Suggestions</h2>
-        <div class="mt-5 space-y-3 workbench-list-container" id="recommendations-list">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Recommendations appear after analysis.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Row 4: Repair Suggestions | Feature Impact (equal 2-col) -->
-    <div class="mt-6 grid gap-6 lg:grid-cols-2">
-      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black dark:text-white">Repair Suggestions</h2>
-            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Minimal remediation steps to move toward the fairness threshold.</p>
-          </div>
-          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="repair-count-chip">0 Suggestions</div>
-        </div>
-        <div class="space-y-3 workbench-list-container" id="repairs-list">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Repair suggestions appear after analysis.</div>
-        </div>
-      </div>
-      <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black dark:text-white">Feature Impact Ranking</h2>
-            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Ranked root-cause features contributing most to disparity.</p>
-          </div>
-          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="feature-count-chip">0 Features</div>
-        </div>
-        <div class="space-y-3 workbench-list-container" id="feature-impact-list">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Feature impact rankings appear after analysis.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Row 5: Bias Hotspots | Counterfactual Simulations (equal 2-col) -->
-    <div class="mt-6 grid gap-6 lg:grid-cols-2">
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black dark:text-white">Bias Hotspots</h2>
-            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Strongest subgroup-level disparity areas.</p>
-          </div>
-          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="hotspot-count-chip">0 Hotspots</div>
-        </div>
-        <div class="space-y-3 workbench-list-container" id="hotspots-list">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Hotspots appear after dataset analysis.</div>
-        </div>
-      </section>
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black dark:text-white">Counterfactual Simulations</h2>
-            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Deterministic what-if scenarios.</p>
-          </div>
-          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="simulation-count-chip">0 Scenarios</div>
-        </div>
-        <div class="space-y-3 workbench-list-container" id="simulations-list">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Simulation scenarios appear after analysis.</div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Row 6: What-If Simulator (full-width) -->
-    <div class="mt-6">
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
-        <div class="grid gap-8 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
-          <div>
-            <span class="material-symbols-outlined text-4xl text-slate-900 dark:text-white">science</span>
-            <h2 class="mt-6 text-4xl font-light tracking-tight text-slate-900 dark:text-white">What-If Simulator</h2>
-            <p class="mt-4 max-w-md text-lg leading-8 text-on-surface-variant dark:text-zinc-400">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
-            <div class="mt-8 space-y-6">
-              <div>
-                <div class="mb-3 flex items-center justify-between gap-4">
-                  <label class="text-sm font-semibold text-slate-900" for="simulator-diversity-weight">Group Diversity Weight</label>
-                  <span class="font-mono text-sm text-secondary" id="simulator-diversity-value">0.75</span>
-                </div>
-                <input class="w-full accent-secondary" id="simulator-diversity-weight" max="1" min="0" step="0.01" type="range" value="0.75"/>
-              </div>
-              <div>
-                <div class="mb-3 flex items-center justify-between gap-4">
-                  <label class="text-sm font-semibold text-slate-900">Fairness Constraint</label>
-                  <span class="font-mono text-sm text-secondary" id="simulator-constraint-text">Optimal</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                  <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Loose" type="button">Loose</button>
-                  <button class="rounded-xl border border-secondary bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition" data-simulator-constraint="Optimal" type="button">Optimal</button>
-                  <button class="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low" data-simulator-constraint="Strict" type="button">Strict</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="rounded-3xl bg-surface-container p-6 dark:bg-zinc-800/50">
-            <div class="flex items-center justify-between gap-4 border-b border-outline-variant pb-4 dark:border-zinc-700">
-              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-600 dark:text-zinc-400">Scenario Preview</p>
-              <span class="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-secondary" id="simulator-instant-label">Instant</span>
-            </div>
-            <div class="mt-5 rounded-2xl border border-outline-variant bg-white p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Change</p>
-              <p class="mt-2 text-sm leading-6 text-slate-700" id="simulator-change-text">Increase diversity weight to 0.75 and apply mild reweighting.</p>
-            </div>
-            <div class="mt-4 grid grid-cols-3 gap-3">
-              <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
-                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-dir-text">0.92</p>
-              </div>
-              <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">SPD</p>
-                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-spd-text">-0.03</p>
-              </div>
-              <div class="rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Accuracy</p>
-                <p class="mt-2 text-2xl font-black text-slate-900 dark:text-white" id="simulator-accuracy-text">93.4%</p>
-              </div>
-            </div>
-            <div class="mt-4 rounded-2xl border border-outline-variant bg-white p-4 dark:bg-zinc-900 dark:border-zinc-800">
-              <div class="mb-3 flex items-center justify-between gap-4">
-                <p class="text-sm font-semibold text-slate-900 dark:text-white">Parity Improvement</p>
-                <span class="text-sm font-semibold text-secondary" id="simulator-improvement-text">+8.1%</span>
-              </div>
-              <div class="h-3 rounded-full bg-slate-200 overflow-hidden dark:bg-zinc-800">
-                <div class="meter-fill h-3 rounded-full bg-secondary" id="simulator-improvement-bar" style="width: 81%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Row 7: Reliability Warnings | Formula Reference (equal 2-col) -->
-    <div class="mt-6 grid gap-6 lg:grid-cols-2">
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div class="mb-5 flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-black dark:text-white">Reliability Warnings</h2>
-            <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Data quality and sample-size caveats that affect interpretation.</p>
-          </div>
-          <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="warning-count-chip">0 Warnings</div>
-        </div>
-        <div class="space-y-3 workbench-list-container" id="warnings-list">
-          <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Warnings appear after analysis when reliability issues are detected.</div>
-        </div>
-      </section>
-      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 class="text-2xl font-bold text-black dark:text-white">Formula Reference</h2>
-        <div class="workbench-list-container mt-5">
-          <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-2xl border border-outline-variant p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Normalize</p>
-              <p class="mt-3 font-mono text-sm text-slate-900">rateA = groupA / 100</p>
-              <p class="font-mono text-sm text-slate-900">rateB = groupB / 100</p>
-            </div>
-            <div class="rounded-2xl border border-outline-variant p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">DIR</p>
-              <p class="mt-3 font-mono text-sm text-slate-900">DIR = min(rate) / max(rate)</p>
-            </div>
-            <div class="rounded-2xl border border-outline-variant p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Decision</p>
-              <p class="mt-3 text-sm text-slate-700">DIR &lt; 0.5: HIGH</p>
-              <p class="text-sm text-slate-700">DIR &lt; 0.8: MODERATE</p>
-              <p class="text-sm text-slate-700">Else: LOW</p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
 
   </section>
