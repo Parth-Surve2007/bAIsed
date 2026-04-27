@@ -12,56 +12,6 @@ from pandas.api.types import CategoricalDtype
 
 TRUE_VALUES = {"1", "true", "yes", "y", "approved", "selected", "pass", "positive"}
 FALSE_VALUES = {"0", "false", "no", "n", "rejected", "not selected", "fail", "negative"}
-PROTECTED_COLUMN_HINTS = {
-    "gender",
-    "sex",
-    "race",
-    "ethnicity",
-    "region",
-    "group",
-    "protected_group",
-    "category",
-    "department",
-}
-IDENTIFIER_COLUMN_HINTS = {"id", "uuid", "sale_id", "record_id", "transaction_id", "timestamp", "date"}
-DATE_COLUMN_HINTS = {"date", "month", "year", "quarter", "week", "day"}
-OUTCOME_COLUMN_HINTS = {
-    "outcome",
-    "label",
-    "target",
-    "selected",
-    "approved",
-    "decision",
-    "result",
-    "hired",
-    "passed",
-    "success",
-}
-NUMERIC_OUTCOME_COLUMN_HINTS = {
-    "sales",
-    "units",
-    "revenue",
-    "amount",
-    "price",
-    "score",
-    "profit",
-    "margin",
-}
-QUALIFICATION_COLUMN_HINTS = {
-    "qualification",
-    "qualified",
-    "eligibility",
-    "eligible",
-    "score",
-    "score_band",
-    "score_level",
-    "grade",
-    "rating",
-    "tier",
-    "experience_level",
-    "risk_band",
-}
-NUMERIC_QUALIFICATION_HINTS = {"score", "grade", "rating", "risk", "tenure", "experience"}
 MIN_GROUP_SAMPLE_SIZE = 5
 LOW_TOTAL_SAMPLE_SIZE = 30
 FAIRNESS_THRESHOLD = 0.8
@@ -266,16 +216,16 @@ def _profile_columns(df: pd.DataFrame) -> dict[str, dict[str, Any]]:
 
         binary_like = False
         if non_null_count:
+            # Use strict check for profiling - only true binary data (0/1, yes/no, true/false)
             try:
-                non_null.map(_normalize_outcome_value)
-                binary_like = True
-            except AnalysisError:
+                unique_str_vals = {str(v).strip().lower() for v in non_null.unique()}
+                strict_binary = unique_str_vals.issubset(TRUE_VALUES | FALSE_VALUES | {"0", "1", "0.0", "1.0"})
+                if strict_binary and len(unique_str_vals) <= 2:
+                    binary_like = True
+            except:
                 binary_like = False
 
-        identifier_like = (
-            any(hint in normalized for hint in IDENTIFIER_COLUMN_HINTS)
-            or (unique_count > 20 and unique_ratio >= 0.95)
-        )
+        identifier_like = (unique_count > 20 and unique_ratio >= 0.95)
         categorical_like = bool(
             non_null_count
             and (pd.api.types.is_object_dtype(non_null) or isinstance(non_null.dtype, CategoricalDtype))
@@ -301,18 +251,76 @@ def _profile_columns(df: pd.DataFrame) -> dict[str, dict[str, Any]]:
             numeric_spread = max(0.0, (max_value - min_value) / mean_abs)
 
         group_score = 0.0
+        # Common protected attribute patterns
+        primary_protected = ["sex", "race", "ethnic", "gender", "age"]
+        secondary_protected = ["disability", "marital", "religion", "native", "nationality"]
+        
+        name_lower = name.lower()
+        if any(k in name_lower for k in primary_protected):
+            semantic_group_boost = 1.5
+        elif any(k in name_lower for k in secondary_protected):
+            semantic_group_boost = 1.0
+        else:
+            semantic_group_boost = 0.0
+
         if groupable_categorical:
-            group_score = (2.5 - min(2.0, abs(unique_count - 6) / 6.0)) + (1.0 - min(1.0, unique_ratio))
+            group_score = (2.5 - min(2.0, abs(unique_count - 6) / 6.0)) + (1.0 - min(1.0, unique_ratio)) + semantic_group_boost
         elif groupable_date:
-            group_score = 1.8 + min(0.6, date_parse_ratio)
+            group_score = 1.8 + min(0.6, date_parse_ratio) + semantic_group_boost
         elif groupable_numeric:
-            group_score = 1.2 + min(1.2, numeric_spread / 4.0)
+            group_score = 1.2 + min(1.2, numeric_spread / 4.0) + semantic_group_boost
 
         outcome_score = 0.0
+        # Common outcome patterns
+        outcome_keywords = ["outcome", "target", "label", "result", "hired", "pass", "fail", "recid", "arrest", "status", "score", "decile"]
+        semantic_outcome_boost = 1.5 if any(k in name.lower() for k in outcome_keywords) else 0.0
+
         if binary_like:
-            outcome_score = 5.0 + (0.5 if any(hint in normalized for hint in OUTCOME_COLUMN_HINTS) else 0.0)
+            # Penalize binary columns that have very low variance (mostly all 1s or all 0s)
+            try:
+                normalized_values = non_null.map(_normalize_outcome_value)
+                balance = float(normalized_values.mean())
+                # If the column is constant (all 1s or all 0s), it's useless for analysis
+                if balance == 0.0 or balance == 1.0:
+                    outcome_score = 0.0
+                else:
+                    # Penalty is 0 at balance=0.5, and increases as it approaches 0 or 1.
+                    variance_penalty = abs(0.5 - balance) * 6.0 
+                    outcome_score = max(0.1, 5.0 - variance_penalty) + semantic_outcome_boost
+            except:
+                outcome_score = 0.0
         elif is_numeric and unique_count >= 4 and not identifier_like:
-            outcome_score = 1.0 + min(2.0, numeric_spread / 3.0)
+            outcome_score = 1.0 + min(2.0, numeric_spread / 3.0) + semantic_outcome_boost
+        elif categorical_like and not identifier_like and 2 < unique_count <= 10:
+            # Ordinal/categorical outcome detection (e.g., Low/Medium/High, Pass/Fail/Pending)
+            ordinal_indicators = {"low", "medium", "high", "very high", "very low", "none", "severe", "critical", "minimal"}
+            unique_lower = {str(v).strip().lower() for v in non_null.unique()}
+            is_ordinal = len(unique_lower & ordinal_indicators) >= 2
+            if is_ordinal:
+                outcome_score = 4.0 + semantic_outcome_boost  # Strong score for ordinal scales
+            elif semantic_outcome_boost > 0:
+                outcome_score = 2.0 + semantic_outcome_boost  # Moderate for keyword-matching categoricals
+
+
+        stats = {
+            "mean": None,
+            "median": None,
+            "min": None,
+            "max": None,
+            "std": None,
+            "missing_count": int(series.isna().sum()),
+            "missing_ratio": _round(series.isna().mean()),
+            "top_values": {str(k): v for k, v in non_null.value_counts().head(5).to_dict().items()} if not non_null.empty else {}
+        }
+
+        if is_numeric and not numeric_series.empty:
+            stats.update({
+                "mean": _round(numeric_series.mean()),
+                "median": _round(numeric_series.median()),
+                "min": _round(numeric_series.min()),
+                "max": _round(numeric_series.max()),
+                "std": _round(numeric_series.std()) if len(numeric_series) > 1 else 0.0
+            })
 
         profiles[name] = {
             "non_null_count": non_null_count,
@@ -329,6 +337,7 @@ def _profile_columns(df: pd.DataFrame) -> dict[str, dict[str, Any]]:
             "numeric_spread": _round(numeric_spread),
             "group_score": _round(group_score),
             "outcome_score": _round(outcome_score),
+            "analysis": stats
         }
 
     return profiles
@@ -402,11 +411,7 @@ def _candidate_feature_columns(df: pd.DataFrame, excluded: set[str]) -> list[str
 
 def _prepare_feature_series(series: pd.Series, column_name: str) -> pd.Series:
     if pd.api.types.is_numeric_dtype(series):
-        normalized_name = _canonical_name(column_name)
-        if any(hint in normalized_name for hint in NUMERIC_QUALIFICATION_HINTS):
-            return _safe_qcut(series.astype(float))
         return _safe_qcut(series.astype(float))
-
     return series.astype(str).str.strip()
 
 
@@ -502,7 +507,6 @@ def _detect_qualification_column(
         if series.empty:
             continue
 
-        hinted = any(hint in normalized_name for hint in QUALIFICATION_COLUMN_HINTS)
         is_binary = False
         try:
             series.map(_normalize_outcome_value)
@@ -510,7 +514,7 @@ def _detect_qualification_column(
         except AnalysisError:
             is_binary = False
 
-        if hinted and (is_binary or pd.api.types.is_numeric_dtype(series) or series.nunique() <= 12):
+        if is_binary or pd.api.types.is_numeric_dtype(series) or series.nunique() <= 12:
             candidates.append(name)
 
     return candidates[0] if candidates else None
@@ -903,23 +907,77 @@ def load_dataset(file_storage) -> pd.DataFrame:
 
 def _normalize_outcome_value(value: Any) -> int:
     if pd.isna(value):
-        raise AnalysisError("Outcome column contains missing values.")
+        return 0 # Treat NaN as failure/zero in outcome
 
     if isinstance(value, bool):
         return int(value)
 
     if isinstance(value, (int, float)) and not isinstance(value, bool):
-        if value in (0, 1):
-            return int(value)
-        raise AnalysisError("Outcome column must be binary (0/1 or yes/no).")
+        if value == 1 or value == 1.0: return 1
+        if value == 0 or value == 0.0: return 0
+        return 1 if value > 0 else 0 # Lenient numeric binarization
 
     normalized = str(value).strip().lower()
     if normalized in TRUE_VALUES:
         return 1
     if normalized in FALSE_VALUES:
         return 0
+    
+    # Fallback for individual row mapping
+    return 1 
 
-    raise AnalysisError("Outcome column must be binary (0/1 or yes/no).")
+def _binarize_outcome_series(series: pd.Series) -> tuple[pd.Series, str]:
+    """
+    Intelligently converts any series into a binary 0/1 series.
+    Returns (binarized_series, description_of_mapping)
+    """
+    # 1. Try standard normalization first (works for pure binary columns)
+    try:
+        sample = series.dropna().head(100)
+        mapped_sample = sample.map(lambda x: str(x).strip().lower())
+        if all(v in TRUE_VALUES or v in FALSE_VALUES for v in mapped_sample):
+             return series.map(_normalize_outcome_value).fillna(0).astype(int), "standard binary mapping"
+    except:
+        pass
+
+    unique_vals = [str(v) for v in series.dropna().unique()]
+    if not unique_vals:
+        return series.fillna(0).astype(int), "empty column"
+    
+    unique_lower = [v.lower() for v in unique_vals]
+
+    # 2. Ordinal scale detection (e.g., Low/Medium/High)
+    ordinal_positive = {"high", "very high", "severe", "critical"}
+    ordinal_negative = {"low", "very low", "none", "minimal"}
+    
+    has_ordinal_positive = any(v in ordinal_positive for v in unique_lower)
+    has_ordinal_negative = any(v in ordinal_negative for v in unique_lower)
+    
+    if has_ordinal_positive and has_ordinal_negative:
+        # Map 'High' -> 1, everything else -> 0
+        positive_vals = {str(v) for v, vl in zip(unique_vals, unique_lower) if vl in ordinal_positive}
+        mapping = {v: (1 if v in positive_vals else 0) for v in series.unique()}
+        return series.map(mapping).fillna(0).astype(int), f"mapped {positive_vals} to 1 (ordinal scale), others to 0"
+
+    # 3. Keyword-based positive detection
+    positive_keywords = ["pass", "high", "success", "approve", "select", "positive", "recid"]
+    positive_candidates = [v for v in unique_vals if v.lower() in TRUE_VALUES or any(k in v.lower() for k in positive_keywords)]
+    
+    if positive_candidates:
+        target = positive_candidates[0]
+        mapping = {v: (1 if v == target else 0) for v in series.unique()}
+        return series.map(mapping).fillna(0).astype(int), f"mapped '{target}' to 1, others to 0"
+    
+    # 4. Fallback: Treat the least frequent value as 1 (the "event" of interest)
+    counts = series.value_counts()
+    if len(counts) > 1:
+        least_freq = counts.index[-1]
+        mapping = {v: (1 if v == least_freq else 0) for v in series.unique()}
+        return series.map(mapping).fillna(0).astype(int), f"mapped least frequent '{least_freq}' to 1, others to 0"
+    elif len(counts) == 1:
+        return pd.Series(0, index=series.index), f"constant column (all '{counts.index[0]}'), mapped to 0"
+    
+    return series.fillna(0).astype(int), "fallback zero mapping"
 
 
 def _candidate_categorical_columns(df: pd.DataFrame) -> list[str]:
@@ -963,8 +1021,9 @@ def _candidate_groupable_date_columns(df: pd.DataFrame, excluded_columns: set[st
 def _candidate_outcome_columns(df: pd.DataFrame) -> list[str]:
     candidates: list[tuple[float, str]] = []
     for column, profile in _profile_columns(df).items():
-        if profile["binary_like"]:
-            candidates.append((float(profile["outcome_score"]), str(column)))
+        score = float(profile["outcome_score"])
+        if score > 0.0:
+            candidates.append((score, str(column)))
 
     candidates.sort(key=lambda item: (-item[0], item[1]))
     return [column for _, column in candidates]
@@ -1069,11 +1128,6 @@ def _resolve_protected_columns(df: pd.DataFrame, protected_attribute: str | None
         categorical_columns = [derived_protected]
 
     protected_columns = categorical_columns[:1]
-    if len(categorical_columns) > 1:
-        top_two = categorical_columns[:2]
-        hinted = [column for column in top_two if str(column).strip().lower() in PROTECTED_COLUMN_HINTS]
-        if hinted:
-            protected_columns = hinted[:1]
     return [str(column) for column in protected_columns]
 
 
@@ -1096,8 +1150,7 @@ def _detect_intersectional_columns(
     if not extras:
         return protected_columns
 
-    hinted = [column for column in extras if _canonical_name(column) in PROTECTED_COLUMN_HINTS]
-    secondary = hinted[0] if hinted else extras[0]
+    secondary = extras[0]
     return [primary, secondary]
 
 
@@ -1115,10 +1168,7 @@ def detect_columns(
         if key not in columns:
             raise AnalysisError(f"Outcome column '{outcome_column}' was not found.")
         resolved_outcome = columns[key]
-        try:
-            df[resolved_outcome].dropna().map(_normalize_outcome_value)
-        except AnalysisError as exc:
-            raise AnalysisError(f"Outcome column '{outcome_column}' must be binary (0/1 or yes/no).") from exc
+        # No longer raising error here, we binarize in analyze_dataset
     else:
         excluded_outcome_columns = {_canonical_name(protected_column)}
         derived_protected_info = df.attrs.get("derived_protected_info")
@@ -1135,11 +1185,6 @@ def detect_columns(
             outcome_candidates = [derived_outcome]
 
         resolved_outcome = outcome_candidates[0]
-        if len(outcome_candidates) > 1:
-            top_two = outcome_candidates[:2]
-            hinted = [column for column in top_two if str(column).strip().lower() in OUTCOME_COLUMN_HINTS]
-            if hinted:
-                resolved_outcome = hinted[0]
 
     if protected_column == resolved_outcome:
         raise AnalysisError("Protected attribute and outcome column must be different.")
@@ -1153,15 +1198,21 @@ def analyze_dataset(
     outcome_column: str | None = None,
     qualification_column: str | None = None,
 ) -> FairnessResult:
+    # Step 1: Scan all columns and fields (Profile)
     column_profile = _profile_columns(df)
+    warnings = []
+    
+    # Step 2: Resolve metadata (Protected Attributes & Outcome) without hints
     protected_columns = _resolve_protected_columns(df, protected_attribute)
     protected_column = protected_columns[0]
     resolved_outcome = detect_columns(df, protected_attribute, outcome_column)[1]
+    
     qualification_resolved = _detect_qualification_column(
         df,
         excluded_columns={_canonical_name(column) for column in [*protected_columns, resolved_outcome]},
         qualification_column=qualification_column,
     )
+    
     intersectional_columns = _detect_intersectional_columns(
         df,
         protected_columns,
@@ -1169,15 +1220,13 @@ def analyze_dataset(
         qualification_column=qualification_resolved,
     )
 
-    selected_columns = [*protected_columns, *intersectional_columns, resolved_outcome]
-    selected_columns = list(dict.fromkeys(selected_columns))
-    if qualification_resolved and qualification_resolved not in selected_columns:
-        selected_columns.append(qualification_resolved)
-
-    working_df = df[selected_columns].copy()
+    # Step 3: Prepare Working Data (Keep all columns for full analysis)
+    working_df = df.copy()
+    
+    # We still need to drop rows with missing values in the primary columns for fairness metrics
     working_df = working_df.dropna(subset=[*protected_columns, resolved_outcome])
     if working_df.empty:
-        raise AnalysisError("No valid rows remain after removing missing values.")
+        raise AnalysisError("No valid rows remain after removing missing values in protected or outcome columns.")
 
     for column in protected_columns:
         working_df[column] = working_df[column].astype(str).str.strip()
@@ -1185,7 +1234,9 @@ def analyze_dataset(
     if working_df.empty:
         raise AnalysisError("Protected attribute column contains no valid group values.")
 
-    working_df[resolved_outcome] = working_df[resolved_outcome].map(_normalize_outcome_value)
+    binarized_outcome, binarization_msg = _binarize_outcome_series(working_df[resolved_outcome])
+    working_df[resolved_outcome] = binarized_outcome
+    warnings.append(f"Outcome binarization: {binarization_msg}")
     qualification_label_column = None
     if qualification_resolved:
         qualification_label_column = f"{qualification_resolved}__qualification_bucket"
@@ -1249,7 +1300,7 @@ def analyze_dataset(
                 "least_advantaged_group": intersectional_disadvantaged,
             }
 
-    warnings = _detect_warnings(
+    detected_warnings = _detect_warnings(
         df,
         working_df,
         protected_column,
@@ -1258,6 +1309,7 @@ def analyze_dataset(
         qualified_group_counts=qualified_group_counts,
         subgroup_counts=hotspot_counts,
     )
+    warnings.extend(detected_warnings)
 
     derived_outcome_info = df.attrs.get("derived_outcome_info")
     if derived_outcome_info:
