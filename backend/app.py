@@ -9,9 +9,14 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 import json
 import math
 import numpy as np
+import pandas as pd
 
 from analysis import AnalysisError, analyze_dataset, analyze_simple_input, detect_columns, load_dataset
 from simulator import simulate_fairness_scenario
+from preprocessor import standardize_dataset
+import uuid
+import os
+import shutil
 
 
 class NaNSafeEncoder(JSONEncoder):
@@ -39,7 +44,10 @@ def clean_for_json(obj: Any) -> Any:
             return None
         return obj
     elif isinstance(obj, (np.floating, np.integer)):
-        return float(obj) if isinstance(obj, np.floating) else int(obj)
+        val = float(obj) if isinstance(obj, np.floating) else int(obj)
+        if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+            return None
+        return val
     return obj
 
 
@@ -222,6 +230,12 @@ def _search_docs(query: str) -> list[dict[str, str]]:
 def create_app() -> Flask:
     frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
     app = Flask(__name__, static_folder=str(frontend_dir), static_url_path="/frontend")
+    
+    # Global safety for NaN values in JSON
+    app.json_encoder = NaNSafeEncoder
+    
+    app.config['TEMP_DATASETS'] = os.path.join(os.path.dirname(__file__), "temp_datasets")
+    os.makedirs(app.config['TEMP_DATASETS'], exist_ok=True)
 
     @app.after_request
     def add_cors_headers(response):
@@ -372,18 +386,56 @@ def create_app() -> Flask:
         response["mode"] = "simple"
         return jsonify(clean_for_json(response))
 
-    @app.post("/upload")
-    def upload():
+    @app.post("/scan")
+    def scan():
         file = request.files.get("file")
         if file is None:
             return jsonify({"error": "A file upload is required."}), 400
+        
+        try:
+            df = load_dataset(file)
+            df, preprocessor_report = standardize_dataset(df)
+            
+            # Save standardized dataset to a temporary file
+            dataset_id = str(uuid.uuid4())
+            temp_path = os.path.join(app.config['TEMP_DATASETS'], f"{dataset_id}.csv")
+            df.to_csv(temp_path, index=False)
+            
+            from analysis import _profile_columns
+            profile = _profile_columns(df)
+            return jsonify(clean_for_json({
+                "dataset_id": dataset_id,
+                "columns": list(df.columns),
+                "profile": profile,
+                "row_count": int(len(df)),
+                "preprocessor_report": preprocessor_report
+            }))
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
 
+    @app.post("/upload")
+    def upload():
+        dataset_id = request.form.get("dataset_id")
         protected_attribute = request.form.get("protected_attribute")
         outcome_column = request.form.get("outcome_column")
         qualification_column = request.form.get("qualification_column")
 
         try:
-            df = load_dataset(file)
+            if dataset_id:
+                # Use the pre-processed temporary dataset
+                temp_path = os.path.join(app.config['TEMP_DATASETS'], f"{dataset_id}.csv")
+                if not os.path.exists(temp_path):
+                    return jsonify({"error": "Dataset session expired. Please re-upload."}), 400
+                df = pd.read_csv(temp_path)
+                preprocessor_report = {"status": "Loaded from standardized workspace"}
+            else:
+                # Fallback to on-the-fly processing if no ID
+                file = request.files.get("file")
+                if file is None:
+                    return jsonify({"error": "A file upload or dataset ID is required."}), 400
+                df = load_dataset(file)
+                df, preprocessor_report = standardize_dataset(df)
+            
             resolved_protected, resolved_outcome = detect_columns(
                 df,
                 protected_attribute=protected_attribute,
@@ -397,6 +449,10 @@ def create_app() -> Flask:
             )
         except AnalysisError as exc:
             return jsonify({"error": str(exc)}), 400
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
 
         response = result.to_dict()
         response["mode"] = "dataset"
@@ -407,7 +463,12 @@ def create_app() -> Flask:
         response["derived_outcome"] = result.stats.get("derived_outcome")
         response["qualification_column"] = result.stats.get("qualification_column")
         response["row_count"] = int(len(df))
-        response["file_name"] = file.filename
+        
+        # Get filename safely - file may not exist when using dataset_id
+        file_obj = request.files.get("file")
+        response["file_name"] = file_obj.filename if file_obj else f"dataset_{dataset_id}.csv"
+        
+        response["preprocessor_report"] = preprocessor_report
         return jsonify(clean_for_json(response))
 
     @app.post("/simulate")
@@ -528,6 +589,30 @@ def create_app() -> Flask:
             "columns": columns,
             "ai_response": ai_text
         })
+
+    @app.post("/reset")
+    def reset():
+        temp_dir = app.config['TEMP_DATASETS']
+        try:
+            files_deleted = 0
+            for filename in os.listdir(temp_dir):
+                file_path = os.path.join(temp_dir, filename)
+                try:
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)
+                        files_deleted += 1
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+                        files_deleted += 1
+                except Exception as e:
+                    print(f"Failed to delete {file_path}. Reason: {e}")
+            
+            return jsonify({
+                "message": f"Reset successful. Deleted {files_deleted} temporary datasets.",
+                "status": "success"
+            })
+        except Exception as e:
+            return jsonify({"error": f"Reset failed: {str(e)}"}), 500
 
     return app
 

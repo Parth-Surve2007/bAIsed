@@ -1,6 +1,7 @@
 (function () {
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
+  let currentDatasetId = null;
   let puppyPetCount = 0;
 
   function movePuppy() {
@@ -352,6 +353,57 @@
     });
   }
 
+  function renderFieldAnalysis(result) {
+    const container = document.getElementById("field-analysis-body");
+    const chip = document.getElementById("field-count-chip");
+    if (!container || !chip) return;
+
+    const profile = (result.stats && result.stats.column_profile) || {};
+    const columns = Object.keys(profile);
+    chip.textContent = `${columns.length} Fields`;
+    container.innerHTML = "";
+
+    if (!columns.length) {
+      container.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-500 italic">No field analysis available.</td></tr>`;
+      return;
+    }
+
+    columns.forEach((name) => {
+      const data = profile[name];
+      const analysis = data.analysis || {};
+      const type = data.is_numeric ? "Numeric" : data.categorical_like ? "Categorical" : "Object";
+      
+      let rangeText = "-";
+      if (data.is_numeric && analysis.min !== null) {
+        rangeText = `${analysis.min} to ${analysis.max} (μ=${analysis.mean})`;
+      } else if (analysis.top_values) {
+        rangeText = Object.keys(analysis.top_values).slice(0, 3).join(", ");
+      }
+
+      const row = document.createElement("tr");
+      row.className = "hover:bg-slate-50 transition-colors";
+      
+      let recommendationBadge = "";
+      if (data.group_score > 3.0) {
+        recommendationBadge = '<span class="ml-2 text-[10px] bg-secondary/10 text-secondary px-1.5 py-0.5 rounded-full font-bold uppercase">Rec. Protected</span>';
+      } else if (data.outcome_score > 4.5) {
+        recommendationBadge = '<span class="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">Rec. Outcome</span>';
+      }
+
+      row.innerHTML = `
+        <td class="px-4 py-4 font-semibold text-slate-900">
+          ${name}
+          ${recommendationBadge}
+        </td>
+        <td class="px-4 py-4 text-slate-600">${type} ${data.identifier_like ? '<span class="ml-2 text-[10px] bg-slate-100 px-1 rounded">ID-like</span>' : ''}</td>
+        <td class="px-4 py-4 text-slate-600">${data.unique_count}</td>
+        <td class="px-4 py-4 text-slate-600">${analysis.missing_count} (${(analysis.missing_ratio * 100).toFixed(1)}%)</td>
+        <td class="px-4 py-4 text-slate-600 font-mono text-xs">${rangeText}</td>
+      `;
+      container.appendChild(row);
+    });
+  }
+
   function renderGroupBars(result) {
     const container = document.getElementById("group-bars");
     const groupCountChip = document.getElementById("group-count-chip");
@@ -460,6 +512,7 @@
     }
 
     renderRecommendations(result.recommendations || []);
+    renderFieldAnalysis(result);
     renderGroupBars(result);
     renderHotspots(result);
     renderSimulations(result);
@@ -665,6 +718,124 @@
     });
   }
 
+  function bindScanOnSelect() {
+    const fileInput = document.getElementById("dataset-file-input");
+    if (!fileInput) return;
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        console.log("Starting scan for file:", file.name);
+        // Show scanning state in the UI
+        document.getElementById('file-name-display').textContent = `Scanning ${file.name}...`;
+        
+        // Disable and show loading in dropdowns
+        const selects = ["protected-attribute-input", "outcome-column-input", "qualification-column-input"];
+        selects.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.disabled = true;
+            el.innerHTML = '<option value="">Scanning columns...</option>';
+          }
+        });
+
+        let scanResult;
+        try {
+          scanResult = await postForm("/scan", formData);
+        } finally {
+          selects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.disabled = false;
+                // If it's still stuck on "Scanning...", reset it to "Auto-detect"
+                if (el.innerHTML.includes("Scanning columns...")) {
+                    el.innerHTML = '<option value="">Auto-detect</option>';
+                }
+            }
+          });
+        }
+
+        console.log("Scan result received:", scanResult);
+        
+        if (!scanResult || scanResult.error) {
+          console.error("Scan API error:", scanResult?.error);
+          renderError(scanResult?.error || "Empty response from server");
+          return;
+        }
+        
+        if (!scanResult.columns || scanResult.columns.length === 0) {
+           throw new Error("No columns detected in the file.");
+        }
+
+        if (scanResult.dataset_id) {
+            currentDatasetId = scanResult.dataset_id;
+        }
+        
+        // Populate dropdowns with intelligence
+        populateDropdowns(scanResult.columns, scanResult.profile);
+        console.log("Dropdowns populated with", scanResult.columns.length, "columns.");
+        
+        // Show field analysis immediately
+        renderFieldAnalysis({ stats: { column_profile: scanResult.profile } });
+        
+        // Update UI state
+        document.getElementById('file-drop-zone').classList.add('border-secondary','bg-secondary/10');
+        document.getElementById('file-drop-zone').classList.remove('border-secondary/40','bg-secondary/5');
+        document.getElementById('file-name-display').textContent = file.name;
+        
+        window.lastUploadedDatasetFile = file;
+
+      } catch (err) {
+        console.error("Scan error:", err);
+        renderError(err.message || "Failed to scan dataset schema.");
+      }
+    });
+  }
+
+  function populateDropdowns(columns, profile = {}) {
+    const protectedSelect = document.getElementById("protected-attribute-input");
+    const outcomeSelect = document.getElementById("outcome-column-input");
+    const qualSelect = document.getElementById("qualification-column-input");
+
+    if (!protectedSelect || !outcomeSelect || !qualSelect) return;
+
+    protectedSelect.innerHTML = '<option value="">Auto-detect</option>';
+    outcomeSelect.innerHTML = '<option value="">Auto-detect</option>';
+    qualSelect.innerHTML = '<option value="">Auto-detect (Recommended)</option>';
+
+    let bestProtected = { name: "", score: -1 };
+    let bestOutcome = { name: "", score: -1 };
+
+    columns.forEach(col => {
+      const p = profile[col] || {};
+      
+      // Track best guesses
+      if (p.group_score > bestProtected.score) {
+        bestProtected = { name: col, score: p.group_score };
+      }
+      if (p.outcome_score > bestOutcome.score) {
+        bestOutcome = { name: col, score: p.outcome_score };
+      }
+
+      protectedSelect.add(new Option(col, col));
+      outcomeSelect.add(new Option(col, col));
+      qualSelect.add(new Option(col, col));
+    });
+
+    // Pre-select if a strong candidate is found (threshold to avoid noise)
+    if (bestProtected.score > 2.0) {
+      protectedSelect.value = bestProtected.name;
+    }
+    if (bestOutcome.score > 3.0) {
+      outcomeSelect.value = bestOutcome.name;
+    }
+  }
+
   function bindDatasetForm() {
     const form = document.getElementById("dataset-analysis-form");
     const reset = document.getElementById("dataset-reset");
@@ -687,11 +858,15 @@
       const originalText = submitBtn?.textContent;
 
       const formData = new FormData();
-      formData.append("file", file);
+      if (currentDatasetId) {
+        formData.append("dataset_id", currentDatasetId);
+      } else {
+        formData.append("file", file);
+      }
 
-      const protectedAttribute = document.getElementById("protected-attribute-input").value.trim();
-      const outcomeColumn = document.getElementById("outcome-column-input").value.trim();
-      const qualificationColumn = document.getElementById("qualification-column-input").value.trim();
+      const protectedAttribute = document.getElementById("protected-attribute-input").value;
+      const outcomeColumn = document.getElementById("outcome-column-input").value;
+      const qualificationColumn = document.getElementById("qualification-column-input").value;
 
       if (protectedAttribute) {
         formData.append("protected_attribute", protectedAttribute);
@@ -734,6 +909,10 @@
 
     reset.addEventListener("click", () => {
       form.reset();
+      // Also reset selects
+      document.getElementById("protected-attribute-input").innerHTML = '<option value="">Auto-detect</option>';
+      document.getElementById("outcome-column-input").innerHTML = '<option value="">Auto-detect</option>';
+      document.getElementById("qualification-column-input").innerHTML = '<option value="">Auto-detect (Recommended)</option>';
     });
   }
 
@@ -898,6 +1077,40 @@
     reportWindow.document.close();
   }
 
+  function bindGlobalReset() {
+    const btn = document.getElementById("global-reset-btn");
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+      if (!confirm("Are you sure you want to clear all temporary datasets from the server? This will also reset your current analysis.")) {
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Resetting...';
+
+        const response = await fetch("/reset", { method: "POST" });
+        const result = await response.json();
+
+        if (result.error) {
+          alert("Reset failed: " + result.error);
+        } else {
+          // Clear localStorage as well
+          localStorage.removeItem(LAST_RESULT_KEY);
+          alert(result.message);
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("Reset error:", error);
+        alert("Failed to reset server cache.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   function bindDownloadReport() {
     const btn = document.getElementById("download-report-btn");
     if (btn) {
@@ -907,9 +1120,11 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     bindSimpleForm();
+    bindScanOnSelect();
     bindDatasetForm();
     bindAiAnalyzerForm();
     bindDownloadReport();
+    bindGlobalReset();
     bindSimulator();
     setupPuppyInteractions();
   });

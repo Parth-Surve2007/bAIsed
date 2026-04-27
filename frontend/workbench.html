@@ -150,7 +150,13 @@
               <h2 class="text-2xl font-bold text-black">Dataset Audit</h2>
               <p class="mt-1 text-sm text-on-surface-variant">Upload a CSV or XLSX file. You can optionally specify the protected attribute and binary outcome columns.</p>
             </div>
-            <div class="rounded-full bg-primary-fixed px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Main Feature</div>
+            <div class="flex items-center gap-3">
+              <button id="global-reset-btn" type="button" class="group flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-600 transition hover:bg-red-100 active:scale-95">
+                <span class="material-symbols-outlined text-sm transition-transform group-hover:rotate-180">restart_alt</span>
+                Reset Server Cache
+              </button>
+              <div class="rounded-full bg-primary-fixed px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Main Feature</div>
+            </div>
           </div>
           <form class="space-y-5" id="dataset-analysis-form">
             <div>
@@ -162,23 +168,29 @@
                   <p class="mt-1 text-xs text-slate-500">Supports CSV and XLSX files</p>
                 </div>
                 <p class="text-xs font-medium text-secondary/80" id="file-name-display">No file selected</p>
-                <input accept=".csv,.xlsx" class="absolute inset-0 cursor-pointer opacity-0" id="dataset-file-input" required type="file" onchange="var name = this.files.length ? this.files[0].name : 'No file selected'; document.getElementById('file-name-display').textContent = name; if(this.files.length) { document.getElementById('file-drop-zone').classList.add('border-secondary','bg-secondary/10'); document.getElementById('file-drop-zone').classList.remove('border-secondary/40','bg-secondary/5'); }"/>
+                <input accept=".csv,.xlsx" class="absolute inset-0 cursor-pointer opacity-0" id="dataset-file-input" required type="file" />
               </div>
             </div>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="mb-2 block text-sm font-semibold text-slate-700">Protected Attribute Column</span>
-                <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="protected-attribute-input" placeholder="gender"/>
+                <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="protected-attribute-input">
+                  <option value="">Auto-detect</option>
+                </select>
               </label>
               <label class="block">
                 <span class="mb-2 block text-sm font-semibold text-slate-700 dark:text-zinc-300">Outcome Column</span>
-                <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white" id="outcome-column-input" placeholder="approved"/>
+                <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white" id="outcome-column-input">
+                  <option value="">Auto-detect</option>
+                </select>
               </label>
             </div>
             <label class="block">
               <span class="mb-2 block text-sm font-semibold text-slate-700">Qualification Column</span>
-              <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="qualification-column-input" placeholder="experience_level or score"/>
-              <span class="mt-2 block text-xs text-slate-500">Optional, but recommended for subgroup context, EOD/AOD, and hidden-bias detection.</span>
+              <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20" id="qualification-column-input">
+                <option value="">Auto-detect (Recommended)</option>
+              </select>
+              <span class="mt-2 block text-xs text-slate-500">Subgroup context, EOD/AOD, and hidden-bias detection.</span>
             </label>
             <div class="flex flex-wrap gap-3">
               <button class="rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90" type="submit">Upload And Analyze</button>
@@ -293,6 +305,37 @@
         <div id="ai-error-panel" class="mt-6 hidden rounded-2xl border border-red-200 bg-red-50 p-5">
           <h3 class="mb-2 text-lg font-bold text-red-900">Analysis Failed</h3>
           <p class="text-sm text-red-700 whitespace-pre-wrap" id="ai-error-text"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row: Dataset Field Analysis (full-width) -->
+    <div class="mt-6">
+      <section class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+        <div class="mb-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-black">Dataset Field Analysis</h2>
+            <p class="mt-1 text-sm text-on-surface-variant">Strict data-driven scanning of all columns and fields detected in your dataset.</p>
+          </div>
+          <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container" id="field-count-chip">0 Fields</div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-outline-variant text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th class="px-4 py-3">Column Name</th>
+                <th class="px-4 py-3">Type</th>
+                <th class="px-4 py-3">Unique</th>
+                <th class="px-4 py-3">Missing</th>
+                <th class="px-4 py-3">Analysis / Range</th>
+              </tr>
+            </thead>
+            <tbody id="field-analysis-body" class="divide-y divide-outline-variant">
+              <tr>
+                <td colspan="5" class="px-4 py-8 text-center text-slate-500 italic">Upload a dataset to see column-wise analysis.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
