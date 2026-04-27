@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>About | bAIsed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#000000",secondary:"#3a6662",background:"#f9f9f9",surface:"#ffffff","surface-container":"#edeeee","surface-container-low":"#f3f4f4","surface-container-high":"#e7e8e8","outline-variant":"#cfc4c5","on-surface":"#191c1c","on-surface-variant":"#4c4546","on-primary":"#ffffff","on-secondary":"#ffffff","secondary-container":"#bdece6","on-secondary-container":"#214e4a"},fontFamily:{body:["Inter"]}}}};</script>
+<style>
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  body { font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body class="bg-background text-on-surface antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="about">
+<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md transition-colors duration-300 dark:border-zinc-800 dark:bg-black/85">
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+    <div class="flex items-center gap-8">
+      <a class="text-2xl font-black tracking-tighter text-teal-600" href="/app">bAIsed</a>
+      <nav class="hidden items-center gap-6 md:flex">
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/solutions">Solutions</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/workbench">Workbench</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/methodology">Methodology</a>
+        <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/app/documentation">Docs</a>
+        <a class="border-b-2 border-teal-600 pb-1 text-sm font-semibold text-teal-600" href="/app/about">About</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-3" data-auth-container>
+      <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/app/case_study">Impact Reports</a>
+      <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/app/login" data-action="Sign In">Sign In</a>
+      <a class="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white" href="/app/pricing_demo">Request Demo</a>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-16">
+  <!-- Hero -->
+  <section class="max-w-7xl mx-auto px-6 mb-20 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 bg-secondary-container/20 text-on-secondary-container rounded-full mb-6">
+      <span class="material-symbols-outlined text-[18px]">diversity_3</span>
+      <span class="text-xs font-semibold uppercase tracking-wider">About bAIsed</span>
+    </div>
+    <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-6 dark:text-white">Algorithmic transparency<br/>for a <span class="text-secondary">fair future.</span></h1>
+    <p class="text-lg text-on-surface-variant max-w-2xl mx-auto dark:text-zinc-400">We believe every AI system should be auditable, explainable, and fair. bAIsed is the open-source toolkit that makes that possible.</p>
+  </section>
+
+  <!-- Mission -->
+  <section class="max-w-7xl mx-auto px-6 mb-20">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <h2 class="text-3xl font-bold mb-6 dark:text-white">Our Mission</h2>
+        <p class="text-on-surface-variant leading-relaxed mb-4 dark:text-zinc-400">AI systems are making high-stakes decisions in hiring, lending, healthcare, and criminal justice — often without accountability. Historical prejudices encoded in training data become automated systemic failures.</p>
+        <p class="text-on-surface-variant leading-relaxed mb-6 dark:text-zinc-400">bAIsed exists to give every team — from startups to governments — the scientific tools to detect, quantify, and fix algorithmic bias before it causes real-world harm.</p>
+        <div class="flex flex-wrap gap-3">
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold text-on-secondary-container"><span class="material-symbols-outlined text-sm">check_circle</span> Open Source</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold text-on-secondary-container"><span class="material-symbols-outlined text-sm">check_circle</span> Privacy First</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold text-on-secondary-container"><span class="material-symbols-outlined text-sm">check_circle</span> Research Grade</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+          <p class="text-3xl font-black text-secondary">40+</p>
+          <p class="text-sm text-on-surface-variant mt-1 dark:text-zinc-500">Bias types detected</p>
+        </div>
+        <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+          <p class="text-3xl font-black text-on-surface dark:text-white">&lt;3s</p>
+          <p class="text-sm text-on-surface-variant mt-1 dark:text-zinc-500">Scan speed</p>
+        </div>
+        <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+          <p class="text-3xl font-black text-on-surface dark:text-white">4</p>
+          <p class="text-sm text-on-surface-variant mt-1 dark:text-zinc-500">Regulatory frameworks</p>
+        </div>
+        <div class="rounded-xl border border-outline-variant bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+          <p class="text-3xl font-black text-secondary">$0</p>
+          <p class="text-sm text-on-surface-variant mt-1 dark:text-zinc-500">Free forever</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Methodology Pillars -->
+  <section class="max-w-7xl mx-auto px-6 mb-20">
+    <h2 class="text-3xl font-bold mb-10 text-center dark:text-white">The Three Pillars</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="rounded-2xl border border-outline-variant bg-white p-8 dark:bg-zinc-900 dark:border-zinc-800">
+        <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-6"><span class="material-symbols-outlined text-secondary">analytics</span></div>
+        <h3 class="text-xl font-bold mb-3 dark:text-white">Statistical Foundation</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed dark:text-zinc-400">Built on rigorous metrics — DIR, SPD, EOD, AOD, Theil Index, Atkinson Index — borrowed from economics to detect deep intersectional inequality.</p>
+      </div>
+      <div class="rounded-2xl border border-outline-variant bg-white p-8 dark:bg-zinc-900 dark:border-zinc-800">
+        <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-6"><span class="material-symbols-outlined text-secondary">psychology</span></div>
+        <h3 class="text-xl font-bold mb-3 dark:text-white">Explainable Results</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed dark:text-zinc-400">Every audit generates plain-English narratives. We translate complex statistical drift into actionable insights for non-technical stakeholders.</p>
+      </div>
+      <div class="rounded-2xl border border-outline-variant bg-white p-8 dark:bg-zinc-900 dark:border-zinc-800">
+        <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-6"><span class="material-symbols-outlined text-secondary">science</span></div>
+        <h3 class="text-xl font-bold mb-3 dark:text-white">What-If Simulation</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed dark:text-zinc-400">Test remediation strategies instantly. Adjust weights, thresholds, and constraints to see how parity improves before retraining your model.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="max-w-7xl mx-auto px-6 mb-20">
+    <h2 class="text-3xl font-bold mb-10 text-center dark:text-white">Built With</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="rounded-xl border border-outline-variant bg-white p-6 text-center dark:bg-zinc-900 dark:border-zinc-800">
+        <span class="material-symbols-outlined text-3xl text-secondary mb-3">terminal</span>
+        <p class="font-bold text-sm">Python / Flask</p>
+        <p class="text-xs text-on-surface-variant mt-1 dark:text-zinc-500">Backend API</p>
+      </div>
+      <div class="rounded-xl border border-outline-variant bg-white p-6 text-center dark:bg-zinc-900 dark:border-zinc-800">
+        <span class="material-symbols-outlined text-3xl text-secondary mb-3">data_array</span>
+        <p class="font-bold text-sm">Pandas / NumPy</p>
+        <p class="text-xs text-on-surface-variant mt-1 dark:text-zinc-500">Data Engine</p>
+      </div>
+      <div class="rounded-xl border border-outline-variant bg-white p-6 text-center dark:bg-zinc-900 dark:border-zinc-800">
+        <span class="material-symbols-outlined text-3xl text-secondary mb-3">code</span>
+        <p class="font-bold text-sm">Tailwind CSS</p>
+        <p class="text-xs text-on-surface-variant mt-1 dark:text-zinc-500">Styling</p>
+      </div>
+      <div class="rounded-xl border border-outline-variant bg-white p-6 text-center dark:bg-zinc-900 dark:border-zinc-800">
+        <span class="material-symbols-outlined text-3xl text-secondary mb-3">smart_toy</span>
+        <p class="font-bold text-sm">Groq / Llama 3.3</p>
+        <p class="text-xs text-on-surface-variant mt-1 dark:text-zinc-500">AI Reports</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Open Source CTA -->
+  <section class="max-w-4xl mx-auto px-6 text-center mb-10">
+    <div class="rounded-2xl border border-outline-variant bg-white p-12 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+      <span class="material-symbols-outlined text-5xl text-secondary mb-6">favorite</span>
+      <h2 class="text-3xl font-bold mb-4 dark:text-white">Free &amp; Open Source</h2>
+      <p class="text-on-surface-variant max-w-xl mx-auto mb-8 dark:text-zinc-400">We believe fairness tools should be accessible to everyone. bAIsed is free to use, free to modify, and free to distribute. Code for all.</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a class="rounded-xl bg-primary text-on-primary px-8 py-4 font-bold hover:opacity-90 transition dark:bg-teal-600" href="/app/workbench">Try the Workbench</a>
+        <a class="rounded-xl border border-outline-variant px-8 py-4 font-bold hover:bg-surface-container-low transition dark:border-zinc-700 dark:hover:bg-zinc-800" href="/app/documentation">Read the Docs</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="w-full py-12 border-t border-gray-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:flex lg:justify-between max-w-7xl mx-auto px-6 gap-8">
+<div class="max-w-xs">
+  <div class="text-xl font-black text-black dark:text-white mb-4">bAIsed</div>
+  <p class="text-gray-600 dark:text-zinc-400">&copy; 2024 bAIsed. Algorithmic transparency for a fair future.</p>
+</div>
+<div class="flex flex-wrap gap-8 lg:gap-16">
+  <div class="flex flex-col gap-4">
+    <span class="font-bold text-black dark:text-white">Product</span>
+    <a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 transition-colors" href="/app/solutions">Solutions</a>
+    <a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 transition-colors" href="/app/workbench">Workbench</a>
+  </div>
+  <div class="flex flex-col gap-4">
+    <span class="font-bold text-black dark:text-white">Resources</span>
+    <a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 transition-colors" href="/app/documentation">Documentation</a>
+    <a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 transition-colors" href="/app/methodology">Methodology</a>
+  </div>
+  <div class="flex flex-col gap-4">
+    <span class="font-bold text-black dark:text-white">Legal</span>
+    <a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 transition-colors" href="#">Privacy Policy</a>
+    <a class="text-gray-600 dark:text-zinc-400 hover:text-teal-600 transition-colors" href="#">Terms of Service</a>
+  </div>
+</div>
+</div>
+</footer>
+<script src="/frontend/site.js"></script>
+</body></html>
