@@ -422,8 +422,8 @@
     const replacements = [
       ["BiasAnalytica AI", "bAIsed"],
       ["BiasAnalytica", "bAIsed"],
-      ["Â© 2024", "© 2024"],
-      ["© 2024 bAIsed AI.", "© 2024 bAIsed."],
+      ["Â© 2026", "© 2026"],
+      ["© 2026 bAIsed AI.", "© 2026 bAIsed."],
     ];
 
     document.querySelectorAll("title, h1, h2, h3, h4, h5, h6, p, span, div, a, button").forEach((element) => {
@@ -440,6 +440,75 @@
         element.textContent = nextValue;
       }
     });
+  }
+
+  function normalizeHeaderActiveState() {
+    const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
+    const activePath = currentPath === "/case-study" ? "/case-study" : currentPath;
+    const topNavPaths = new Set(["/solutions", "/workbench", "/methodology", "/docs", "/about"]);
+    const specialNavPaths = new Set(["/case-study"]);
+
+    document.querySelectorAll("header a[href]").forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href || (!topNavPaths.has(href) && !specialNavPaths.has(href))) {
+        return;
+      }
+
+      if (topNavPaths.has(href)) {
+        link.className =
+          "text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400";
+      } else if (specialNavPaths.has(href)) {
+        link.className =
+          "hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block";
+      }
+
+      if (href === activePath) {
+        if (topNavPaths.has(href)) {
+          link.className = "border-b-2 border-teal-600 pb-1 text-sm font-semibold text-teal-600";
+        } else if (specialNavPaths.has(href)) {
+          link.className = "hidden border-b-2 border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 md:block";
+        }
+      }
+    });
+  }
+
+  function renderGlobalFooter() {
+    let footer = document.querySelector("footer");
+    if (!footer) {
+      footer = document.createElement("footer");
+      document.body.appendChild(footer);
+    }
+
+    footer.className = "w-full border-t border-slate-200 bg-slate-50 py-12 transition-colors duration-300 dark:border-zinc-800 dark:bg-zinc-950";
+    footer.innerHTML = `
+      <div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
+        <div>
+          <p class="text-2xl font-black tracking-tight text-teal-600 dark:text-teal-400">bAIsed</p>
+          <p class="mt-3 max-w-xs text-sm text-slate-500 dark:text-zinc-400">© 2026 bAIsed. Lab-grade analysis for ethical AI.</p>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white">Product</p>
+          <div class="mt-3 space-y-2">
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/solutions">Solutions</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/workbench">Workbench</a>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white">Resources</p>
+          <div class="mt-3 space-y-2">
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/docs">Documentation</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Methodology</a>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white">Legal</p>
+          <div class="mt-3 space-y-2">
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/docs">Privacy Policy</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/docs">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function enhanceDocumentationAnchors() {
@@ -629,14 +698,19 @@
         const normalized = normalizeText(action || element.textContent || "");
         return normalized === "sign in" || normalized === "login";
       });
+      const existingSignUp = Array.from(container.querySelectorAll("a, button")).find((element) => {
+        const action = element.getAttribute("data-action");
+        const normalized = normalizeText(action || element.textContent || "");
+        return normalized === "sign up";
+      });
 
-      let signUpLink = container.querySelector("[data-signup-link]");
+      let signUpLink = container.querySelector("[data-signup-link]") || existingSignUp;
       if (!signUpLink) {
         signUpLink = document.createElement("a");
         signUpLink.dataset.signupLink = "true";
         signUpLink.href = routes.signup;
         signUpLink.className =
-          "hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block";
+          "hidden rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white md:block";
         signUpLink.textContent = "Sign Up";
 
         if (signInLink) {
@@ -652,6 +726,10 @@
           }
         }
       }
+
+      if (signUpLink) {
+        signUpLink.dataset.signupLink = "true";
+      }
     });
 
     if (!user) {
@@ -666,6 +744,15 @@
             element.style.display = "";
             element.removeAttribute("aria-hidden");
             element.removeAttribute("tabindex");
+
+            if (normalized === "sign in" || normalized === "login") {
+              element.className =
+                "hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block";
+            }
+            if (isSignUp) {
+              element.className =
+                "hidden rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white md:block";
+            }
           }
         });
       });
@@ -1008,7 +1095,7 @@
 
   async function hydratePage() {
     const page = getCurrentPage();
-    if (!page || page === "login" || page === "workbench") {
+    if (!page || page === "login" || page === "signup" || page === "workbench" || page === "dashboard") {
       return;
     }
 
@@ -1251,6 +1338,7 @@
     bindDarkMode();
     bindMobileNav();
     normalizeBranding();
+    normalizeHeaderActiveState();
     renderAuthState();
     bindElements();
     bindActionButtons();
@@ -1258,6 +1346,7 @@
     bindLoginFlow();
     bindDemoRequestForm();
     bindPersonaTabs();
+    renderGlobalFooter();
     await hydratePage();
     await bindDocsSearch();
     
