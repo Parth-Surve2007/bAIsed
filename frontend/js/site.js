@@ -442,6 +442,22 @@
     });
   }
 
+  function brandWordmarkHtml() {
+    return `
+      <span class="text-teal-600 dark:text-teal-400">b</span><span class="text-slate-900 dark:text-white">AI</span><span class="text-teal-600 dark:text-teal-400">sed</span>
+    `;
+  }
+
+  function stylizeBrandWordmark() {
+    document.querySelectorAll("header a[href='/']").forEach((link) => {
+      const text = (link.textContent || "").trim();
+      if (text !== "bAIsed") {
+        return;
+      }
+      link.innerHTML = brandWordmarkHtml();
+    });
+  }
+
   function normalizeHeaderActiveState() {
     const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
     const activePath = currentPath === "/case-study" ? "/case-study" : currentPath;
@@ -483,7 +499,7 @@
     footer.innerHTML = `
       <div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
-          <p class="text-2xl font-black tracking-tight text-teal-600 dark:text-teal-400">bAIsed</p>
+          <p class="text-2xl font-black tracking-tight">${brandWordmarkHtml()}</p>
           <p class="mt-3 max-w-xs text-sm text-slate-500 dark:text-zinc-400">© 2026 bAIsed. Lab-grade analysis for ethical AI.</p>
         </div>
         <div>
@@ -1345,6 +1361,7 @@
     bindDarkMode();
     bindMobileNav();
     normalizeBranding();
+    stylizeBrandWordmark();
     normalizeHeaderActiveState();
     renderAuthState();
     bindElements();
