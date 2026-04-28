@@ -553,18 +553,42 @@ def ai_analyze():
         ml_summary = ml_summary[:4000] + "\n...[TRUNCATED]"
 
     prompt = (
-        "You are an expert AI bias detector and data scientist. You have been provided with two contexts:\n"
-        "1. A structural summary and sample rows of the dataset.\n"
-        "2. The deterministic Machine Learning Fairness Analysis output (including Disparate Impact Ratio, Bias Scores, Hotspots, and Feature Impacts) calculated by our backend engine.\n\n"
-        "Your task is to synthesize our mathematical engine's findings with your own data insights to produce a unified, concise 'Final Bias Report' for the user.\n"
-        "The report must be short-form but highly informative (strictly 3 to 4 concise paragraphs). Do not generate a massive wall of text.\n"
-        "It must seamlessly blend the hard metrics (like DIR, SPD, and bias score) with plain-English context about the dataset features.\n"
-        "Format the output using Markdown. Use **bolding** heavily for key terms, metric names, feature names, and specific group names to make it scannable.\n"
-        "Format the output using these concise sections:\n"
-        "### Final Bias Report\n"
-        "### Root Causes & Insights\n"
-        "### Recommended Action\n"
-        "> **Note:** For the Recommended Action section, present the actions as a markdown blockquote (using `>`) with bullet points so it stands out visually.\n\n"
+        "You are an expert AI fairness auditor and responsible AI reviewer.\n"
+        "You are given:\n"
+        "1) Dataset context (columns, uniqueness, top values, sample rows).\n"
+        "2) Deterministic fairness outputs from the backend engine (DIR, SPD, EOD, AOD, bias score, hotspots, feature impact, warnings).\n\n"
+        "Your objective: produce a deep, decision-ready report that combines metric interpretation, likely root causes, risk severity, and practical remediation.\n"
+        "Avoid generic advice. Every claim must be grounded in provided metrics or dataset context.\n\n"
+        "Output requirements (Markdown):\n"
+        "### Executive Summary\n"
+        "- Give a high-confidence verdict in 4-6 sentences.\n"
+        "- Include explicit interpretation of DIR, SPD, EOD, AOD, bias score, and severity.\n"
+        "- Name most advantaged vs least advantaged groups and explain what that means operationally.\n\n"
+        "### Metric Deep Dive\n"
+        "- Provide short bullet analysis for each metric: DIR, SPD, EOD, AOD.\n"
+        "- Explain why each metric matters and what risk it indicates in plain English.\n"
+        "- If metrics disagree, explain the mismatch and likely reason.\n\n"
+        "### Root-Cause Analysis\n"
+        "- Analyze likely drivers using most influential feature, hotspots, subgroup/context clues, and column patterns.\n"
+        "- Distinguish probable direct causes vs proxy/indirect causes.\n"
+        "- Include data quality concerns (missingness, imbalance, low sample warnings) if present.\n\n"
+        "### Risk & Compliance Assessment\n"
+        "- Rate risk as Low/Moderate/High with reasoning.\n"
+        "- Mention potential legal/compliance exposure under common fairness standards (high-level, non-legal advice).\n"
+        "- Identify which use-cases are unsafe to deploy without remediation.\n\n"
+        "### Prioritized Remediation Plan\n"
+        "- Provide 5-8 concrete actions ordered by impact and effort.\n"
+        "- For each action, include: expected fairness effect, possible accuracy trade-off, and validation step.\n"
+        "- Use blockquote bullets (`> - ...`) so this section is visually emphasized.\n\n"
+        "### Validation & Monitoring Plan\n"
+        "- Define a re-test protocol with thresholds and acceptance criteria.\n"
+        "- Include what to monitor in production (drift, parity over time, subgroup regression).\n"
+        "- End with a clear go/no-go recommendation.\n\n"
+        "Style constraints:\n"
+        "- Detailed but concise. Target 700-1200 words.\n"
+        "- Use **bold** for metric names, group names, and key conclusions.\n"
+        "- No markdown tables.\n"
+        "- Do not invent metrics or data not present in context.\n\n"
         "=== DATASET CONTEXT ===\n"
         f"{dataset_summary}\n\n"
         "=== ML FAIRNESS ANALYSIS ===\n"
@@ -599,7 +623,7 @@ def ai_analyze():
                     "contents": [{"parts": [{"text": prompt}]}],
                     "generationConfig": {
                         "temperature": 0.35,
-                        "maxOutputTokens": 1024,
+                        "maxOutputTokens": 3072,
                     },
                 }
             ).encode("utf-8"),
