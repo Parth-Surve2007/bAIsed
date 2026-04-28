@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from flask import Flask, send_from_directory
+from dotenv import load_dotenv
 
 try:
     from .api import api_bp
@@ -10,6 +11,10 @@ try:
 except ImportError:  # pragma: no cover - direct script fallback
     from api import api_bp
     from auth import auth_bp
+
+
+# Load backend/.env so API keys are available during app startup.
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 
 def create_app() -> Flask:

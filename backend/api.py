@@ -539,56 +539,86 @@ def ai_analyze():
         f"{ml_summary}\n"
     )
 
-    endpoint = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{gemini_model}:generateContent?key={urllib.parse.quote(gemini_api_key)}"
-    )
-    req = urllib.request.Request(
-        endpoint,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-        },
-        data=json.dumps(
-            {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.35,
-                    "maxOutputTokens": 1024,
-                },
-            }
-        ).encode("utf-8"),
-    )
+    # Try configured model first, then fall back to broadly available models.
+    model_candidates = []
+    for model in [gemini_model, "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
+        if model and model not in model_candidates:
+            model_candidates.append(model)
 
-    try:
-        with urllib.request.urlopen(req) as response:
-            resp_data = json.loads(response.read().decode("utf-8"))
-            ai_text = (
-                resp_data.get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [{}])[0]
-                .get("text", "")
+    ai_text = ""
+    selected_model = model_candidates[0]
+    last_http_error: urllib.error.HTTPError | None = None
+    last_reason = ""
+
+    for candidate_model in model_candidates:
+        endpoint = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{candidate_model}:generateContent?key={urllib.parse.quote(gemini_api_key)}"
+        )
+        req = urllib.request.Request(
+            endpoint,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(
+                {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {
+                        "temperature": 0.35,
+                        "maxOutputTokens": 1024,
+                    },
+                }
+            ).encode("utf-8"),
+        )
+
+        try:
+            with urllib.request.urlopen(req) as response:
+                resp_data = json.loads(response.read().decode("utf-8"))
+                ai_text = (
+                    resp_data.get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text", "")
+                )
+                if ai_text:
+                    selected_model = candidate_model
+                    break
+                last_reason = "Gemini response was empty."
+        except urllib.error.HTTPError as exc:
+            last_http_error = exc
+            if exc.code == 401:
+                return jsonify({"error": "Invalid Gemini API key."}), 401
+            if exc.code == 403:
+                try:
+                    err_msg = exc.read().decode("utf-8")
+                except Exception:
+                    err_msg = exc.reason
+                return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
+            if exc.code == 429:
+                return jsonify({"error": "Rate limit exceeded on Gemini API."}), 429
+            last_reason = str(exc.reason)
+            continue
+        except Exception as exc:
+            last_reason = str(exc)
+            continue
+
+    if not ai_text:
+        if last_http_error is not None:
+            return (
+                jsonify(
+                    {
+                        "error": f"Gemini API Error: {last_http_error.code} - {last_http_error.reason}. "
+                        f"Tried models: {', '.join(model_candidates)}"
+                    }
+                ),
+                500,
             )
-            if not ai_text:
-                return jsonify({"error": "Gemini response was empty."}), 502
-    except urllib.error.HTTPError as exc:
-        if exc.code == 401:
-            return jsonify({"error": "Invalid Gemini API key."}), 401
-        if exc.code == 403:
-            try:
-                err_msg = exc.read().decode("utf-8")
-            except Exception:
-                err_msg = exc.reason
-            return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
-        if exc.code == 429:
-            return jsonify({"error": "Rate limit exceeded on Gemini API."}), 429
-        return jsonify({"error": f"Gemini API Error: {exc.code} - {exc.reason}"}), 500
-    except Exception as exc:
-        return jsonify({"error": f"Request failed: {str(exc)}"}), 500
+        return jsonify({"error": f"Gemini request failed: {last_reason or 'unknown error'}"}), 500
 
     return jsonify(
         {
-            "model": gemini_model,
+            "model": selected_model,
             "row_count": row_count,
             "columns": columns,
             "ai_response": ai_text,
