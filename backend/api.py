@@ -162,6 +162,38 @@ def _json_error(message: str, status: int = 400):
     return jsonify({"error": message}), status
 
 
+def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int, columns: list[str]) -> str:
+    severity = str(analysis_data.get("severity", "UNKNOWN"))
+    dir_value = analysis_data.get("DIR", analysis_data.get("metrics", {}).get("DIR", 0))
+    spd_value = analysis_data.get("difference", analysis_data.get("metrics", {}).get("SPD", 0))
+    bias_score = analysis_data.get("bias_score", 0)
+    most_advantaged = analysis_data.get("most_advantaged_group", "N/A")
+    least_advantaged = analysis_data.get("least_advantaged_group", "N/A")
+    top_feature = analysis_data.get("most_influential_feature", "N/A")
+    recommendations = analysis_data.get("recommendations", [])[:3]
+
+    recommendation_lines = "\n".join(
+        f"> - {item}" for item in recommendations if isinstance(item, str) and item.strip()
+    )
+    if not recommendation_lines:
+        recommendation_lines = "> - Re-run AI report later when provider quota resets."
+
+    return (
+        "### Final Bias Report\n"
+        f"**Quota fallback mode** was used because the external AI provider is currently rate-limited. "
+        f"This report is generated from deterministic fairness outputs and dataset metadata (**{row_count} rows**, "
+        f"**{len(columns)} columns**) so analysis remains available.\n\n"
+        f"The current run indicates **{severity}** bias with **DIR={dir_value}**, **SPD={spd_value}**, "
+        f"and **Bias Score={bias_score}**. The most advantaged group is **{most_advantaged}**, while the least "
+        f"advantaged group is **{least_advantaged}**.\n\n"
+        "### Root Causes & Insights\n"
+        f"The strongest disparity signal is tied to **{top_feature}** based on feature-impact ranking in your last audit. "
+        "Review this driver first along with subgroup-level hotspots and qualification context before model release.\n\n"
+        "### Recommended Action\n"
+        f"{recommendation_lines}"
+    )
+
+
 def _normalize_action(value: str | None) -> str:
     return " ".join((value or "").strip().lower().split())
 
@@ -549,6 +581,7 @@ def ai_analyze():
     selected_model = model_candidates[0]
     last_http_error: urllib.error.HTTPError | None = None
     last_reason = ""
+    saw_rate_limit = False
 
     for candidate_model in model_candidates:
         endpoint = (
@@ -596,12 +629,26 @@ def ai_analyze():
                     err_msg = exc.reason
                 return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
             if exc.code == 429:
-                return jsonify({"error": "Rate limit exceeded on Gemini API."}), 429
+                saw_rate_limit = True
+                last_reason = "Rate limit exceeded on Gemini API."
+                continue
             last_reason = str(exc.reason)
             continue
         except Exception as exc:
             last_reason = str(exc)
             continue
+
+    if not ai_text and saw_rate_limit:
+        fallback_text = _build_fallback_ai_report(analysis_data, row_count, columns)
+        return jsonify(
+            {
+                "model": "deterministic-fallback",
+                "row_count": row_count,
+                "columns": columns,
+                "ai_response": fallback_text,
+                "warning": "Gemini API is currently rate-limited. Showing fallback report.",
+            }
+        )
 
     if not ai_text:
         if last_http_error is not None:
