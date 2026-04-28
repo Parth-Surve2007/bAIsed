@@ -11,6 +11,10 @@
     workbench: "/workbench",
     dashboard: "/dashboard",
   };
+  const EMAIL_KEY = "baised_user_email";
+  const TOKEN_KEY = "baised_demo_token";
+  const AUTH_PROVIDER_KEY = "baised_auth_provider";
+  const PROTECTED_ROUTES = new Set([routes.workbench, routes.dashboard]);
 
   const routeMap = new Map([
     ["baised", routes.home],
@@ -81,12 +85,34 @@
     return document.body.dataset.page || "";
   }
 
+  function getStoredAuthProvider() {
+    return localStorage.getItem(AUTH_PROVIDER_KEY) || "";
+  }
+
+  function hasTrustedSession() {
+    const provider = getStoredAuthProvider();
+    if (!provider) {
+      return false;
+    }
+
+    const email = localStorage.getItem(EMAIL_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    return Boolean(email || token);
+  }
+
+  function clearSessionUser() {
+    localStorage.removeItem(EMAIL_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(AUTH_PROVIDER_KEY);
+  }
+
   function getSessionUser() {
-    const email = localStorage.getItem("baised_user_email");
-    const token = localStorage.getItem("baised_demo_token");
-    if (!email && !token) {
+    if (!hasTrustedSession()) {
       return null;
     }
+
+    const email = localStorage.getItem(EMAIL_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
 
     const safeEmail = email || "signed-in user";
     const name = safeEmail.split("@")[0] || safeEmail;
@@ -98,6 +124,66 @@
       .join("") || "U";
 
     return { email: safeEmail, initials };
+  }
+
+  function isProtectedRoute(route) {
+    return PROTECTED_ROUTES.has(route);
+  }
+
+  function buildLoginRedirect(target = window.location.pathname) {
+    const params = new URLSearchParams();
+    if (target && target !== routes.login) {
+      params.set("redirect", target);
+    }
+    const query = params.toString();
+    return query ? `${routes.login}?${query}` : routes.login;
+  }
+
+  function routeToAuthAwareTarget(route) {
+    if (!isProtectedRoute(route)) {
+      return route;
+    }
+    return getSessionUser() ? route : buildLoginRedirect(route);
+  }
+
+  function enforceProtectedPageAccess() {
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (!isProtectedRoute(path)) {
+      return false;
+    }
+    if (getSessionUser()) {
+      return false;
+    }
+
+    clearSessionUser();
+    window.location.replace(buildLoginRedirect(path));
+    return true;
+  }
+
+  function syncProtectedNavVisibility() {
+    const isSignedIn = Boolean(getSessionUser());
+
+    document.querySelectorAll("a[href='/workbench'], a[href='/dashboard'], a[data-protected-route]").forEach((link) => {
+      const protectedRoute = link.dataset.protectedRoute || link.getAttribute("href") || "";
+      if (!isProtectedRoute(protectedRoute)) {
+        return;
+      }
+      link.dataset.protectedRoute = protectedRoute;
+
+      const nav = link.closest("nav");
+      const shouldHide = !isSignedIn && Boolean(nav || link.dataset.hideWhenSignedOut === "true");
+      if (shouldHide) {
+        link.classList.add("hidden");
+        link.setAttribute("aria-hidden", "true");
+        link.tabIndex = -1;
+        return;
+      }
+
+      link.setAttribute("href", routeToAuthAwareTarget(protectedRoute));
+      link.classList.remove("hidden");
+      link.removeAttribute("aria-hidden");
+      link.removeAttribute("tabindex");
+    });
   }
 
   function setText(id, value) {
@@ -297,14 +383,16 @@
   }
 
   function attachRoute(element, href) {
+    const resolvedHref = routeToAuthAwareTarget(href);
+
     if (element.tagName === "A") {
-      element.setAttribute("href", href);
+      element.setAttribute("href", resolvedHref);
       return;
     }
 
     element.style.cursor = "pointer";
     element.addEventListener("click", () => {
-      window.location.href = href;
+      window.location.href = resolvedHref;
     });
   }
 
@@ -408,6 +496,12 @@
         }
 
         const action = element.getAttribute("data-action") || element.textContent || "";
+        const expectedRoute = routeMap.get(normalizeText(action));
+        if (expectedRoute && isProtectedRoute(expectedRoute) && !getSessionUser()) {
+          window.location.href = buildLoginRedirect(expectedRoute);
+          return;
+        }
+
         try {
           const result = await resolveAction(action);
           showToast(result.message || "Action completed.");
@@ -422,7 +516,7 @@
 
           if (result.target) {
             window.setTimeout(() => {
-              window.location.href = result.target;
+              window.location.href = routeToAuthAwareTarget(result.target);
             }, 200);
           }
         } catch (error) {
@@ -486,6 +580,9 @@
     if (!form) {
       return;
     }
+    if (window.baisedFirebase && window.baisedFirebase.auth) {
+      return;
+    }
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -505,12 +602,14 @@
           }),
         });
 
-        localStorage.setItem("baised_demo_token", result.token);
-        localStorage.setItem("baised_user_email", result.email);
+        localStorage.setItem(TOKEN_KEY, result.token);
+        localStorage.setItem(EMAIL_KEY, result.email);
+        localStorage.setItem(AUTH_PROVIDER_KEY, "backend-session");
         setText("login-status", `${result.message} Redirecting to the workbench...`);
         showToast(result.message);
+        const redirect = new URLSearchParams(window.location.search).get("redirect");
         window.setTimeout(() => {
-          window.location.href = result.redirect || routes.workbench;
+          window.location.href = result.redirect || redirect || routes.workbench;
         }, 250);
       } catch (error) {
         setText("login-status", error.message);
@@ -522,6 +621,7 @@
   function renderAuthState() {
     const user = getSessionUser();
     if (!user) {
+      syncProtectedNavVisibility();
       return;
     }
 
@@ -550,6 +650,8 @@
         element.dataset.navLabel = "Dashboard";
       });
     });
+
+    syncProtectedNavVisibility();
   }
 
   function bindDemoRequestForm() {
@@ -844,11 +946,13 @@
     const navLinks = [
       { label: "Home", href: "/", page: "landing" },
       { label: "Solutions", href: "/solutions", page: "solutions" },
-      { label: "Workbench", href: "/workbench", page: "workbench" },
       { label: "Methodology", href: "/methodology", page: "methodology" },
       { label: "Docs", href: "/docs", page: "documentation" },
       { label: "About", href: "/about", page: "about" },
     ];
+    if (getSessionUser()) {
+      navLinks.splice(2, 0, { label: "Workbench", href: "/workbench", page: "workbench" });
+    }
 
     panel.appendChild(closeBtn);
     navLinks.forEach(link => {
@@ -993,6 +1097,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
+    if (enforceProtectedPageAccess()) {
+      return;
+    }
     injectGlobalStyles();
     bindDarkMode();
     bindMobileNav();
