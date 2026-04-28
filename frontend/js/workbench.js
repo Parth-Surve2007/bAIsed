@@ -642,27 +642,27 @@
     if (!container) return;
 
     if (!explanation) {
-      container.innerHTML = `<p class="text-sm italic text-slate-500">Explanation data not available.</p>`;
+      container.innerHTML = `<p class="text-sm italic text-slate-500 dark:text-zinc-400">Explanation data not available.</p>`;
       return;
     }
 
     if (typeof explanation === 'string') {
-      container.innerHTML = `<p class="text-sm leading-7 text-slate-700">${explanation}</p>`;
+      container.innerHTML = `<p class="text-sm leading-7 text-slate-700 dark:text-zinc-200">${explanation}</p>`;
       return;
     }
 
     const bulletsHtml = (explanation.bullets || [])
-      .map(b => `<li class="ml-4 list-disc text-sm text-slate-700">${b}</li>`)
+      .map(b => `<li class="ml-4 list-disc text-sm text-slate-700 dark:text-zinc-200">${b}</li>`)
       .join("");
 
     container.innerHTML = `
-      <p class="font-semibold text-indigo-900 mb-2">${explanation.headline || ""}</p>
+      <p class="font-semibold text-indigo-900 dark:text-teal-200 mb-2">${explanation.headline || ""}</p>
       <ul class="space-y-1 mb-3">
         ${bulletsHtml}
       </ul>
-      <div class="mt-3 rounded-lg border border-indigo-200 bg-indigo-100/50 p-3">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-800 mb-1">Recommended Fix</p>
-        <p class="text-sm font-medium text-indigo-900">${explanation.fix || "None"}</p>
+      <div class="mt-3 rounded-lg border border-indigo-200 bg-indigo-100/50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-800 dark:text-zinc-300 mb-1">Recommended Fix</p>
+        <p class="text-sm font-medium text-indigo-900 dark:text-zinc-100">${explanation.fix || "None"}</p>
       </div>
     `;
   }
