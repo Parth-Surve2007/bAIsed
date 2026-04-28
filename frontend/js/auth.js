@@ -2,6 +2,7 @@
   const EMAIL_KEY = "baised_user_email";
   const TOKEN_KEY = "baised_demo_token";
   const AUTH_PROVIDER_KEY = "baised_auth_provider";
+  const FORCE_LOGOUT_KEY = "baised_force_logged_out";
   const REDIRECT_FALLBACK = "/workbench";
 
   function getAuth() {
@@ -14,6 +15,9 @@
 
   function getRedirectTarget() {
     const params = new URLSearchParams(window.location.search);
+    if (params.get("logged_out") === "1") {
+      return "/login";
+    }
     return params.get("redirect") || REDIRECT_FALLBACK;
   }
 
@@ -39,6 +43,7 @@
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(EMAIL_KEY, email);
     localStorage.setItem(AUTH_PROVIDER_KEY, provider);
+    localStorage.removeItem(FORCE_LOGOUT_KEY);
     dispatchAuthChanged({ email, provider, signedIn: true });
     return { token, email };
   }
@@ -100,8 +105,11 @@
 
   async function signOut() {
     const auth = getAuth();
-    await auth.signOut();
-    clearStoredSession();
+    try {
+      await auth.signOut();
+    } finally {
+      clearStoredSession();
+    }
   }
 
   async function getIdToken() {
@@ -118,6 +126,9 @@
   async function handlePendingAuthRedirect() {
     const page = document.body.dataset.page || "";
     const auth = getAuth();
+    const params = new URLSearchParams(window.location.search);
+    const isLoggedOutLanding = params.get("logged_out") === "1";
+    const forceLoggedOut = localStorage.getItem(FORCE_LOGOUT_KEY) === "1";
 
     auth.onIdTokenChanged(async (user) => {
       if (!user) {
@@ -125,15 +136,40 @@
         return;
       }
 
+      if (forceLoggedOut || isLoggedOutLanding) {
+        try {
+          await auth.signOut();
+        } finally {
+          clearStoredSession();
+        }
+        return;
+      }
+
       try {
         await persistAuthSession(user, "firebase-session");
+        if ((page === "login" || page === "signup") && !isLoggedOutLanding) {
+          window.location.replace(getRedirectTarget());
+        }
       } catch (_error) {
         clearStoredSession();
       }
     });
 
+    if (isLoggedOutLanding) {
+      return;
+    }
+
     const currentUser = auth.currentUser;
     if (!currentUser) {
+      return;
+    }
+
+    if (forceLoggedOut) {
+      try {
+        await auth.signOut();
+      } finally {
+        clearStoredSession();
+      }
       return;
     }
 
@@ -201,6 +237,7 @@
       return;
     }
 
+    const googleButton = document.getElementById("google-signup-btn");
     const submitButton = form.querySelector('button[type="submit"]');
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -225,6 +262,19 @@
         }
       }
     });
+
+    if (googleButton) {
+      googleButton.addEventListener("click", async () => {
+        try {
+          setStatus("signup-status", "Opening Google sign-up...");
+          await signInWithGoogle();
+          setStatus("signup-status", "Signed in with Google. Redirecting...");
+          window.location.replace(getRedirectTarget());
+        } catch (error) {
+          setStatus("signup-status", error.message || "Google sign-up failed.");
+        }
+      });
+    }
   }
 
   function bindDashboardPage() {
