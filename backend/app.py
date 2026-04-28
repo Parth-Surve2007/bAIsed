@@ -39,10 +39,6 @@ def create_app() -> Flask:
     def methodology_page():
         return send_from_directory(pages_dir, "methodology.html")
 
-    @app.get("/docs")
-    def documentation_page():
-        return send_from_directory(pages_dir, "documentation.html")
-
     @app.get("/about")
     def about_page():
         return send_from_directory(pages_dir, "about.html")

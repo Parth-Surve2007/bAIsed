@@ -124,22 +124,22 @@ SITE_CONTENT: dict[str, dict[str, Any]] = {
         "search_topics": [
             {
                 "title": "Introduction",
-                "href": "/docs#introduction",
+                "href": "/methodology",
                 "summary": "Overview of the fairness auditing framework and lifecycle coverage.",
             },
             {
                 "title": "Quick Start",
-                "href": "/docs#quick-start",
+                "href": "/methodology",
                 "summary": "Install the CLI and bootstrap an audit project.",
             },
             {
                 "title": "Architecture Overview",
-                "href": "/docs#metrics-engine",
+                "href": "/methodology",
                 "summary": "Understand the metrics engine, DIR, and explainability model.",
             },
             {
                 "title": "API Reference",
-                "href": "/docs#api-reference",
+                "href": "/methodology",
                 "summary": "Authentication, endpoints, and operational limits.",
             },
         ],
@@ -213,7 +213,7 @@ def _resolve_action_payload(action: str, page: str) -> dict[str, str]:
     if action in docs_actions:
         if action == "download whitepaper":
             return {"target": "/api/downloads/whitepaper", "message": "Preparing the whitepaper download."}
-        return {"target": "/docs", "message": "Opening the documentation hub."}
+        return {"target": "/methodology", "message": "Opening the documentation hub."}
     if action in login_actions:
         return {"target": "/login", "message": "Opening secure sign-in."}
     if action in case_actions:
@@ -223,7 +223,7 @@ def _resolve_action_payload(action: str, page: str) -> dict[str, str]:
         "landing": "/",
         "solutions": "/solutions",
         "methodology": "/methodology",
-        "documentation": "/docs",
+        "methodology": "/methodology",
         "about": "/about",
         "case_study": "/case-study",
         "pricing_demo": "/pricing",

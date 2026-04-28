@@ -5,7 +5,7 @@
     methodology: "/methodology",
     caseStudies: "/case-study",
     pricing: "/pricing",
-    docs: "/docs",
+    
     login: "/login",
     signup: "/signup",
     workbench: "/workbench",
@@ -445,7 +445,7 @@
   function normalizeHeaderActiveState() {
     const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
     const activePath = currentPath === "/case-study" ? "/case-study" : currentPath;
-    const topNavPaths = new Set(["/solutions", "/workbench", "/methodology", "/docs", "/about"]);
+    const topNavPaths = new Set(["/solutions", "/workbench", "/methodology", "/about"]);
     const specialNavPaths = new Set(["/case-study"]);
 
     document.querySelectorAll("header a[href]").forEach((link) => {
@@ -496,15 +496,15 @@
         <div>
           <p class="text-sm font-bold text-slate-900 dark:text-white">Resources</p>
           <div class="mt-3 space-y-2">
-            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/docs">Documentation</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Documentation</a>
             <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Methodology</a>
           </div>
         </div>
         <div>
           <p class="text-sm font-bold text-slate-900 dark:text-white">Legal</p>
           <div class="mt-3 space-y-2">
-            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/docs">Privacy Policy</a>
-            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/docs">Terms of Service</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Privacy Policy</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Terms of Service</a>
           </div>
         </div>
       </div>
@@ -1181,7 +1181,7 @@
       { label: "Home", href: "/", page: "landing" },
       { label: "Solutions", href: "/solutions", page: "solutions" },
       { label: "Methodology", href: "/methodology", page: "methodology" },
-      { label: "Docs", href: "/docs", page: "documentation" },
+      
       { label: "About", href: "/about", page: "about" },
     ];
     if (getSessionUser()) {
