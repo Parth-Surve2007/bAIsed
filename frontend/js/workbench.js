@@ -2,6 +2,7 @@
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
   let currentDatasetId = null;
+  let currentAiMarkdown = "";
   let puppyPetCount = 0;
 
   function movePuppy() {
@@ -1090,9 +1091,10 @@
           document.getElementById("ai-error-text").textContent = result.error;
           errorPanel.classList.remove("hidden");
         } else {
+          currentAiMarkdown = result.ai_response || "";
           document.getElementById("ai-model-name").textContent = result.model || "Unknown Model";
           document.getElementById("ai-row-count").textContent = result.row_count || "0";
-          document.getElementById("ai-response-text").innerHTML = marked.parse(result.ai_response || "");
+          document.getElementById("ai-response-text").innerHTML = marked.parse(currentAiMarkdown);
           resultPanel.classList.remove("hidden");
         }
       } catch (error) {
@@ -1113,7 +1115,7 @@
     if (!currentAnalysisResult) return;
     
     const reportWindow = window.open("", "_blank");
-    const aiContent = document.getElementById("ai-response-text").innerHTML;
+    const aiMarkdownPayload = JSON.stringify(currentAiMarkdown || "");
     const rankings = (currentAnalysisResult.stats && currentAnalysisResult.stats.group_rankings) || [];
     
     const html = `
@@ -1123,11 +1125,84 @@
         <meta charset="UTF-8">
         <title>Bias Analysis Report - bAIsed</title>
         <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @media print { .no-print { display: none; } }
-          body { background: #f8fafc; padding: 40px; font-family: sans-serif; }
-          .report-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 40px; max-width: 900px; margin: 0 auto; }
+          :root {
+            --teal: #0f766e;
+            --teal-soft: #f0fdfa;
+            --ink: #0f172a;
+            --muted: #475569;
+            --line: #dbe5e1;
+            --page: #f8fafc;
+          }
+          @media print {
+            .no-print { display: none; }
+            body { background: #fff !important; padding: 0 !important; }
+            .report-card { box-shadow: none !important; border: 0 !important; border-radius: 0 !important; max-width: 100% !important; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+          body {
+            background: linear-gradient(160deg, #f8fafc, #eef6f3);
+            padding: 32px;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            color: var(--ink);
+          }
+          .report-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 12px 40px rgba(2, 8, 23, 0.08);
+            padding: 36px;
+            max-width: 980px;
+            margin: 0 auto;
+          }
+          .kpi {
+            background: var(--teal-soft);
+            border: 1px solid #ccfbf1;
+            border-radius: 16px;
+            padding: 16px;
+          }
+          .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-weight: 800;
+            color: #0f766e;
+            margin-bottom: 10px;
+          }
+          .ai-report {
+            margin-top: 8px;
+            border-top: 1px solid var(--line);
+            padding-top: 20px;
+          }
+          .ai-report h1, .ai-report h2, .ai-report h3 {
+            color: #0f172a;
+            font-weight: 800;
+            margin-top: 1.25rem;
+            margin-bottom: 0.65rem;
+            line-height: 1.25;
+          }
+          .ai-report h3 {
+            font-size: 1.02rem;
+            padding-left: 10px;
+            border-left: 4px solid #14b8a6;
+            background: #f8fffd;
+          }
+          .ai-report p, .ai-report li {
+            color: #1e293b;
+            line-height: 1.75;
+            font-size: 0.97rem;
+          }
+          .ai-report ul { margin-top: 0.4rem; margin-bottom: 0.9rem; }
+          .ai-report blockquote {
+            border-left: 4px solid #14b8a6;
+            background: #f0fdfa;
+            border-radius: 0 10px 10px 0;
+            padding: 10px 14px;
+            margin: 12px 0;
+          }
+          .ai-report strong { color: #0f172a; }
         </style>
       </head>
       <body>
@@ -1166,7 +1241,8 @@
           </div>
 
           <div class="prose prose-slate max-w-none prose-headings:text-slate-900 prose-strong:text-slate-900 prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50 prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-r-xl">
-            ${aiContent}
+            <div class="section-title">AI Deep Analysis</div>
+            <div id="report-ai-content" class="ai-report"></div>
           </div>
 
           <div class="mt-12 pt-8 border-t text-center text-xs text-slate-400 italic">
@@ -1176,6 +1252,12 @@
         </div>
 
         <script>
+          const rawAiMarkdown = ${aiMarkdownPayload};
+          const aiContainer = document.getElementById("report-ai-content");
+          if (aiContainer) {
+            aiContainer.innerHTML = marked.parse(rawAiMarkdown || "_No AI analysis text available._");
+          }
+
           const ctx = document.getElementById('reportChart').getContext('2d');
           new Chart(ctx, {
             type: 'bar',
