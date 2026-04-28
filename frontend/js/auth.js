@@ -28,6 +28,35 @@
     }
   }
 
+  function bindPasswordVisibilityToggles() {
+    document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+      if (button.dataset.toggleBound === "true") {
+        return;
+      }
+      button.dataset.toggleBound = "true";
+
+      const selector = button.getAttribute("data-password-toggle");
+      if (!selector) {
+        return;
+      }
+
+      const input = document.querySelector(selector);
+      const icon = button.querySelector(".material-symbols-outlined");
+      if (!input) {
+        return;
+      }
+
+      button.addEventListener("click", () => {
+        const showing = input.getAttribute("type") === "text";
+        input.setAttribute("type", showing ? "password" : "text");
+        if (icon) {
+          icon.textContent = showing ? "visibility" : "visibility_off";
+        }
+        button.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+      });
+    });
+  }
+
   function dispatchAuthChanged(detail) {
     document.dispatchEvent(new CustomEvent("baised:auth-changed", { detail }));
   }
@@ -186,7 +215,6 @@
     }
 
     const googleButton = document.getElementById("google-signin-btn");
-    const githubButton = document.getElementById("github-signin-btn");
     const submitButton = form.querySelector('button[type="submit"]');
 
     form.addEventListener("submit", async (event) => {
@@ -224,11 +252,6 @@
       });
     }
 
-    if (githubButton) {
-      githubButton.addEventListener("click", () => {
-        setStatus("login-status", "GitHub sign-in is not enabled yet for this Firebase project.");
-      });
-    }
   }
 
   function bindSignupPage() {
@@ -321,6 +344,7 @@
     bindLoginPage();
     bindSignupPage();
     bindDashboardPage();
+    bindPasswordVisibilityToggles();
   });
 
   window.baisedAuth = {
