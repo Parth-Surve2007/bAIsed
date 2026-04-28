@@ -488,7 +488,7 @@ def ai_analyze():
         analysis_data = {}
 
     gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
     if not gemini_api_key:
         return jsonify({"error": "GEMINI_API_KEY is not configured on the server."}), 500
 
@@ -541,7 +541,7 @@ def ai_analyze():
 
     # Try configured model first, then fall back to broadly available models.
     model_candidates = []
-    for model in [gemini_model, "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
+    for model in [gemini_model, "gemini-2.0-flash", "gemini-2.0-flash-lite"]:
         if model and model not in model_candidates:
             model_candidates.append(model)
 
