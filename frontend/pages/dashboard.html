@@ -32,10 +32,16 @@
 <main class="flex min-h-screen items-center justify-center px-6 pt-24">
   <div class="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-500">Dashboard</p>
-    <h1 class="mt-4 text-3xl font-black tracking-tight dark:text-white">Welcome back.</h1>
-    <p class="mt-3 text-base text-slate-600 dark:text-zinc-400">Your dashboard is loading.</p>
+    <h1 class="mt-4 text-3xl font-black tracking-tight dark:text-white" id="dashboard-greeting">Welcome back.</h1>
+    <p class="mt-3 text-base text-slate-600 dark:text-zinc-400">Signed in as <span class="font-semibold text-slate-900 dark:text-white" id="dashboard-user-email">loading...</span></p>
+    <div class="mt-8 flex items-center justify-center gap-3">
+      <a class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white" href="/workbench">Open Workbench</a>
+      <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-zinc-700 dark:text-zinc-300" id="dashboard-signout" type="button">Sign Out</button>
+    </div>
   </div>
 </main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="/frontend/js/site.js"></script>
 <script src="/frontend/js/firebase-config.js"></script>
 <script src="/frontend/js/auth.js"></script>

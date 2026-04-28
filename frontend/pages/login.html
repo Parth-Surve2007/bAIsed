@@ -48,11 +48,11 @@
 </div>
 <!-- Social Authentication Cluster -->
 <div class="grid grid-cols-2 gap-md mb-lg">
-<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant dark:border-zinc-700 hover:bg-surface-container-high dark:hover:bg-zinc-800 transition-all active:scale-95 duration-150 rounded-lg">
+<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant dark:border-zinc-700 hover:bg-surface-container-high dark:hover:bg-zinc-800 transition-all active:scale-95 duration-150 rounded-lg" id="google-signin-btn" type="button">
 <span class="material-symbols-outlined text-[20px] dark:text-white" data-icon="google">google</span>
 <span class="font-label-sm text-label-sm text-on-surface dark:text-zinc-300">Google</span>
 </button>
-<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant dark:border-zinc-700 hover:bg-surface-container-high dark:hover:bg-zinc-800 transition-all active:scale-95 duration-150 rounded-lg">
+<button class="flex items-center justify-center gap-sm px-md py-sm border border-outline-variant dark:border-zinc-700 hover:bg-surface-container-high dark:hover:bg-zinc-800 transition-all active:scale-95 duration-150 rounded-lg" id="github-signin-btn" type="button">
 <span class="material-symbols-outlined text-[20px] dark:text-white" data-icon="terminal">terminal</span>
 <span class="font-label-sm text-label-sm text-on-surface dark:text-zinc-300">GitHub</span>
 </button>
@@ -127,6 +127,8 @@
 <!-- Grid pattern overlay -->
 <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style="background-image: radial-gradient(#000 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="/frontend/js/site.js"></script>
 <script src="/frontend/js/firebase-config.js"></script>
 <script src="/frontend/js/auth.js"></script>

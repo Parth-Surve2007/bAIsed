@@ -62,26 +62,10 @@
 </div>
 </div>
 </main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="/frontend/js/site.js"></script>
 <script src="/frontend/js/firebase-config.js"></script>
 <script src="/frontend/js/auth.js"></script>
-<script>
-document.getElementById("signup-form")?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const name = document.getElementById("signup-name")?.value || "";
-  const email = document.getElementById("signup-email")?.value || "";
-  const password = document.getElementById("signup-password")?.value || "";
-  const confirmPassword = document.getElementById("signup-confirm-password")?.value || "";
-  const status = document.getElementById("signup-status");
-
-  try {
-    await window.baisedAuth.signUpWithEmail(name, email, password, confirmPassword);
-  } catch (error) {
-    if (status) {
-      status.textContent = error.message;
-    }
-  }
-});
-</script>
 </body>
 </html>
