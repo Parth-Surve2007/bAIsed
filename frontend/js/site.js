@@ -496,7 +496,7 @@
         <div>
           <p class="text-sm font-bold text-slate-900 dark:text-white">Resources</p>
           <div class="mt-3 space-y-2">
-            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Documentation</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/about">About</a>
             <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Methodology</a>
           </div>
         </div>
