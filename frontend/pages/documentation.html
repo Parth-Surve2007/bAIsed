@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html class="light" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
@@ -13,96 +13,32 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-tertiary-container": "#c16b6c",
-                        "surface-container-high": "#e7e8e8",
-                        "on-secondary-fixed-variant": "#214e4a",
-                        "tertiary": "#000000",
-                        "on-background": "#191c1c",
-                        "tertiary-container": "#3d050b",
-                        "primary-fixed-dim": "#c6c6c6",
-                        "on-tertiary-fixed-variant": "#763032",
-                        "surface": "#f9f9f9",
-                        "on-error": "#ffffff",
-                        "primary-container": "#1b1b1b",
-                        "on-primary-fixed-variant": "#474747",
-                        "inverse-surface": "#2e3131",
-                        "tertiary-fixed": "#ffdad9",
-                        "on-secondary-container": "#406c68",
-                        "on-primary-container": "#848484",
-                        "tertiary-fixed-dim": "#ffb3b2",
-                        "surface-variant": "#e1e3e3",
-                        "outline": "#7e7576",
-                        "on-primary": "#ffffff",
-                        "surface-bright": "#f9f9f9",
-                        "outline-variant": "#cfc4c5",
-                        "surface-container": "#edeeee",
-                        "secondary-fixed": "#bdece6",
-                        "background": "#f9f9f9",
-                        "secondary": "#3a6662",
-                        "on-secondary-fixed": "#00201e",
-                        "inverse-primary": "#c6c6c6",
-                        "on-surface": "#191c1c",
-                        "on-primary-fixed": "#1b1b1b",
-                        "surface-container-highest": "#e1e3e3",
-                        "secondary-fixed-dim": "#a2cfca",
-                        "on-error-container": "#93000a",
-                        "on-tertiary": "#ffffff",
-                        "on-surface-variant": "#4c4546",
-                        "primary-fixed": "#e2e2e2",
-                        "inverse-on-surface": "#f0f1f1",
-                        "surface-tint": "#5e5e5e",
-                        "surface-container-lowest": "#ffffff",
-                        "error-container": "#ffdad6",
-                        "secondary-container": "#bdece6",
-                        "on-tertiary-fixed": "#3d050b",
-                        "on-secondary": "#ffffff",
-                        "surface-container-low": "#f3f4f4",
-                        "error": "#ba1a1a",
-                        "surface-dim": "#d9dada",
-                        "primary": "#000000",
-                        "accent-teal": "#13eed3"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "lg": "24px",
-                        "md": "16px",
-                        "xl": "32px",
-                        "base": "8px",
-                        "xs": "4px",
-                        "gutter": "16px",
-                        "sm": "8px"
-                    },
-                    "fontFamily": {
-                        "body-sm": ["Inter"],
-                        "label-md": ["Inter"],
-                        "headline-md": ["Inter"],
-                        "body-lg": ["Inter"],
-                        "headline-lg": ["Inter"]
-                    },
-                    "fontSize": {
-                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
-                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
-                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
-                        "body-lg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
-                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
-                    }
-                },
-            },
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "secondary": "#3a6662",
+          "secondary-container": "#bdece6",
+          "on-secondary-container": "#214e4a",
+          "surface-container-low": "#f3f4f4",
+          "surface-container": "#edeeee",
+          "outline-variant": "#cfc4c5",
+          "on-surface-variant": "#4c4546",
+          "accent-teal": "#13eed3"
+        },
+        fontFamily: {
+          body: ["Inter"],
+          headline: ["Inter"],
+          mono: ["Inter"]
         }
-    </script>
+      }
+    }
+  };
+</script>
 </head>
-<body class="bg-background text-on-surface transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="documentation">
-<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md transition-colors duration-300 dark:border-zinc-800 dark:bg-black/85">
+<body class="bg-white text-slate-700 dark:bg-zinc-950 dark:text-zinc-300 transition-colors duration-200" data-page="documentation">
+<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950/90">
   <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
     <div class="flex items-center gap-8">
       <a class="text-2xl font-black tracking-tighter text-teal-600" href="/">bAIsed</a>
@@ -110,14 +46,14 @@
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/solutions">Solutions</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/workbench">Workbench</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Methodology</a>
-        <a class="border-b-2 border-teal-600 pb-1 text-sm font-semibold text-teal-600" href="/docs">Docs</a>
+        <a class="border-b-2 border-teal-600 pb-1 text-sm font-semibold text-teal-600 dark:text-teal-400 dark:border-teal-400" href="/docs">Docs</a>
         <a class="text-sm font-medium text-slate-600 transition-colors hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/about">About</a>
       </nav>
     </div>
     <div class="flex items-center gap-3" data-auth-container>
       <div class="relative hidden sm:block">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" data-icon="search">search</span>
-        <input class="pl-10 pr-4 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-accent-teal transition-all dark:text-white" id="docs-search-input" placeholder="Search documentation..." type="text"/>
+        <input class="w-64 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-2 pl-10 text-sm outline-none transition-all" id="docs-search-input" placeholder="Search documentation..." type="text"/>
       </div>
       <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/case-study">Impact Reports</a>
       <a class="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block" href="/login">Sign In</a>
@@ -127,157 +63,154 @@
 </header>
 <div class="mx-auto flex w-full max-w-7xl pt-16 min-h-screen">
 <!-- SideNavBar -->
-<aside class="sticky top-16 h-[calc(100vh-64px)] w-64 hidden md:flex flex-col py-6 gap-2 border-r border-slate-200 bg-white transition-colors dark:border-zinc-800 dark:bg-zinc-950">
+<aside class="sticky top-16 h-[calc(100vh-64px)] w-60 hidden md:flex flex-col py-6 gap-2 border-r border-slate-200 bg-slate-50 transition-colors dark:border-zinc-800 dark:bg-zinc-900">
 <div class="px-6 mb-6">
 <div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-lg bg-black dark:bg-teal-600 flex items-center justify-center">
+<div class="w-8 h-8 rounded-lg bg-teal-600 dark:bg-teal-500 flex items-center justify-center">
 <span class="material-symbols-outlined text-white text-lg" data-icon="shield">shield</span>
 </div>
 <div>
-<h3 class="font-headline-md text-sm font-bold tracking-tight dark:text-white">Core Docs</h3>
-<span class="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-widest" id="docs-version">v1.0.4-beta</span>
+<h3 class="text-sm font-bold text-zinc-900 dark:text-white">Core Docs</h3>
+<span class="bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-400 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest" id="docs-version">v1.0.4-beta</span>
 </div>
 </div>
 </div>
 <nav class="flex-1 overflow-y-auto px-2 space-y-1">
 <!-- Getting Started -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-teal-800 bg-teal-100 dark:bg-teal-900/40 dark:text-teal-200 rounded-full mx-2 font-label-md cursor-pointer">
+<div class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500 px-3 py-2 mt-5 first:mt-0 mx-2">Getting Started</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 mx-2 cursor-pointer transition-colors">
 <span class="material-symbols-outlined text-sm" data-icon="rocket_launch">rocket_launch</span>
-<span>Getting Started</span>
+<span>Overview</span>
 </div>
 <div class="ml-11 mt-2 space-y-1" data-api-reference-anchor>
-<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#introduction">Introduction</a>
-<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#quick-start">Quickstart Guide</a>
-<a class="block py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#architecture">Architecture Overview</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 transition-colors" href="#introduction">Introduction</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#quick-start">Quickstart Guide</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#architecture">Architecture Overview</a>
 </div>
 </div>
 <!-- API Reference -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md cursor-pointer transition-transform hover:scale-[1.02]">
+<div class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500 px-3 py-2 mt-5 mx-2">API Reference</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 mx-2 cursor-pointer transition-colors">
 <span class="material-symbols-outlined text-sm" data-icon="code">code</span>
-<span>API Reference</span>
+<span>Endpoints</span>
 </div>
 <div class="ml-11 mt-2 space-y-1">
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#authentication">Authentication</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#endpoints">Endpoints</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#rate-limits">Rate Limits</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#authentication">Authentication</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#endpoints">Endpoints</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#rate-limits">Rate Limits</a>
 </div>
 </div>
 <!-- Metrics -->
 <div class="mb-4">
-<div class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md cursor-pointer transition-transform hover:scale-[1.02]">
+<div class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500 px-3 py-2 mt-5 mx-2">Metrics</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 mx-2 cursor-pointer transition-colors">
 <span class="material-symbols-outlined text-sm" data-icon="analytics">analytics</span>
-<span>Metrics</span>
+<span>Fairness Metrics</span>
 </div>
 <div class="ml-11 mt-2 space-y-1">
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#bias-detection">Bias Detection</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#drift-analytics">Drift Analytics</a>
-<a class="block py-1.5 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white font-body-sm transition-colors" href="#fairness-ratios">Fairness Ratios</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#bias-detection">Bias Detection</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#drift-analytics">Drift Analytics</a>
+<a class="block px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors" href="#fairness-ratios">Fairness Ratios</a>
 </div>
 </div>
 </nav>
-<div class="mt-auto px-2 border-t border-zinc-100 dark:border-zinc-800 pt-4 space-y-1">
-<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md transition-all" href="#">
+<div class="mt-auto px-2 border-t border-slate-200 dark:border-zinc-800 pt-4 space-y-1">
+<a class="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 rounded-lg mx-2 transition-colors" href="#">
 <span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
 <span>Settings</span>
 </a>
-<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg mx-2 font-label-md transition-all" href="#">
+<a class="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 rounded-lg mx-2 transition-colors" href="#">
 <span class="material-symbols-outlined text-sm" data-icon="help">help</span>
 <span>Help</span>
 </a>
 </div>
 </aside>
 <!-- Main Content Area -->
-<main class="flex-1 bg-background dark:bg-zinc-950 transition-colors">
-<div class="max-w-4xl mx-auto px-8 py-12">
+<main class="flex-1 bg-white dark:bg-zinc-950 transition-colors">
+<div class="max-w-3xl mx-auto px-8 md:px-12 pt-10 pb-12">
 <!-- Header -->
-<header class="mb-12 pt-6 mt-[-24px]" id="introduction">
-<nav class="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-label-md mb-8">
+<div class="mb-12 pt-6 mt-[-24px]" id="introduction">
+<nav class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-zinc-500 mb-6">
 <span>Docs</span>
-<span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-[10px] text-slate-300 dark:text-zinc-700" data-icon="chevron_right">chevron_right</span>
 <span>Getting Started</span>
-<span class="material-symbols-outlined text-[10px]" data-icon="chevron_right">chevron_right</span>
-<span class="text-accent-teal">Introduction</span>
+<span class="material-symbols-outlined text-[10px] text-slate-300 dark:text-zinc-700" data-icon="chevron_right">chevron_right</span>
+<span class="text-teal-600 dark:text-teal-400">Introduction</span>
 </nav>
-<h1 class="font-headline-lg text-black dark:text-white mb-6">Introduction to bAIsed</h1>
-<p class="font-body-lg text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl">
+<h1 class="text-4xl md:text-5xl font-black tracking-tight text-zinc-900 dark:text-white mt-2 mb-4">Introduction to bAIsed</h1>
+<p class="text-lg leading-8 text-slate-600 dark:text-zinc-400 max-w-2xl mb-10">
                         bAIsed is a high-precision fairness auditing framework for modern AI models. It provides developers with the toolset needed to detect, measure, and mitigate algorithmic bias throughout the entire machine learning lifecycle.
                     </p>
-</header>
+</div>
 <!-- Feature Grid -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-6 transition-colors">
+<div class="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+<div class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4 transition-colors">
 <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 transition-colors" data-icon="tune">tune</span>
 </div>
-<h3 class="font-headline-md text-lg mb-2 dark:text-white">Precision Control</h3>
-<p class="font-body-sm text-zinc-500 dark:text-zinc-400">Audit your models with granular control over sensitive attributes and intersectional parity checks.</p>
+<h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Precision Control</h3>
+<p class="text-sm leading-6 text-slate-600 dark:text-zinc-400">Audit your models with granular control over sensitive attributes and intersectional parity checks.</p>
 </div>
-<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-6 transition-colors">
+<div class="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+<div class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4 transition-colors">
 <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 transition-colors" data-icon="waves">waves</span>
 </div>
-<h3 class="font-headline-md text-lg mb-2 dark:text-white">Real-time Drift</h3>
-<p class="font-body-sm text-zinc-500 dark:text-zinc-400">Monitor statistical parity in flight with live alerts when model performance begins to skew across cohorts.</p>
+<h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Real-time Drift</h3>
+<p class="text-sm leading-6 text-slate-600 dark:text-zinc-400">Monitor statistical parity in flight with live alerts when model performance begins to skew across cohorts.</p>
 </div>
-<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-xl shadow-sm hover:border-accent-teal transition-colors group">
-<div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-6 transition-colors">
+<div class="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+<div class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4 transition-colors">
 <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 transition-colors" data-icon="shield">shield</span>
 </div>
-<h3 class="font-headline-md text-lg mb-2 dark:text-white">Compliance Ready</h3>
-<p class="font-body-sm text-zinc-500 dark:text-zinc-400">Generate automated fairness reports designed to meet strict algorithmic accountability regulations.</p>
+<h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Compliance Ready</h3>
+<p class="text-sm leading-6 text-slate-600 dark:text-zinc-400">Generate automated fairness reports designed to meet strict algorithmic accountability regulations.</p>
 </div>
 </div>
 <!-- Quick Start -->
 <section class="mb-16 pt-24 mt-[-96px]" id="quick-start">
-<div class="flex items-center gap-4 mb-6">
-<div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-<h2 class="font-headline-lg text-2xl dark:text-white">Quick Start</h2>
-</div>
-<p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+<h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Quick Start</h2>
+<p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
                         Get started by installing the bAIsed core CLI. Ensure you have Node.js 16+ installed in your development environment.
                     </p>
-<div class="bg-zinc-950 rounded-xl overflow-hidden shadow-xl border border-zinc-800">
-<div class="bg-zinc-900 px-4 py-2 flex items-center justify-between border-b border-zinc-800">
+<div class="rounded-2xl overflow-hidden border border-slate-700 shadow-md my-6">
+<div class="bg-zinc-900 px-4 py-3 flex items-center justify-between">
 <div class="flex gap-1.5">
-<div class="w-2.5 h-2.5 rounded-full bg-red-500/20"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
+<div class="w-3 h-3 rounded-full bg-red-500"></div>
+<div class="w-3 h-3 rounded-full bg-amber-400"></div>
+<div class="w-3 h-3 rounded-full bg-green-500"></div>
 </div>
 <div class="flex items-center gap-3">
 <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">terminal</span>
-<button class="text-zinc-500 hover:text-white transition-colors" title="Copy to clipboard">
+<button class="text-zinc-500 hover:text-zinc-300 transition-colors" title="Copy to clipboard">
 <span class="material-symbols-outlined text-[14px]">content_copy</span>
 </button>
 </div>
 </div>
-<div class="p-6 font-mono text-sm">
+<div class="bg-zinc-950 px-5 py-5 font-mono text-sm leading-7">
 <div class="flex gap-4">
-<span class="text-zinc-600 select-none">1</span>
-<span class="text-zinc-300">npm install <span class="text-accent-teal">@baised/core</span></span>
+<span class="text-zinc-600 select-none mr-4">1</span>
+<span class="text-zinc-100"><span class="text-indigo-400">npm install</span> <span class="text-teal-400">@baised/core</span></span>
 </div>
 <div class="flex gap-4 mt-2">
-<span class="text-zinc-600 select-none">2</span>
-<span class="text-zinc-300">baised init --project my-model-audit</span>
+<span class="text-zinc-600 select-none mr-4">2</span>
+<span class="text-zinc-100"><span class="text-indigo-400">baised init</span> --project my-model-audit</span>
 </div>
 </div>
 </div>
 </section>
 <!-- Metrics Engine Deep Dive -->
 <section class="mb-16 pt-24 mt-[-96px]" id="architecture">
-<div class="bg-teal-50 dark:bg-teal-900/10 rounded-2xl p-10 border border-teal-100/50 dark:border-teal-900/30">
+<div class="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-8 my-8">
 <div class="flex flex-col md:flex-row gap-8 items-center">
 <div class="flex-1">
-<div class="flex items-center gap-4 mb-4">
-<div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-<h2 class="font-headline-lg text-2xl text-zinc-900 dark:text-white">Metrics Engine Section</h2>
-</div>
-<p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+<h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mb-4">Metrics Engine Section</h2>
+<p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
                                      Our proprietary fairness engine calculates the Disparate Impact Ratio (DIR) across multidimensional vectors using a modified Four-Fifths rule algorithm.
                                  </p>
-<div class="bg-white/60 dark:bg-black/60 p-4 rounded-lg font-mono text-sm text-black dark:text-teal-400 inline-block border border-teal-200 dark:border-teal-900">
-                                     DIR = P(Y=1 | D=unprivileged) / P(Y=1 | D=privileged)
+<div class="bg-zinc-950 text-zinc-100 font-mono text-sm rounded-xl px-5 py-4 border border-zinc-700 mt-4 inline-block">
+                                     DIR = P(Y=1 | <span class="text-teal-400">D=unprivileged</span>) / P(Y=1 | <span class="text-teal-400">D=privileged</span>)
                                  </div>
 </div>
 <div class="w-full md:w-64 aspect-square bg-white dark:bg-zinc-800 rounded-xl shadow-inner border border-teal-100 dark:border-teal-900 flex items-center justify-center p-6">
@@ -289,102 +222,87 @@
 
 <!-- Authentication -->
 <section class="mb-16 pt-24 mt-[-96px]" id="authentication">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-        <h2 class="font-headline-lg text-2xl dark:text-white">Authentication</h2>
-    </div>
-    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+    <h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Authentication</h2>
+    <p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
         bAIsed uses API keys to authenticate requests. You can view and manage your API keys in the settings dashboard. Include your API key in the `Authorization` header as a Bearer token.
     </p>
-    <div class="bg-zinc-950 rounded-xl overflow-hidden shadow-xl border border-zinc-800 p-6 font-mono text-sm text-zinc-300">
-        Authorization: Bearer <span class="text-accent-teal">sk_test_12345</span>
+    <div class="rounded-2xl p-5 bg-slate-950 text-zinc-100 border border-zinc-700 font-mono text-sm">
+        Authorization: Bearer <span class="text-teal-400">sk_test_12345</span>
     </div>
 </section>
 
 <!-- Endpoints -->
 <section class="mb-16 pt-24 mt-[-96px]" id="endpoints">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-        <h2 class="font-headline-lg text-2xl dark:text-white">Endpoints</h2>
-    </div>
-    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
-        The primary endpoint for fairness analysis is <code>/analyze</code>. The API expects a JSON payload containing dataset metadata and model predictions.
+    <h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Endpoints</h2>
+    <p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
+        The primary endpoint for fairness analysis is <code class="bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 px-1.5 py-0.5 rounded font-mono text-sm">/analyze</code>. The API expects a JSON payload containing dataset metadata and model predictions.
     </p>
 </section>
 
 <!-- Rate Limits -->
 <section class="mb-16 pt-24 mt-[-96px]" id="rate-limits">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-        <h2 class="font-headline-lg text-2xl dark:text-white">Rate Limits</h2>
-    </div>
-    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+    <h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Rate Limits</h2>
+    <p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
         Free tier users are limited to 100 requests per minute. Pro and Enterprise users have unlimited API access.
     </p>
 </section>
 
 <!-- Bias Detection -->
 <section class="mb-16 pt-24 mt-[-96px]" id="bias-detection">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-        <h2 class="font-headline-lg text-2xl dark:text-white">Bias Detection</h2>
-    </div>
-    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+    <h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Bias Detection</h2>
+    <p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
         Our bias detection algorithm automatically scans features for correlation with protected classes using Disparate Impact and Equal Opportunity metrics.
     </p>
 </section>
 
 <!-- Drift Analytics -->
 <section class="mb-16 pt-24 mt-[-96px]" id="drift-analytics">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-        <h2 class="font-headline-lg text-2xl dark:text-white">Drift Analytics</h2>
-    </div>
-    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+    <h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Drift Analytics</h2>
+    <p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
         Monitor real-time changes in dataset distribution and parity metrics over time with continuous integration.
     </p>
 </section>
 
 <!-- Fairness Ratios -->
 <section class="mb-16 pt-24 mt-[-96px]" id="fairness-ratios">
-    <div class="flex items-center gap-4 mb-6">
-        <div class="w-1 h-8 bg-accent-teal rounded-full"></div>
-        <h2 class="font-headline-lg text-2xl dark:text-white">Fairness Ratios</h2>
-    </div>
-    <p class="font-body-lg text-zinc-600 dark:text-zinc-400 mb-6">
+    <h2 class="border-l-4 border-teal-500 pl-4 text-2xl font-bold text-zinc-900 dark:text-white mt-12 mb-4">Fairness Ratios</h2>
+    <p class="text-base font-normal leading-7 text-slate-700 dark:text-zinc-300 mb-6">
         bAIsed provides a suite of fairness ratios including Statistical Parity Difference, Average Odds Difference, and Predictive Equality.
     </p>
 </section>
 <!-- Footer Navigation -->
-<footer class="pt-12 border-t border-zinc-200 dark:border-zinc-800 flex justify-between">
-<div></div>
+<footer class="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl px-6 py-5 mt-10 flex items-center justify-between">
+<div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500 mb-1">NEXT UP</p>
+</div>
 <a class="group text-right" href="#">
-<p class="text-zinc-400 dark:text-zinc-500 font-label-md mb-1 uppercase tracking-wider">Next Up</p>
-<p class="font-headline-md text-black dark:text-white group-hover:text-accent-teal transition-colors flex items-center justify-end gap-2">
+<p class="text-lg font-bold text-zinc-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors flex items-center justify-end gap-2">
                             Quickstart Guide
-                            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+                            <span class="material-symbols-outlined text-teal-500" data-icon="arrow_forward">arrow_forward</span>
 </p>
 </a>
 </footer>
-<section class="mt-10 rounded-2xl border border-outline-variant dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+<!-- TODO: replace with real search when backend search is wired -->
+<section class="mt-8 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
 <div class="flex items-center justify-between gap-4">
 <div>
-<h3 class="font-headline-md text-lg dark:text-white">Backend Search Results</h3>
-<p class="text-sm text-zinc-500 dark:text-zinc-400">Type in the docs search box to query Flask-backed topics.</p>
+<h3 class="text-xl font-bold text-zinc-900 dark:text-white">Backend Search Results</h3>
+<p class="text-sm text-slate-500 dark:text-zinc-500">Type in the docs search box to query Flask-backed topics.</p>
 </div>
-<button class="rounded-lg border border-outline-variant dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors" data-action="Deploy Audit">Deploy Audit</button>
+<button class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-3 text-sm font-bold shadow-sm transition-colors" data-action="Deploy Audit">Deploy Audit</button>
 </div>
 <div class="mt-4 space-y-3" id="docs-search-results">
-<div class="rounded-xl border border-dashed border-outline-variant dark:border-zinc-800 bg-surface-container-low dark:bg-zinc-800/50 px-4 py-4 text-sm text-zinc-500 dark:text-zinc-400">Search results will appear here.</div>
+<div class="bg-slate-50 dark:bg-zinc-800 rounded-xl px-4 py-3 mb-2 text-sm text-slate-700 dark:text-zinc-300 border border-transparent hover:border-teal-500 transition-colors cursor-pointer">Search results will appear here.</div>
 </div>
 </section>
 </div>
 </main>
 </div>
 <!-- Floating Action Button -->
-<button class="fixed bottom-8 right-8 bg-black dark:bg-teal-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform z-40 group" data-action="Deploy Audit">
-<span class="material-symbols-outlined" data-icon="bolt" data-weight="fill" style="font-variation-settings: 'FILL' 1;">bolt</span>
-<span class="pr-2 font-label-md">Deploy Audit</span>
+<button class="fixed bottom-8 right-8 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform z-40 group" data-action="Deploy Audit">
+<span class="material-symbols-outlined" data-icon="bolt" data-weight="fill">bolt</span>
+<span class="pr-2 text-xs font-bold uppercase tracking-widest">Deploy Audit</span>
 </button>
 <script src="/frontend/js/site.js"></script>
+<!-- STYLE PASS COMPLETE -->
 </body></html>

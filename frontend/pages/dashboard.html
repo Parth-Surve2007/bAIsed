@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -9,8 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
   <link href="/frontend/css/custom.css" rel="stylesheet"/>
 </head>
-<body class="bg-background text-on-surface transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="dashboard">
-<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md transition-colors duration-300 dark:border-zinc-800 dark:bg-black/85">
+<body class="bg-white text-slate-700 dark:bg-zinc-950 dark:text-zinc-300 transition-colors duration-200" data-page="dashboard">
+<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950/90">
   <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
     <div class="flex items-center gap-8">
       <a class="text-2xl font-black tracking-tighter text-teal-600" href="/">bAIsed</a>
@@ -30,13 +30,13 @@
   </div>
 </header>
 <main class="flex min-h-screen items-center justify-center px-6 pt-24">
-  <div class="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-500">Dashboard</p>
-    <h1 class="mt-4 text-3xl font-black tracking-tight dark:text-white" id="dashboard-greeting">Welcome back.</h1>
-    <p class="mt-3 text-base text-slate-600 dark:text-zinc-400">Signed in as <span class="font-semibold text-slate-900 dark:text-white" id="dashboard-user-email">loading...</span></p>
+  <div class="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <p class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Dashboard</p>
+    <h1 class="mt-4 text-4xl md:text-5xl font-black tracking-tight text-zinc-900 dark:text-white" id="dashboard-greeting">Welcome back.</h1>
+    <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-zinc-400">Signed in as <span class="font-mono text-sm text-slate-800 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded" id="dashboard-user-email">loading...</span></p>
     <div class="mt-8 flex items-center justify-center gap-3">
-      <a class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white" href="/workbench">Open Workbench</a>
-      <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-zinc-700 dark:text-zinc-300" id="dashboard-signout" type="button">Sign Out</button>
+      <a class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 text-sm font-bold shadow-sm" href="/workbench">Open Workbench</a>
+      <button class="rounded-xl border border-slate-300 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 px-5 py-2.5 text-sm font-semibold transition" id="dashboard-signout" type="button">Sign Out</button>
     </div>
   </div>
 </main>
