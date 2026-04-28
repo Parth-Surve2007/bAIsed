@@ -1,13 +1,15 @@
 (() => {
   const routes = {
-    home: "/app",
-    solutions: "/app/solutions",
-    methodology: "/app/methodology",
-    caseStudies: "/app/case_study",
-    pricing: "/app/pricing_demo",
-    docs: "/app/documentation",
-    login: "/app/login",
-    workbench: "/app/workbench",
+    home: "/",
+    solutions: "/solutions",
+    methodology: "/methodology",
+    caseStudies: "/case-study",
+    pricing: "/pricing",
+    docs: "/docs",
+    login: "/login",
+    signup: "/signup",
+    workbench: "/workbench",
+    dashboard: "/dashboard",
   };
 
   const routeMap = new Map([
@@ -20,12 +22,12 @@
     ["pricing", routes.pricing],
     ["docs", routes.docs],
     ["documentation", routes.docs],
-    ["dashboard", routes.workbench],
+    ["dashboard", routes.dashboard],
     ["support", routes.docs],
     ["enterprise", routes.pricing],
     ["login", routes.login],
     ["sign in", routes.login],
-    ["sign up", routes.login],
+    ["sign up", routes.signup],
     ["get started", routes.workbench],
     ["request demo", routes.pricing],
     ["book demo", routes.pricing],
@@ -840,12 +842,12 @@
 
     const page = getCurrentPage();
     const navLinks = [
-      { label: "Home", href: "/app", page: "landing" },
-      { label: "Solutions", href: "/app/solutions", page: "solutions" },
-      { label: "Workbench", href: "/app/workbench", page: "workbench" },
-      { label: "Methodology", href: "/app/methodology", page: "methodology" },
-      { label: "Docs", href: "/app/documentation", page: "documentation" },
-      { label: "About", href: "/app/about", page: "about" },
+      { label: "Home", href: "/", page: "landing" },
+      { label: "Solutions", href: "/solutions", page: "solutions" },
+      { label: "Workbench", href: "/workbench", page: "workbench" },
+      { label: "Methodology", href: "/methodology", page: "methodology" },
+      { label: "Docs", href: "/docs", page: "documentation" },
+      { label: "About", href: "/about", page: "about" },
     ];
 
     panel.appendChild(closeBtn);
