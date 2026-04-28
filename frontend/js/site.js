@@ -1281,9 +1281,16 @@
       html.classList.add("dark");
     }
 
-    // Global Dark Mode Overrides for pages not fully themed yet
+    // Global color normalization for legacy page tokens.
     const style = document.createElement("style");
     style.innerHTML = `
+      body { background-color: #ffffff !important; color: #334155 !important; }
+      .bg-background { background-color: #ffffff !important; }
+      .bg-surface, .bg-surface-container, .bg-surface-container-low, .bg-surface-container-high { background-color: #f8fafc !important; }
+      .text-on-background, .text-on-surface { color: #18181b !important; }
+      .text-on-surface-variant { color: #475569 !important; }
+      .border-outline-variant { border-color: #e2e8f0 !important; }
+
       .dark body { background-color: #09090b !important; color: #f4f4f5 !important; }
       .dark header { background-color: rgba(0, 0, 0, 0.8) !important; border-color: #27272a !important; }
       .dark nav a { color: #a1a1aa !important; }
