@@ -174,6 +174,7 @@
       const shouldHide = !isSignedIn && Boolean(nav || link.dataset.hideWhenSignedOut === "true");
       if (shouldHide) {
         link.classList.add("hidden");
+        link.style.display = "none";
         link.setAttribute("aria-hidden", "true");
         link.tabIndex = -1;
         return;
@@ -181,6 +182,7 @@
 
       link.setAttribute("href", routeToAuthAwareTarget(protectedRoute));
       link.classList.remove("hidden");
+      link.style.display = "";
       link.removeAttribute("aria-hidden");
       link.removeAttribute("tabindex");
     });
@@ -620,34 +622,179 @@
 
   function renderAuthState() {
     const user = getSessionUser();
+
+    document.querySelectorAll("[data-auth-container]").forEach((container) => {
+      const signInLink = Array.from(container.querySelectorAll("a, button")).find((element) => {
+        const action = element.getAttribute("data-action");
+        const normalized = normalizeText(action || element.textContent || "");
+        return normalized === "sign in" || normalized === "login";
+      });
+
+      let signUpLink = container.querySelector("[data-signup-link]");
+      if (!signUpLink) {
+        signUpLink = document.createElement("a");
+        signUpLink.dataset.signupLink = "true";
+        signUpLink.href = routes.signup;
+        signUpLink.className =
+          "hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 md:block";
+        signUpLink.textContent = "Sign Up";
+
+        if (signInLink) {
+          signInLink.insertAdjacentElement("afterend", signUpLink);
+        } else {
+          const requestDemoButton = Array.from(container.querySelectorAll("a, button")).find((element) =>
+            normalizeText(element.textContent || "") === "request demo"
+          );
+          if (requestDemoButton) {
+            container.insertBefore(signUpLink, requestDemoButton);
+          } else {
+            container.appendChild(signUpLink);
+          }
+        }
+      }
+    });
+
     if (!user) {
+      document.querySelectorAll("[data-user-pill]").forEach((pill) => pill.remove());
+      document.querySelectorAll("[data-auth-container]").forEach((container) => {
+        container.querySelectorAll("button, a").forEach((element) => {
+          const action = element.getAttribute("data-action");
+          const normalized = normalizeText(action || element.textContent || "");
+          const isSignUp = element.dataset.signupLink === "true" || normalized === "sign up";
+          if (normalized === "sign in" || normalized === "login" || isSignUp) {
+            element.classList.remove("hidden");
+            element.style.display = "";
+            element.removeAttribute("aria-hidden");
+            element.removeAttribute("tabindex");
+          }
+        });
+      });
       syncProtectedNavVisibility();
       return;
     }
 
-    document.querySelectorAll("[data-auth-container]").forEach((container) => {
-      if (!container.querySelector("[data-user-pill]")) {
-        const pill = document.createElement("a");
-        pill.href = routes.workbench;
-        pill.dataset.userPill = "true";
-        pill.className =
-          "hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 md:inline-flex md:items-center md:gap-2";
-        pill.innerHTML = `<span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">${user.initials}</span><span>${user.email}</span>`;
-        container.prepend(pill);
-      }
-    });
+    const closeAllMenus = () => {
+      document.querySelectorAll("[data-user-menu]").forEach((menu) => {
+        menu.classList.add("hidden");
+        menu.setAttribute("aria-hidden", "true");
+      });
+      document.querySelectorAll("[data-user-menu-trigger]").forEach((trigger) => {
+        trigger.setAttribute("aria-expanded", "false");
+      });
+    };
 
     document.querySelectorAll("[data-auth-container]").forEach((container) => {
+      if (!container.querySelector("[data-user-pill]")) {
+        const wrapper = document.createElement("div");
+        wrapper.dataset.userPill = "true";
+        wrapper.className = "relative hidden md:inline-flex md:items-center";
+
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.dataset.userMenuTrigger = "true";
+        pill.className =
+          "rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 inline-flex items-center gap-2 hover:bg-white transition";
+        pill.setAttribute("aria-haspopup", "menu");
+        pill.setAttribute("aria-expanded", "false");
+        pill.innerHTML = `<span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">${user.initials}</span><span>${user.email}</span>`;
+
+        const menu = document.createElement("div");
+        menu.dataset.userMenu = "true";
+        menu.className =
+          "hidden absolute right-0 top-[calc(100%+10px)] z-[200] w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl";
+        menu.setAttribute("role", "menu");
+        menu.setAttribute("aria-hidden", "true");
+        menu.innerHTML = `
+          <div class="px-2 py-2">
+            <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Account</p>
+            <div class="mt-2 flex items-center gap-3">
+              <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-black text-white">${user.initials}</div>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-slate-900">${user.email}</p>
+                <p class="text-xs text-slate-500">Signed in</p>
+              </div>
+            </div>
+          </div>
+          <div class="my-2 h-px bg-slate-100"></div>
+          <div class="flex items-center justify-end gap-2 px-2 pb-1">
+            <button type="button" data-user-logout class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Log out</button>
+          </div>
+        `;
+
+        wrapper.appendChild(pill);
+        wrapper.appendChild(menu);
+
+        const requestDemoButton = Array.from(container.querySelectorAll("a, button")).find((element) =>
+          normalizeText(element.textContent || "") === "request demo"
+        );
+        if (requestDemoButton) {
+          container.insertBefore(wrapper, requestDemoButton);
+        } else {
+          container.prepend(wrapper);
+        }
+
+        if (wrapper.dataset.userMenuBound !== "true") {
+          wrapper.dataset.userMenuBound = "true";
+
+          pill.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const isHidden = menu.classList.contains("hidden");
+            closeAllMenus();
+            if (isHidden) {
+              menu.classList.remove("hidden");
+              menu.setAttribute("aria-hidden", "false");
+              pill.setAttribute("aria-expanded", "true");
+            } else {
+              menu.classList.add("hidden");
+              menu.setAttribute("aria-hidden", "true");
+              pill.setAttribute("aria-expanded", "false");
+            }
+          });
+
+          menu.addEventListener("click", (event) => {
+            event.stopPropagation();
+          });
+
+          const logoutBtn = menu.querySelector("[data-user-logout]");
+          if (logoutBtn) {
+            logoutBtn.addEventListener("click", async () => {
+              try {
+                logoutBtn.disabled = true;
+                localStorage.setItem("baised_force_logged_out", "1");
+                if (window.baisedAuth && typeof window.baisedAuth.signOut === "function") {
+                  await window.baisedAuth.signOut();
+                } else if (window.baisedFirebase && window.baisedFirebase.auth && typeof window.baisedFirebase.auth.signOut === "function") {
+                  await window.baisedFirebase.auth.signOut();
+                }
+                clearSessionUser();
+              } finally {
+                window.location.replace(`${routes.login}?logged_out=1`);
+              }
+            });
+          }
+
+          if (document.documentElement.dataset.userMenuGlobalBound !== "true") {
+            document.documentElement.dataset.userMenuGlobalBound = "true";
+            document.addEventListener("click", () => closeAllMenus());
+            document.addEventListener("keydown", (event) => {
+              if (event.key === "Escape") {
+                closeAllMenus();
+              }
+            });
+          }
+        }
+      }
+
       container.querySelectorAll("button, a").forEach((element) => {
         const action = element.getAttribute("data-action");
         const normalized = normalizeText(action || element.textContent || "");
-        if (normalized !== "sign in" && normalized !== "login") {
-          return;
+        const isSignUp = element.dataset.signupLink === "true" || normalized === "sign up";
+        if (normalized === "sign in" || normalized === "login" || isSignUp) {
+          element.classList.add("hidden");
+          element.style.display = "none";
+          element.setAttribute("aria-hidden", "true");
+          element.tabIndex = -1;
         }
-
-        element.textContent = user.email;
-        element.setAttribute("data-action", "Dashboard");
-        element.dataset.navLabel = "Dashboard";
       });
     });
 
@@ -1162,5 +1309,9 @@
         });
       }
     }
+  });
+
+  document.addEventListener("baised:auth-changed", () => {
+    renderAuthState();
   });
 })();
