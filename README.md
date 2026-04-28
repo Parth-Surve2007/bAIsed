@@ -14,21 +14,23 @@
 
 ## Overview
 
-**bAIsed** is a full-stack application built to help teams evaluate fairness in machine learning systems and understand where bias comes from. It supports quick fairness checks, deeper dataset analysis, what-if simulation, and AI-generated reporting so users can move from detection to remediation in one workflow.
+**bAIsed** is a full-stack AI fairness auditing platform that helps teams detect, explain, and reduce bias in machine learning models and datasets.
 
-The project combines deterministic fairness metrics with a modern interface and Gemini-powered analysis to provide both technical depth and practical insight.
+It combines deterministic fairness metrics, a browser-based analysis interface, what-if simulation, and Gemini-powered reporting in one workflow so users can move from detection to remediation quickly.
 
 ---
 
 ## What This Project Does
 
-bAIsed helps teams to:
+bAIsed helps users to:
 
-- run fairness checks using either simple percentage inputs or real datasets (`.csv`, `.xlsx`)
+- run fairness checks using simple percentage inputs or real datasets (`.csv`, `.xlsx`)
 - compute core parity metrics such as **DIR**, **SPD**, **EOD**, and **AOD**
 - detect root-cause feature impact and subgroup hotspots
-- generate counterfactual repair suggestions and what-if simulation outputs
+- generate counterfactual repair suggestions and simulation outputs
 - produce AI-written analysis reports using **Google Gemini**
+- export audit reports as **PDF**
+- revisit past runs through **user-specific audit history**
 
 ---
 
@@ -79,6 +81,10 @@ bAIsed helps teams to:
 - Google sign-in support
 - Clean multi-page frontend experience
 
+### Reporting and History
+- PDF audit report export
+- User-specific audit history for revisiting past analyses
+
 ---
 
 ## Metrics Implemented
@@ -99,11 +105,39 @@ bAIsed computes the following fairness signals:
 
 ---
 
+## System Flow
+
+1. The user opens the **Workbench**.
+2. The frontend sends requests for either quick analysis or dataset analysis.
+3. The backend processes the data and computes fairness metrics.
+4. Results are returned as structured JSON.
+5. The UI renders metrics, hotspots, feature analysis, and repair suggestions.
+6. The simulator estimates how fairness and accuracy change under alternative settings.
+7. The AI analyzer generates a readable fairness report with Gemini.
+8. The user can export the report as PDF or revisit the run later from their audit history.
+
+---
+
+## Wireframes / Mock UI
+
+The solution is designed as a multi-panel fairness workbench with screens for:
+
+- landing/dashboard overview
+- dataset upload and schema detection
+- fairness metrics dashboard
+- bias hotspot and intersectional analysis
+- fairness simulator
+- AI-generated report and recommendations
+- PDF export and user history
+
+---
+
 ## Project Structure
 
 ```text
 bAIsed/
 ├─ backend/
+│  ├─ __init__.py
 │  ├─ app.py
 │  ├─ api.py
 │  ├─ analysis.py
@@ -138,20 +172,9 @@ bAIsed/
 ├─ app.yaml
 ├─ .env.example
 ├─ test_data.csv
+├─ README.md
 └─ .gitignore
 ```
-
----
-
-## How It Works
-
-1. The user opens the **Workbench**.
-2. The frontend sends requests for either quick analysis or dataset analysis.
-3. The backend processes the data and computes fairness metrics.
-4. Results are returned as structured JSON.
-5. The UI renders metrics, hotspots, feature analysis, and repair suggestions.
-6. The simulator estimates how fairness and accuracy change under alternative settings.
-7. The AI analyzer generates a readable fairness report with Gemini.
 
 ---
 
@@ -226,7 +249,20 @@ This repository includes Google App Engine configuration in `app.yaml`:
 
 ```yaml
 runtime: python311
-entrypoint: gunicorn -b :$PORT run:app
+entrypoint: gunicorn -b :$PORT backend.app:app
+```
+
+### Render Deployment
+If you deploy on Render, use:
+
+**Build Command**
+```bash
+pip install -r backend/requirements.txt
+```
+
+**Start Command**
+```bash
+gunicorn backend.app:app
 ```
 
 ### Deploy Steps
@@ -260,6 +296,7 @@ entrypoint: gunicorn -b :$PORT run:app
 - **Upload parsing issues**: Make sure the file is a valid `.csv` or `.xlsx`.
 - **Unexpected fairness output**: Use at least two valid groups and a binary or derivable outcome signal.
 - **Auth failures**: Check Firebase configuration and credential wiring.
+- **Render import errors**: Confirm `backend/__init__.py` exists and the start command points to `backend.app:app`.
 
 ---
 
