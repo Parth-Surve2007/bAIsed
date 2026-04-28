@@ -474,6 +474,7 @@ def simulate():
 @api_bp.post("/ai-analyze")
 def ai_analyze():
     import urllib.error
+    import urllib.parse
     import urllib.request
 
     file = request.files.get("file")
@@ -486,7 +487,10 @@ def ai_analyze():
     except Exception:
         analysis_data = {}
 
-    groq_api_key = "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"
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    if not gemini_api_key:
+        return jsonify({"error": "GEMINI_API_KEY is not configured on the server."}), 500
 
     try:
         df = load_dataset(file)
@@ -535,41 +539,56 @@ def ai_analyze():
         f"{ml_summary}\n"
     )
 
+    endpoint = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{gemini_model}:generateContent?key={urllib.parse.quote(gemini_api_key)}"
+    )
     req = urllib.request.Request(
-        "https://api.groq.com/openai/v1/chat/completions",
+        endpoint,
         method="POST",
         headers={
-            "Authorization": f"Bearer {groq_api_key}",
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         },
         data=json.dumps(
-            {"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": prompt}]}
+            {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.35,
+                    "maxOutputTokens": 1024,
+                },
+            }
         ).encode("utf-8"),
     )
 
     try:
         with urllib.request.urlopen(req) as response:
             resp_data = json.loads(response.read().decode("utf-8"))
-            ai_text = resp_data["choices"][0]["message"]["content"]
+            ai_text = (
+                resp_data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [{}])[0]
+                .get("text", "")
+            )
+            if not ai_text:
+                return jsonify({"error": "Gemini response was empty."}), 502
     except urllib.error.HTTPError as exc:
         if exc.code == 401:
-            return jsonify({"error": "Invalid Groq API Key."}), 401
+            return jsonify({"error": "Invalid Gemini API key."}), 401
         if exc.code == 403:
             try:
                 err_msg = exc.read().decode("utf-8")
             except Exception:
                 err_msg = exc.reason
-            return jsonify({"error": f"Groq API Error: 403 - Forbidden ({err_msg})"}), 403
+            return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
         if exc.code == 429:
-            return jsonify({"error": "Rate limit exceeded on Groq API."}), 429
-        return jsonify({"error": f"Groq API Error: {exc.code} - {exc.reason}"}), 500
+            return jsonify({"error": "Rate limit exceeded on Gemini API."}), 429
+        return jsonify({"error": f"Gemini API Error: {exc.code} - {exc.reason}"}), 500
     except Exception as exc:
         return jsonify({"error": f"Request failed: {str(exc)}"}), 500
 
     return jsonify(
         {
-            "model": "llama-3.3-70b-versatile",
+            "model": gemini_model,
             "row_count": row_count,
             "columns": columns,
             "ai_response": ai_text,
