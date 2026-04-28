@@ -162,36 +162,165 @@ def _json_error(message: str, status: int = 400):
     return jsonify({"error": message}), status
 
 
-def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int, columns: list[str]) -> str:
-    severity = str(analysis_data.get("severity", "UNKNOWN"))
-    dir_value = analysis_data.get("DIR", analysis_data.get("metrics", {}).get("DIR", 0))
-    spd_value = analysis_data.get("difference", analysis_data.get("metrics", {}).get("SPD", 0))
+def humanize_column(col: str) -> str:
+    """Convert raw column names to UI-friendly labels."""
+    mapping = {
+        "recsupervisionleveltext": "Supervision Level",
+        "recidiviz_decile_score": "Risk Decile Score",
+        "race": "Race",
+        "sex": "Sex",
+        "age_cat": "Age Category",
+        "priors_count": "Prior Offenses Count",
+        "c_charge_degree": "Charge Severity",
+        "score_text": "Risk Score Label",
+        "is_recid": "Recidivism Outcome",
+        "two_year_recid": "2-Year Recidivism",
+    }
+    raw = str(col or "").strip()
+    return mapping.get(raw.lower(), raw.replace("_", " ").title())
+
+
+def safe_dataset_summary(df: pd.DataFrame, max_rows: int = 8) -> str:
+    """Summarize dataset using complete row objects (no mid-row truncation)."""
+    sample = df.head(max_rows).to_dict(orient="records")
+    col_samples = {}
+    for col in df.columns:
+        col_samples[humanize_column(col)] = df[col].dropna().unique()[:5].tolist()
+    summary = {
+        "columns": [humanize_column(col) for col in df.columns],
+        "column_samples": col_samples,
+        "row_count": int(len(df)),
+        "sample_rows": sample,
+    }
+    return json.dumps(summary, default=str)
+
+
+def _compact_ml_summary(analysis_data: dict[str, Any]) -> str:
+    metrics = analysis_data.get("metrics", {}) if isinstance(analysis_data.get("metrics"), dict) else {}
+    compact = {
+        "severity": analysis_data.get("severity"),
+        "DIR": analysis_data.get("DIR", metrics.get("DIR")),
+        "SPD": analysis_data.get("difference", metrics.get("SPD")),
+        "EOD": metrics.get("EOD"),
+        "AOD": metrics.get("AOD"),
+        "bias_score": analysis_data.get("bias_score"),
+        "most_advantaged_group": analysis_data.get("most_advantaged_group"),
+        "least_advantaged_group": analysis_data.get("least_advantaged_group"),
+        "most_influential_feature": humanize_column(str(analysis_data.get("most_influential_feature", "N/A"))),
+        "warnings": (analysis_data.get("warnings") or [])[:5],
+        "recommendations": (analysis_data.get("recommendations") or [])[:5],
+        "bias_hotspots": (analysis_data.get("bias_hotspots") or [])[:3],
+        "feature_impact_ranking": (analysis_data.get("feature_impact_ranking") or [])[:5],
+    }
+    return json.dumps(clean_for_json(compact), default=str)
+
+
+def _severity_tokens(value: str) -> tuple[str, str]:
+    normalized = str(value or "").strip().upper()
+    if normalized in {"HIGH", "SEVERE"}:
+        return "HIGH", "red"
+    if normalized in {"MODERATE", "MEDIUM"}:
+        return "MEDIUM", "amber"
+    return "LOW", "green"
+
+
+def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int) -> dict[str, Any]:
+    metrics = analysis_data.get("metrics", {}) if isinstance(analysis_data.get("metrics"), dict) else {}
+    severity_label, severity_color = _severity_tokens(str(analysis_data.get("severity", "LOW")))
+    dir_value = analysis_data.get("DIR", metrics.get("DIR", 0))
+    spd_value = analysis_data.get("difference", metrics.get("SPD", 0))
     bias_score = analysis_data.get("bias_score", 0)
-    most_advantaged = analysis_data.get("most_advantaged_group", "N/A")
-    least_advantaged = analysis_data.get("least_advantaged_group", "N/A")
-    top_feature = analysis_data.get("most_influential_feature", "N/A")
-    recommendations = analysis_data.get("recommendations", [])[:3]
+    most_advantaged = str(analysis_data.get("most_advantaged_group", "N/A"))
+    least_advantaged = str(analysis_data.get("least_advantaged_group", "N/A"))
+    top_feature = humanize_column(str(analysis_data.get("most_influential_feature", "N/A")))
+    recommendations = [item for item in (analysis_data.get("recommendations") or []) if isinstance(item, str)][:3]
+    recommended_actions = [
+        {"priority": "IMMEDIATE", "action": recommendations[0] if len(recommendations) > 0 else "Audit threshold disparities for least-advantaged group."},
+        {"priority": "SHORT_TERM", "action": recommendations[1] if len(recommendations) > 1 else "Rebalance training distribution and re-run fairness evaluation."},
+        {"priority": "LONG_TERM", "action": recommendations[2] if len(recommendations) > 2 else "Set continuous fairness monitoring with group-level alerts."},
+    ]
 
-    recommendation_lines = "\n".join(
-        f"> - {item}" for item in recommendations if isinstance(item, str) and item.strip()
-    )
-    if not recommendation_lines:
-        recommendation_lines = "> - Re-run AI report later when provider quota resets."
+    disparity_ratio = "N/A"
+    try:
+        ratio = 1 / max(float(dir_value), 1e-6)
+        disparity_ratio = f"{ratio:.2f}x"
+    except Exception:
+        pass
 
-    return (
-        "### Final Bias Report\n"
-        f"**Quota fallback mode** was used because the external AI provider is currently rate-limited. "
-        f"This report is generated from deterministic fairness outputs and dataset metadata (**{row_count} rows**, "
-        f"**{len(columns)} columns**) so analysis remains available.\n\n"
-        f"The current run indicates **{severity}** bias with **DIR={dir_value}**, **SPD={spd_value}**, "
-        f"and **Bias Score={bias_score}**. The most advantaged group is **{most_advantaged}**, while the least "
-        f"advantaged group is **{least_advantaged}**.\n\n"
-        "### Root Causes & Insights\n"
-        f"The strongest disparity signal is tied to **{top_feature}** based on feature-impact ranking in your last audit. "
-        "Review this driver first along with subgroup-level hotspots and qualification context before model release.\n\n"
-        "### Recommended Action\n"
-        f"{recommendation_lines}"
-    )
+    confidence = "LOW" if row_count < 30 else "MEDIUM" if row_count < 100 else "HIGH"
+    return {
+        "severity_label": severity_label,
+        "severity_color": severity_color,
+        "headline": f"{least_advantaged} faces materially lower favorable outcomes than {most_advantaged}.",
+        "metrics_summary": f"**DIR**={dir_value}, **SPD**={spd_value}, **Bias Score**={bias_score}. Current run indicates {severity_label} disparity risk.",
+        "root_cause": {
+            "primary_driver": top_feature,
+            "explanation": f"The largest disparity signal aligns with {top_feature}. Feature distribution and threshold effects likely amplify outcome gaps for {least_advantaged}.",
+        },
+        "group_comparison": {
+            "most_advantaged": most_advantaged,
+            "least_advantaged": least_advantaged,
+            "disparity_ratio": disparity_ratio,
+            "plain_english": f"A person in {least_advantaged} is currently less likely to receive the same favorable outcome as someone in {most_advantaged}.",
+        },
+        "recommended_actions": recommended_actions,
+        "compliance_flags": [
+            "Potential discrimination risk requires documented mitigation and periodic bias monitoring under applicable fairness governance obligations."
+        ],
+        "confidence": confidence,
+        "confidence_reason": f"Confidence is {confidence} based on sample size ({row_count} rows) and deterministic metric consistency.",
+    }
+
+
+def _normalize_ai_report(report: dict[str, Any], analysis_data: dict[str, Any], row_count: int) -> dict[str, Any]:
+    fallback = _build_fallback_ai_report(analysis_data, row_count)
+    if not isinstance(report, dict):
+        return fallback
+
+    merged = {**fallback, **report}
+    root = merged.get("root_cause") if isinstance(merged.get("root_cause"), dict) else {}
+    group = merged.get("group_comparison") if isinstance(merged.get("group_comparison"), dict) else {}
+    merged["root_cause"] = {
+        "primary_driver": humanize_column(str(root.get("primary_driver", fallback["root_cause"]["primary_driver"]))),
+        "explanation": str(root.get("explanation", fallback["root_cause"]["explanation"])),
+    }
+    merged["group_comparison"] = {
+        "most_advantaged": str(group.get("most_advantaged", fallback["group_comparison"]["most_advantaged"])),
+        "least_advantaged": str(group.get("least_advantaged", fallback["group_comparison"]["least_advantaged"])),
+        "disparity_ratio": str(group.get("disparity_ratio", fallback["group_comparison"]["disparity_ratio"])),
+        "plain_english": str(group.get("plain_english", fallback["group_comparison"]["plain_english"])),
+    }
+    actions = merged.get("recommended_actions")
+    if not isinstance(actions, list) or not actions:
+        merged["recommended_actions"] = fallback["recommended_actions"]
+    else:
+        normalized_actions = []
+        for idx, item in enumerate(actions[:3]):
+            if isinstance(item, dict):
+                normalized_actions.append(
+                    {
+                        "priority": str(item.get("priority", fallback["recommended_actions"][min(idx, 2)]["priority"])),
+                        "action": str(item.get("action", fallback["recommended_actions"][min(idx, 2)]["action"])),
+                    }
+                )
+        while len(normalized_actions) < 3:
+            normalized_actions.append(fallback["recommended_actions"][len(normalized_actions)])
+        merged["recommended_actions"] = normalized_actions
+
+    flags = merged.get("compliance_flags")
+    if not isinstance(flags, list) or not flags:
+        merged["compliance_flags"] = fallback["compliance_flags"]
+    else:
+        merged["compliance_flags"] = [str(flag) for flag in flags[:3]]
+
+    severity_label, severity_color = _severity_tokens(str(merged.get("severity_label", fallback["severity_label"])))
+    merged["severity_label"] = severity_label
+    merged["severity_color"] = severity_color
+    merged["headline"] = str(merged.get("headline", fallback["headline"]))[:160]
+    merged["metrics_summary"] = str(merged.get("metrics_summary", fallback["metrics_summary"]))
+    merged["confidence"] = str(merged.get("confidence", fallback["confidence"])).upper()
+    merged["confidence_reason"] = str(merged.get("confidence_reason", fallback["confidence_reason"]))
+    return merged
 
 
 def _normalize_action(value: str | None) -> str:
@@ -508,6 +637,7 @@ def ai_analyze():
     import urllib.error
     import urllib.parse
     import urllib.request
+    import time
 
     file = request.files.get("file")
     if file is None:
@@ -532,72 +662,55 @@ def ai_analyze():
     row_count = int(len(df))
     columns = list(df.columns)
 
-    summary_lines = []
-    summary_lines.append(f"Row count: {row_count}")
-    summary_lines.append("Columns and Unique Counts:")
-    for col in columns:
-        unique_count = int(df[col].nunique())
-        top_vals = df[col].value_counts().head(3).index.tolist()
-        summary_lines.append(f" - {col}: {unique_count} unique (top: {top_vals})")
+    dataset_summary = safe_dataset_summary(df, max_rows=8)
+    ml_summary = _compact_ml_summary(analysis_data)
 
-    summary_lines.append("\nSample Data:")
-    sample_df = df.head(80)
-    summary_lines.append(sample_df.to_csv(index=False))
-
-    dataset_summary = "\n".join(summary_lines)
-    if len(dataset_summary) > 4000:
-        dataset_summary = dataset_summary[:4000] + "\n...[TRUNCATED]"
-
-    ml_summary = json.dumps(analysis_data, indent=2)
-    if len(ml_summary) > 4000:
-        ml_summary = ml_summary[:4000] + "\n...[TRUNCATED]"
-
-    prompt = (
-        "You are an expert AI fairness auditor and responsible AI reviewer.\n"
-        "You are given:\n"
-        "1) Dataset context (columns, uniqueness, top values, sample rows).\n"
-        "2) Deterministic fairness outputs from the backend engine (DIR, SPD, EOD, AOD, bias score, hotspots, feature impact, warnings).\n\n"
-        "Your objective: produce a deep, decision-ready report that combines metric interpretation, likely root causes, risk severity, and practical remediation.\n"
-        "Avoid generic advice. Every claim must be grounded in provided metrics or dataset context.\n\n"
-        "Output requirements (Markdown):\n"
-        "### Executive Summary\n"
-        "- Give a high-confidence verdict in 4-6 sentences.\n"
-        "- Include explicit interpretation of DIR, SPD, EOD, AOD, bias score, and severity.\n"
-        "- Name most advantaged vs least advantaged groups and explain what that means operationally.\n\n"
-        "### Metric Deep Dive\n"
-        "- Provide short bullet analysis for each metric: DIR, SPD, EOD, AOD.\n"
-        "- Explain why each metric matters and what risk it indicates in plain English.\n"
-        "- If metrics disagree, explain the mismatch and likely reason.\n\n"
-        "### Root-Cause Analysis\n"
-        "- Analyze likely drivers using most influential feature, hotspots, subgroup/context clues, and column patterns.\n"
-        "- Distinguish probable direct causes vs proxy/indirect causes.\n"
-        "- Include data quality concerns (missingness, imbalance, low sample warnings) if present.\n\n"
-        "### Risk & Compliance Assessment\n"
-        "- Rate risk as Low/Moderate/High with reasoning.\n"
-        "- Mention potential legal/compliance exposure under common fairness standards (high-level, non-legal advice).\n"
-        "- Identify which use-cases are unsafe to deploy without remediation.\n\n"
-        "### Prioritized Remediation Plan\n"
-        "- Provide 5-8 concrete actions ordered by impact and effort.\n"
-        "- For each action, include: expected fairness effect, possible accuracy trade-off, and validation step.\n"
-        "- Use blockquote bullets (`> - ...`) so this section is visually emphasized.\n\n"
-        "### Validation & Monitoring Plan\n"
-        "- Define a re-test protocol with thresholds and acceptance criteria.\n"
-        "- Include what to monitor in production (drift, parity over time, subgroup regression).\n"
-        "- End with a clear go/no-go recommendation.\n\n"
-        "Style constraints:\n"
-        "- Detailed but concise. Target 700-1200 words.\n"
-        "- Use **bold** for metric names, group names, and key conclusions.\n"
-        "- No markdown tables.\n"
-        "- Do not invent metrics or data not present in context.\n\n"
+    system_prompt = (
+        "You are an expert AI fairness auditor. Analyze bias in AI/ML systems. "
+        "You MUST respond with ONLY valid JSON. No markdown fences. No preamble. "
+        "No explanation outside the JSON. Your tone is authoritative, precise, and actionable."
+    )
+    user_prompt = (
+        "Analyze the following bias audit results and produce a structured report.\n\n"
         "=== DATASET CONTEXT ===\n"
         f"{dataset_summary}\n\n"
         "=== ML FAIRNESS ANALYSIS ===\n"
-        f"{ml_summary}\n"
+        f"{ml_summary}\n\n"
+        "Return ONLY this exact JSON schema (no extra fields, no markdown):\n"
+        "{\n"
+        '  "severity_label": "HIGH | MEDIUM | LOW",\n'
+        '  "severity_color": "red | amber | green",\n'
+        '  "headline": "One punchy sentence (max 20 words) describing the core bias finding",\n'
+        '  "metrics_summary": "2 sentences max. Mention DIR, SPD, Bias Score. Bold key terms with **.",\n'
+        '  "root_cause": {\n'
+        '    "primary_driver": "Human-readable feature name (NOT raw column name)",\n'
+        '    "explanation": "2-3 sentences explaining WHY this feature causes disparity."\n'
+        "  },\n"
+        '  "group_comparison": {\n'
+        '    "most_advantaged": "group name",\n'
+        '    "least_advantaged": "group name",\n'
+        '    "disparity_ratio": "e.g. 2.3x",\n'
+        '    "plain_english": "1 sentence impact statement for least advantaged group"\n'
+        "  },\n"
+        '  "recommended_actions": [\n'
+        '    {"priority": "IMMEDIATE", "action": "Specific action sentence"},\n'
+        '    {"priority": "SHORT_TERM", "action": "Specific action sentence"},\n'
+        '    {"priority": "LONG_TERM", "action": "Specific action sentence"}\n'
+        "  ],\n"
+        '  "compliance_flags": ["One-line compliance concern"],\n'
+        '  "confidence": "HIGH | MEDIUM | LOW",\n'
+        '  "confidence_reason": "One sentence confidence rationale"\n'
+        "}"
     )
 
     # Try configured model first, then fall back to broadly available models.
     model_candidates = []
-    for model in [gemini_model, "gemini-2.0-flash", "gemini-2.0-flash-lite"]:
+    for model in [
+        gemini_model,
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-2.0-flash-lite",
+    ]:
         if model and model not in model_candidates:
             model_candidates.append(model)
 
@@ -612,67 +725,72 @@ def ai_analyze():
             "https://generativelanguage.googleapis.com/v1beta/models/"
             f"{candidate_model}:generateContent?key={urllib.parse.quote(gemini_api_key)}"
         )
-        req = urllib.request.Request(
-            endpoint,
-            method="POST",
-            headers={
-                "Content-Type": "application/json",
+        request_body = {
+            "systemInstruction": {"parts": [{"text": system_prompt}]},
+            "contents": [{"parts": [{"text": user_prompt}]}],
+            "generationConfig": {
+                "temperature": 0.2,
+                "maxOutputTokens": 1024,
+                "responseMimeType": "application/json",
             },
-            data=json.dumps(
-                {
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {
-                        "temperature": 0.35,
-                        "maxOutputTokens": 3072,
-                    },
-                }
-            ).encode("utf-8"),
-        )
+        }
 
-        try:
-            with urllib.request.urlopen(req) as response:
-                resp_data = json.loads(response.read().decode("utf-8"))
-                ai_text = (
-                    resp_data.get("candidates", [{}])[0]
-                    .get("content", {})
-                    .get("parts", [{}])[0]
-                    .get("text", "")
-                )
-                if ai_text:
-                    selected_model = candidate_model
-                    break
-                last_reason = "Gemini response was empty."
-        except urllib.error.HTTPError as exc:
-            last_http_error = exc
-            if exc.code == 401:
-                return jsonify({"error": "Invalid Gemini API key."}), 401
-            if exc.code == 403:
-                try:
-                    err_msg = exc.read().decode("utf-8")
-                except Exception:
-                    err_msg = exc.reason
-                return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
-            if exc.code == 429:
-                saw_rate_limit = True
-                last_reason = "Rate limit exceeded on Gemini API."
-                continue
-            last_reason = str(exc.reason)
-            continue
-        except Exception as exc:
-            last_reason = str(exc)
-            continue
+        for attempt in range(2):
+            req = urllib.request.Request(
+                endpoint,
+                method="POST",
+                headers={
+                    "Content-Type": "application/json",
+                },
+                data=json.dumps(request_body).encode("utf-8"),
+            )
+
+            try:
+                with urllib.request.urlopen(req) as response:
+                    resp_data = json.loads(response.read().decode("utf-8"))
+                    ai_text = (
+                        resp_data.get("candidates", [{}])[0]
+                        .get("content", {})
+                        .get("parts", [{}])[0]
+                        .get("text", "")
+                    )
+                    if ai_text:
+                        selected_model = candidate_model
+                        break
+                    last_reason = "Gemini response was empty."
+            except urllib.error.HTTPError as exc:
+                last_http_error = exc
+                if exc.code == 401:
+                    return jsonify({"error": "Invalid Gemini API key."}), 401
+                if exc.code == 403:
+                    try:
+                        err_msg = exc.read().decode("utf-8")
+                    except Exception:
+                        err_msg = exc.reason
+                    return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
+                if exc.code == 429:
+                    saw_rate_limit = True
+                    last_reason = "Rate limit exceeded on Gemini API."
+                    if attempt == 0:
+                        time.sleep(1.5)
+                        continue
+                else:
+                    last_reason = str(exc.reason)
+            except Exception as exc:
+                last_reason = str(exc)
+
+            break
+
+        if ai_text:
+            break
 
     if not ai_text and saw_rate_limit:
-        fallback_text = _build_fallback_ai_report(analysis_data, row_count, columns)
-        return jsonify(
-            {
-                "model": "deterministic-fallback",
-                "row_count": row_count,
-                "columns": columns,
-                "ai_response": fallback_text,
-                "warning": "Gemini API is currently rate-limited. Showing fallback report.",
-            }
-        )
+        fallback_report = _build_fallback_ai_report(analysis_data, row_count)
+        fallback_report["_source"] = "deterministic-fallback"
+        fallback_report["_warning"] = "Gemini API is currently rate-limited."
+        fallback_report["_row_count"] = row_count
+        fallback_report["_columns"] = [humanize_column(col) for col in columns]
+        return jsonify(clean_for_json(fallback_report))
 
     if not ai_text:
         if last_http_error is not None:
@@ -687,14 +805,16 @@ def ai_analyze():
             )
         return jsonify({"error": f"Gemini request failed: {last_reason or 'unknown error'}"}), 500
 
-    return jsonify(
-        {
-            "model": selected_model,
-            "row_count": row_count,
-            "columns": columns,
-            "ai_response": ai_text,
-        }
-    )
+    try:
+        ai_report = json.loads(ai_text)
+    except Exception:
+        ai_report = {}
+
+    normalized_report = _normalize_ai_report(ai_report, analysis_data, row_count)
+    normalized_report["_source"] = selected_model
+    normalized_report["_row_count"] = row_count
+    normalized_report["_columns"] = [humanize_column(col) for col in columns]
+    return jsonify(clean_for_json(normalized_report))
 
 
 @api_bp.post("/reset")

@@ -668,6 +668,46 @@
     `;
   }
 
+  function aiReportJsonToMarkdown(report) {
+    const actions = Array.isArray(report.recommended_actions) ? report.recommended_actions : [];
+    const flags = Array.isArray(report.compliance_flags) ? report.compliance_flags : [];
+    const root = report.root_cause || {};
+    const groups = report.group_comparison || {};
+
+    const actionLines = actions
+      .map((item) => `> - **${item.priority || "ACTION"}**: ${item.action || ""}`)
+      .join("\n");
+    const flagLines = flags.map((item) => `- ${item}`).join("\n");
+
+    return [
+      "### Executive Summary",
+      `**${report.severity_label || "LOW"} Bias** - ${report.headline || "No headline generated."}`,
+      "",
+      report.metrics_summary || "Metric summary unavailable.",
+      "",
+      "### Root Cause",
+      `**Primary Driver:** ${root.primary_driver || "-"}`,
+      "",
+      root.explanation || "Root-cause explanation unavailable.",
+      "",
+      "### Group Comparison",
+      `Most advantaged: **${groups.most_advantaged || "-"}**`,
+      `Least advantaged: **${groups.least_advantaged || "-"}**`,
+      `Disparity ratio: **${groups.disparity_ratio || "-"}**`,
+      "",
+      groups.plain_english || "",
+      "",
+      "### Recommended Action",
+      actionLines || "> - No actions returned.",
+      "",
+      "### Compliance Flags",
+      flagLines || "- No compliance flags returned.",
+      "",
+      `### Confidence`,
+      `**${report.confidence || "LOW"}** - ${report.confidence_reason || "No confidence rationale returned."}`,
+    ].join("\n");
+  }
+
   function bindSimulator() {
     const slider = document.getElementById("simulator-diversity-weight");
     const value = document.getElementById("simulator-diversity-value");
@@ -1091,9 +1131,16 @@
           document.getElementById("ai-error-text").textContent = result.error;
           errorPanel.classList.remove("hidden");
         } else {
-          currentAiMarkdown = result.ai_response || "";
-          document.getElementById("ai-model-name").textContent = result.model || "Unknown Model";
-          document.getElementById("ai-row-count").textContent = result.row_count || "0";
+          const isStructured = result && typeof result === "object" && result.severity_label && result.root_cause;
+          if (isStructured) {
+            currentAiMarkdown = aiReportJsonToMarkdown(result);
+            document.getElementById("ai-model-name").textContent = result._source || "Gemini";
+            document.getElementById("ai-row-count").textContent = result._row_count || "0";
+          } else {
+            currentAiMarkdown = result.ai_response || "";
+            document.getElementById("ai-model-name").textContent = result.model || "Unknown Model";
+            document.getElementById("ai-row-count").textContent = result.row_count || "0";
+          }
           document.getElementById("ai-response-text").innerHTML = marked.parse(currentAiMarkdown);
           resultPanel.classList.remove("hidden");
         }
