@@ -4,6 +4,7 @@
   const AUTH_PROVIDER_KEY = "baised_auth_provider";
   const FORCE_LOGOUT_KEY = "baised_force_logged_out";
   const REDIRECT_FALLBACK = "/workbench";
+  let googleSignInPromise = null;
 
   function getAuth() {
     const auth = window.baisedFirebase && window.baisedFirebase.auth;
@@ -124,12 +125,24 @@
   }
 
   async function signInWithGoogle() {
+    if (googleSignInPromise) {
+      return googleSignInPromise;
+    }
+
     const auth = getAuth();
     const provider = new window.firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
-    const credential = await auth.signInWithPopup(provider);
-    await persistAuthSession(credential.user, "firebase-google");
-    return credential.user;
+    googleSignInPromise = (async () => {
+      const credential = await auth.signInWithPopup(provider);
+      await persistAuthSession(credential.user, "firebase-google");
+      return credential.user;
+    })();
+
+    try {
+      return await googleSignInPromise;
+    } finally {
+      googleSignInPromise = null;
+    }
   }
 
   async function signOut() {
@@ -213,6 +226,10 @@
     if (!form) {
       return;
     }
+    if (form.dataset.authBound === "true") {
+      return;
+    }
+    form.dataset.authBound = "true";
 
     const googleButton = document.getElementById("google-signin-btn");
     const submitButton = form.querySelector('button[type="submit"]');
@@ -239,15 +256,22 @@
       }
     });
 
-    if (googleButton) {
+    if (googleButton && googleButton.dataset.authBound !== "true") {
+      googleButton.dataset.authBound = "true";
       googleButton.addEventListener("click", async () => {
+        if (googleButton.disabled) {
+          return;
+        }
         try {
+          googleButton.disabled = true;
           setStatus("login-status", "Opening Google sign-in...");
           await signInWithGoogle();
           setStatus("login-status", "Signed in with Google. Redirecting...");
           window.location.replace(getRedirectTarget());
         } catch (error) {
           setStatus("login-status", error.message || "Google sign-in failed.");
+        } finally {
+          googleButton.disabled = false;
         }
       });
     }
@@ -259,6 +283,10 @@
     if (!form) {
       return;
     }
+    if (form.dataset.authBound === "true") {
+      return;
+    }
+    form.dataset.authBound = "true";
 
     const googleButton = document.getElementById("google-signup-btn");
     const submitButton = form.querySelector('button[type="submit"]');
@@ -286,15 +314,22 @@
       }
     });
 
-    if (googleButton) {
+    if (googleButton && googleButton.dataset.authBound !== "true") {
+      googleButton.dataset.authBound = "true";
       googleButton.addEventListener("click", async () => {
+        if (googleButton.disabled) {
+          return;
+        }
         try {
+          googleButton.disabled = true;
           setStatus("signup-status", "Opening Google sign-up...");
           await signInWithGoogle();
           setStatus("signup-status", "Signed in with Google. Redirecting...");
           window.location.replace(getRedirectTarget());
         } catch (error) {
           setStatus("signup-status", error.message || "Google sign-up failed.");
+        } finally {
+          googleButton.disabled = false;
         }
       });
     }
