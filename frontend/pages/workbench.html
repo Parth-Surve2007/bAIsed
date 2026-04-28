@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -105,8 +105,8 @@
   };
 </script>
 </head>
-<body class="bg-background text-on-surface transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100" data-page="workbench">
-<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md transition-colors duration-300 dark:border-zinc-800 dark:bg-black/85">
+<body class="bg-white text-slate-700 dark:bg-zinc-950 dark:text-zinc-300 transition-colors duration-200" data-page="workbench">
+<header class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950/90">
   <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
     <div class="flex items-center gap-8">
       <a class="text-2xl font-black tracking-tighter text-teal-600" href="/">bAIsed</a>
@@ -135,14 +135,14 @@
           Fairness Workbench
         </span>
         <h1 class="max-w-3xl text-4xl font-black tracking-tight text-black md:text-5xl dark:text-white">Upload data, analyze disparity, and review deterministic fairness evidence.</h1>
-        <p class="mt-4 max-w-3xl text-lg text-on-surface-variant dark:text-zinc-400">This workspace runs your backend fairness engine directly. Use simple percentages for a quick test or upload a CSV/XLSX dataset for multi-group disparity analysis with DIR, bias score, and explainable recommendations.</p>
+        <p class="mt-4 max-w-3xl text-base font-normal leading-7 text-slate-700 dark:text-zinc-300">This workspace runs your backend fairness engine directly. Use simple percentages for a quick test or upload a CSV/XLSX dataset for multi-group disparity analysis with DIR, bias score, and explainable recommendations.</p>
       </div>
       <div class="flex gap-4">
-        <div class="rounded-2xl border border-outline-variant bg-white px-6 py-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+        <div class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-500">DIR Threshold</p>
           <p class="mt-2 text-2xl font-black text-black dark:text-white">0.80</p>
         </div>
-        <div class="rounded-2xl border border-outline-variant bg-white px-6 py-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+        <div class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-500">Bias Score</p>
           <p class="mt-2 text-2xl font-black text-black dark:text-white">0 to 100</p>
         </div>
@@ -174,23 +174,23 @@
     <div class="wb-tab-panel active" data-wb-panel="quick">
       <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div class="space-y-6">
-          <section class="rounded-3xl border border-outline-variant bg-white p-8 shadow-md relative overflow-hidden">
+          <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-md relative overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
             <div class="absolute top-0 left-0 w-full h-1.5 bg-teal-600"></div>
             <div class="mb-6 flex items-center justify-between">
               <div>
-                <h2 class="text-3xl font-black text-black tracking-tight">Dataset Audit</h2>
-                <p class="mt-2 text-sm text-on-surface-variant">Upload a CSV or XLSX file. You can optionally specify the protected attribute and binary outcome columns.</p>
+                <h2 class="text-3xl font-black text-black tracking-tight dark:text-white">Dataset Audit</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-zinc-400">Upload a CSV or XLSX file. You can optionally specify the protected attribute and binary outcome columns.</p>
               </div>
             </div>
             <form class="space-y-6" id="dataset-analysis-form">
               <div>
-                <div id="file-drop-zone" class="group relative flex cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 px-6 py-10 transition-colors hover:border-teal-500 hover:bg-teal-50">
-                  <span class="material-symbols-outlined text-4xl text-teal-400 transition group-hover:text-teal-600">cloud_upload</span>
+                <div id="file-drop-zone" class="group relative flex cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-teal-300 bg-teal-50/50 px-6 py-10 transition-colors hover:border-teal-500 hover:bg-teal-50 dark:border-zinc-700 dark:bg-zinc-950/40 dark:hover:border-teal-500/80 dark:hover:bg-zinc-950/55">
+                  <span class="material-symbols-outlined text-4xl text-teal-400 transition group-hover:text-teal-600 dark:text-teal-300 dark:group-hover:text-teal-200">cloud_upload</span>
                   <div class="text-center">
-                    <p class="text-base font-bold text-teal-900">Click to browse or drag & drop</p>
-                    <p class="mt-1 text-sm text-teal-700/70">Supports CSV and XLSX files</p>
+                    <p class="text-base font-bold text-teal-900 dark:text-zinc-100">Click to browse or drag & drop</p>
+                    <p class="mt-1 text-sm text-teal-700/70 dark:text-zinc-400">Supports CSV and XLSX files</p>
                   </div>
-                  <p class="mt-2 text-sm font-semibold text-teal-700" id="file-name-display">No file selected</p>
+                  <p class="mt-2 text-sm font-semibold text-teal-700 dark:text-teal-200" id="file-name-display">No file selected</p>
                   <input accept=".csv,.xlsx" class="absolute inset-0 cursor-pointer opacity-0" id="dataset-file-input" required type="file" />
                 </div>
               </div>
@@ -199,34 +199,34 @@
                 <h3 class="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Column Configuration</h3>
                 <div class="grid gap-5 md:grid-cols-2">
                   <label class="block">
-                    <span class="mb-2 block text-sm font-semibold text-slate-700">Protected Attribute Column</span>
-                    <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="protected-attribute-input">
+                    <span class="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Protected Attribute Column</span>
+                    <select class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-base outline-none" id="protected-attribute-input">
                       <option value="">Auto-detect</option>
                     </select>
                   </label>
                   <label class="block">
-                    <span class="mb-2 block text-sm font-semibold text-slate-700">Outcome Column</span>
-                    <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="outcome-column-input">
+                    <span class="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Outcome Column</span>
+                    <select class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-base outline-none" id="outcome-column-input">
                       <option value="">Auto-detect</option>
                     </select>
                   </label>
                 </div>
                 <label class="block mt-5">
-                  <span class="mb-2 block text-sm font-semibold text-slate-700">Qualification Column</span>
-                  <select class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="qualification-column-input">
+                  <span class="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Qualification Column</span>
+                  <select class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-base outline-none" id="qualification-column-input">
                     <option value="">Auto-detect (Recommended)</option>
                   </select>
-                  <span class="mt-2 block text-xs text-slate-500">Subgroup context, EOD/AOD, and hidden-bias detection.</span>
+                  <span class="mt-2 block text-xs text-slate-400 dark:text-zinc-500">Subgroup context, EOD/AOD, and hidden-bias detection.</span>
                 </label>
               </div>
               <div class="flex flex-wrap gap-3 pt-2">
-                <button class="rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700 hover:shadow" type="submit">Upload And Analyze</button>
-                <button class="rounded-xl border border-outline-variant px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" id="dataset-reset" type="button">Clear File</button>
+                <button class="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 text-sm font-bold shadow-sm" type="submit">Upload And Analyze</button>
+                <button class="rounded-xl border border-slate-300 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 px-5 py-2.5 text-sm font-semibold transition" id="dataset-reset" type="button">Clear File</button>
               </div>
             </form>
           </section>
 
-          <section class="rounded-2xl border border-outline-variant bg-white p-5 shadow-sm">
+          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
             <details class="group" id="simple-check-details">
               <summary class="flex cursor-pointer items-center justify-between font-bold text-slate-800 list-none [&::-webkit-details-marker]:hidden">
                 <div class="flex items-center gap-3">
@@ -236,21 +236,21 @@
                 <span class="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180">expand_more</span>
               </summary>
               <div class="mt-5 pt-5 border-t border-slate-100">
-                <p class="mb-4 text-sm text-slate-600">Enter group selection percentages to compute normalized rates, DIR, difference, and severity.</p>
+                <p class="mb-4 text-sm leading-6 text-slate-600 dark:text-zinc-400">Enter group selection percentages to compute normalized rates, DIR, difference, and severity.</p>
                 <form class="space-y-4" id="simple-analysis-form">
                   <div class="grid gap-4 md:grid-cols-2">
                     <label class="block">
-                      <span class="mb-2 block text-sm font-semibold text-slate-700">Group A (%)</span>
-                      <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="group-a-input" max="100" min="0" placeholder="80" required type="number"/>
+                      <span class="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Group A (%)</span>
+                      <input class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-base outline-none" id="group-a-input" max="100" min="0" placeholder="80" required type="number"/>
                     </label>
                     <label class="block">
-                      <span class="mb-2 block text-sm font-semibold text-slate-700">Group B (%)</span>
-                      <input class="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" id="group-b-input" max="100" min="0" placeholder="30" required type="number"/>
+                      <span class="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Group B (%)</span>
+                      <input class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-base outline-none" id="group-b-input" max="100" min="0" placeholder="30" required type="number"/>
                     </label>
                   </div>
                   <div class="flex flex-wrap gap-3">
                     <button class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800" type="submit">Analyze Input</button>
-                    <button class="rounded-xl border border-outline-variant px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" id="simple-reset" type="button">Reset</button>
+                    <button class="rounded-xl border border-slate-300 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 px-5 py-2.5 text-sm font-semibold transition" id="simple-reset" type="button">Reset</button>
                   </div>
                 </form>
               </div>
@@ -352,10 +352,10 @@
               </div>
             </div>
 
-            <div class="rounded-2xl border border-teal-200 bg-teal-50/50 p-6 shadow-sm">
-              <p class="text-xs font-bold uppercase tracking-widest text-teal-800">Explanation</p>
-              <div id="explanation-container" class="mt-4 text-slate-800">
-                <p class="text-sm italic text-slate-500">Upload a dataset or submit simple percentages to generate a deterministic fairness explanation.</p>
+            <div class="rounded-2xl border border-teal-200 bg-teal-50/50 p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/40">
+              <p class="text-xs font-bold uppercase tracking-widest text-teal-800 dark:text-teal-200">Explanation</p>
+              <div id="explanation-container" class="mt-4 text-slate-800 dark:text-zinc-200">
+                <p class="text-sm italic text-slate-500 dark:text-zinc-400">Upload a dataset or submit simple percentages to generate a deterministic fairness explanation.</p>
               </div>
             </div>
           </section>
@@ -439,7 +439,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black">Comparative Group Stats</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">The workbench sorts groups by selection rate so the most and least advantaged cohorts are immediately visible.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">The workbench sorts groups by selection rate so the most and least advantaged cohorts are immediately visible.</p>
             </div>
             <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="group-count-chip">0 Groups</div>
           </div>
@@ -455,7 +455,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black">Dataset Field Analysis</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">Strict data-driven scanning of all columns and fields detected in your dataset.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Strict data-driven scanning of all columns and fields detected in your dataset.</p>
             </div>
             <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container" id="field-count-chip">0 Fields</div>
           </div>
@@ -488,7 +488,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black dark:text-white">Feature Impact Ranking</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Ranked root-cause features contributing most to disparity.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Ranked root-cause features contributing most to disparity.</p>
             </div>
             <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="feature-count-chip">0 Features</div>
           </div>
@@ -500,7 +500,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black dark:text-white">Bias Hotspots</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Strongest subgroup-level disparity areas.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Strongest subgroup-level disparity areas.</p>
             </div>
             <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="hotspot-count-chip">0 Hotspots</div>
           </div>
@@ -524,7 +524,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black dark:text-white">Repair Suggestions</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Minimal remediation steps to move toward the fairness threshold.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Minimal remediation steps to move toward the fairness threshold.</p>
             </div>
             <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="repair-count-chip">0 Suggestions</div>
           </div>
@@ -540,7 +540,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black dark:text-white">Counterfactual Simulations</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Deterministic what-if scenarios.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Deterministic what-if scenarios.</p>
             </div>
             <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="simulation-count-chip">0 Scenarios</div>
           </div>
@@ -559,7 +559,7 @@
             <div>
               <span class="material-symbols-outlined text-4xl text-slate-900 dark:text-white">science</span>
               <h2 class="mt-6 text-4xl font-light tracking-tight text-slate-900 dark:text-white">What-If Simulator</h2>
-              <p class="mt-4 max-w-md text-lg leading-8 text-on-surface-variant dark:text-zinc-400">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
+              <p class="mt-4 max-w-md text-base font-normal leading-7 text-slate-700 dark:text-zinc-300">Test hypothetical scenarios. See how changing weights or adding synthetic data impacts your model's fairness scores instantly.</p>
               <div class="mt-8 space-y-6">
                 <div>
                   <div class="mb-3 flex items-center justify-between gap-4">
@@ -626,7 +626,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black dark:text-white">Reliability Warnings</h2>
-              <p class="mt-1 text-sm text-on-surface-variant dark:text-zinc-400">Data quality and sample-size caveats that affect interpretation.</p>
+              <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Data quality and sample-size caveats that affect interpretation.</p>
             </div>
             <div class="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="warning-count-chip">0 Warnings</div>
           </div>
