@@ -625,7 +625,11 @@
 
       const improvementBar = document.getElementById("simulator-improvement-bar");
       if (improvementBar) {
-        const width = Math.max(0, Math.min(100, Number(preview.metrics?.parity_improvement_percent || 0) * 10));
+        const rawImprovement = Number(preview.metrics?.parity_improvement_percent || 0);
+        const normalizedPercent = Math.abs(rawImprovement) <= 1
+          ? Math.abs(rawImprovement) * 100
+          : Math.abs(rawImprovement);
+        const width = Math.max(0, Math.min(100, normalizedPercent));
         improvementBar.style.width = `${width}%`;
       }
     } catch (e) {

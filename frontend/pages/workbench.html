@@ -155,20 +155,16 @@
           type="button"
           class="wb-tab-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold bg-teal-50 text-teal-700"
           data-wb-tab="quick"
-          onclick="
-            (()=>{const root=this.closest('section');const panels=root.querySelectorAll('.wb-tab-panel');const btns=root.querySelectorAll('.wb-tab-btn');btns.forEach(b=>{b.classList.remove('bg-teal-50','text-teal-700');b.classList.add('text-slate-500');});this.classList.add('bg-teal-50','text-teal-700');this.classList.remove('text-slate-500');panels.forEach(p=>p.classList.remove('active'));root.querySelector('[data-wb-panel=quick]').classList.add('active');})();
-          ">
-          <span class="inline-flex h-2 w-2 items-center justify-center rounded-full bg-teal-600"></span>
+          onclick="switchWorkbenchTab(this, 'quick')">
+          <span class="wb-tab-dot inline-flex h-2 w-2 items-center justify-center rounded-full bg-teal-600"></span>
           Quick Analysis
         </button>
         <button
           type="button"
           class="wb-tab-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50"
           data-wb-tab="deep"
-          onclick="
-            (()=>{const root=this.closest('section');const panels=root.querySelectorAll('.wb-tab-panel');const btns=root.querySelectorAll('.wb-tab-btn');btns.forEach(b=>{b.classList.remove('bg-teal-50','text-teal-700');b.classList.add('text-slate-500');});this.classList.add('bg-teal-50','text-teal-700');this.classList.remove('text-slate-500');panels.forEach(p=>p.classList.remove('active'));root.querySelector('[data-wb-panel=deep]').classList.add('active');})();
-          ">
-          <span class="inline-flex h-2 w-2 items-center justify-center rounded-full border border-slate-400 bg-white"></span>
+          onclick="switchWorkbenchTab(this, 'deep')">
+          <span class="wb-tab-dot inline-flex h-2 w-2 items-center justify-center rounded-full border border-slate-400 bg-white"></span>
           Deep Dive
           <span class="ml-1 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">10 sections</span>
         </button>
@@ -399,7 +395,7 @@
           <div class="mb-5 flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Groq API.</p>
+              <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the Gemini API.</p>
             </div>
             <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
           </div>
@@ -667,6 +663,33 @@
 </main>
 <script src="/frontend/js/site.js"></script>
 <script src="/frontend/js/workbench.js"></script>
+<script>
+  function switchWorkbenchTab(button, panelName) {
+    const root = button.closest("section");
+    if (!root) return;
+
+    const buttons = root.querySelectorAll(".wb-tab-btn");
+    const panels = root.querySelectorAll(".wb-tab-panel");
+    buttons.forEach((tabButton) => {
+      const active = tabButton === button;
+      tabButton.classList.toggle("bg-teal-50", active);
+      tabButton.classList.toggle("text-teal-700", active);
+      tabButton.classList.toggle("text-slate-500", !active);
+      tabButton.classList.toggle("hover:bg-slate-50", !active);
+
+      const dot = tabButton.querySelector(".wb-tab-dot");
+      if (!dot) return;
+      dot.classList.toggle("bg-teal-600", active);
+      dot.classList.toggle("border", !active);
+      dot.classList.toggle("border-slate-400", !active);
+      dot.classList.toggle("bg-white", !active);
+    });
+
+    panels.forEach((panel) => panel.classList.remove("active"));
+    const selectedPanel = root.querySelector(`[data-wb-panel="${panelName}"]`);
+    if (selectedPanel) selectedPanel.classList.add("active");
+  }
+</script>
 
 <!-- Puppy Playground Overlay -->
 <div id="puppy-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500">

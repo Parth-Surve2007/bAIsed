@@ -32,7 +32,7 @@
     ["login", routes.login],
     ["sign in", routes.login],
     ["sign up", routes.signup],
-    ["get started", routes.workbench],
+    ["get started", routes.home],
     ["request demo", routes.pricing],
     ["book demo", routes.pricing],
     ["start free audit", routes.workbench],
