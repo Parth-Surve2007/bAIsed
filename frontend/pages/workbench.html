@@ -390,6 +390,63 @@
           </div>
         </div>
 
+        <section class="xl:col-span-2 grid gap-4 lg:grid-cols-3">
+          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-xl font-bold text-black">Proxy Bias</h2>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" id="proxy-count-chip">0 Found</span>
+            </div>
+            <div class="mt-4 space-y-3" id="proxy-analysis-list">
+              <p class="text-sm leading-6 text-slate-500">Run a dataset audit to detect proxy features.</p>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-xl font-bold text-black">Dataset Risk</h2>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" id="risk-level-chip">Unknown</span>
+            </div>
+            <p class="mt-4 text-4xl font-black text-black" id="dataset-risk-score">--</p>
+            <p class="mt-1 text-sm text-slate-500" id="dataset-risk-confidence">Confidence unavailable.</p>
+            <div class="mt-4 space-y-3" id="dataset-risk-factors">
+              <p class="text-sm leading-6 text-slate-500">Reliability factors will appear after analysis.</p>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-xl font-bold text-black">Bias Pattern</h2>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" id="pattern-confidence-chip">--</span>
+            </div>
+            <p class="mt-4 text-lg font-black text-black" id="bias-pattern-type">No pattern yet</p>
+            <p class="mt-2 text-sm leading-6 text-slate-600" id="bias-pattern-action">Run a dataset audit to classify the bias pattern.</p>
+            <ul class="mt-4 space-y-2 text-sm leading-6 text-slate-600" id="bias-pattern-evidence"></ul>
+          </div>
+        </section>
+
+        <section class="xl:col-span-2 rounded-3xl border border-outline-variant bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-black">Export Center</h2>
+              <p class="mt-1 text-sm text-slate-600">Send the standardized audit dataset into Google-friendly review workflows.</p>
+            </div>
+            <div class="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Google Ready</div>
+          </div>
+          <div class="mt-5 grid gap-4 md:grid-cols-2">
+            <button class="rounded-2xl border border-teal-200 bg-teal-50 p-5 text-left transition hover:border-teal-400 hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50" id="export-colab-btn" type="button">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">Colab Notebook</p>
+              <p class="mt-2 text-lg font-black text-slate-900">Download audit notebook</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Includes the standardized dataset, selected columns, fairness metric cells, charts, and Gemini prompt starter.</p>
+            </button>
+            <button class="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50" id="export-what-if-btn" type="button">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">What-If Tool</p>
+              <p class="mt-2 text-lg font-black text-slate-900">Download WIT bundle</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Exports CSV, metadata, and instructions for Google TensorBoard What-If Tool workflows.</p>
+            </button>
+          </div>
+          <p class="mt-4 text-sm text-slate-500" id="export-status-text">Run a dataset audit before exporting.</p>
+        </section>
+
         <section class="xl:col-span-2 rounded-3xl border border-outline-variant bg-white p-6 shadow-sm" id="ai-analyzer-section">
           <div class="mb-5 flex items-center justify-between">
             <div>

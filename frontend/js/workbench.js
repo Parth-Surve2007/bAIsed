@@ -354,6 +354,124 @@
     });
   }
 
+  function riskTone(level) {
+    const normalized = String(level || "").toUpperCase();
+    if (normalized === "HIGH") return "bg-red-100 text-red-700";
+    if (normalized === "MEDIUM") return "bg-amber-100 text-amber-700";
+    return "bg-emerald-100 text-emerald-700";
+  }
+
+  function renderProxyAnalysis(result) {
+    const container = document.getElementById("proxy-analysis-list");
+    const chip = document.getElementById("proxy-count-chip");
+    if (!container || !chip) return;
+
+    const proxies = result.proxy_analysis || [];
+    chip.textContent = `${proxies.length} Found`;
+    container.innerHTML = "";
+
+    if (!proxies.length) {
+      container.innerHTML = `<p class="text-sm leading-6 text-slate-500">No strong proxy feature signals were detected.</p>`;
+      return;
+    }
+
+    proxies.slice(0, 4).forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-outline-variant bg-surface-container-low p-4";
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm font-bold text-slate-900">${item.feature}</p>
+            <p class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">Proxy for ${item.proxy_for}</p>
+          </div>
+          <span class="rounded-full px-2.5 py-1 text-xs font-semibold ${riskTone(item.risk)}">${item.risk}</span>
+        </div>
+        <p class="mt-3 text-sm leading-6 text-slate-600">Association score ${formatDecimal(item.association_score || 0, 4)}</p>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function renderDatasetRisk(result) {
+    const risk = result.dataset_risk || {};
+    const chip = document.getElementById("risk-level-chip");
+    const score = document.getElementById("dataset-risk-score");
+    const confidence = document.getElementById("dataset-risk-confidence");
+    const factors = document.getElementById("dataset-risk-factors");
+    if (!chip || !score || !confidence || !factors) return;
+
+    chip.textContent = risk.risk_level || "Unknown";
+    chip.className = `rounded-full px-3 py-1 text-xs font-semibold ${riskTone(risk.risk_level)}`;
+    score.textContent = risk.risk_score !== undefined ? `${risk.risk_score}/100` : "--";
+    confidence.textContent = risk.confidence ? `Audit confidence: ${risk.confidence}` : "Confidence unavailable.";
+    factors.innerHTML = "";
+
+    const items = risk.factors || [];
+    if (!items.length) {
+      factors.innerHTML = `<p class="text-sm leading-6 text-slate-500">No reliability factors available.</p>`;
+      return;
+    }
+
+    items.slice(0, 4).forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "rounded-2xl border border-outline-variant bg-surface-container-low p-4";
+      row.innerHTML = `
+        <p class="text-sm font-bold text-slate-900">${String(item.factor || "Risk").replaceAll("_", " ")}</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600">${item.detail || ""}</p>
+      `;
+      factors.appendChild(row);
+    });
+  }
+
+  function renderBiasPattern(result) {
+    const pattern = result.bias_pattern || {};
+    const type = document.getElementById("bias-pattern-type");
+    const action = document.getElementById("bias-pattern-action");
+    const chip = document.getElementById("pattern-confidence-chip");
+    const evidence = document.getElementById("bias-pattern-evidence");
+    if (!type || !action || !chip || !evidence) return;
+
+    type.textContent = pattern.pattern_type ? String(pattern.pattern_type).replaceAll("_", " ") : "No pattern yet";
+    action.textContent = pattern.recommended_action || "Run a dataset audit to classify the bias pattern.";
+    chip.textContent = pattern.confidence !== undefined ? `${Math.round(pattern.confidence * 100)}%` : "--";
+    evidence.innerHTML = "";
+
+    (pattern.evidence || []).slice(0, 4).forEach((item) => {
+      const li = document.createElement("li");
+      li.className = "rounded-2xl bg-surface-container-low px-4 py-3";
+      li.textContent = item;
+      evidence.appendChild(li);
+    });
+  }
+
+  function setExportState(enabled, message) {
+    const colabBtn = document.getElementById("export-colab-btn");
+    const whatIfBtn = document.getElementById("export-what-if-btn");
+    const status = document.getElementById("export-status-text");
+    [colabBtn, whatIfBtn].forEach((button) => {
+      if (button) button.disabled = !enabled;
+    });
+    if (status) {
+      status.textContent = message || (enabled ? "Exports are ready for this standardized dataset." : "Run a dataset audit before exporting.");
+    }
+  }
+
+  function buildExportUrl(kind) {
+    if (!currentDatasetId || !currentAnalysisResult) return "";
+    const params = new URLSearchParams();
+    if (currentAnalysisResult.protected_attribute) {
+      params.set("protected_attribute", currentAnalysisResult.protected_attribute);
+    }
+    if (currentAnalysisResult.outcome_column) {
+      params.set("outcome_column", currentAnalysisResult.outcome_column);
+    }
+    if (currentAnalysisResult.qualification_column) {
+      params.set("qualification_column", currentAnalysisResult.qualification_column);
+    }
+    const query = params.toString();
+    return `/api/export/${kind}/${encodeURIComponent(currentDatasetId)}${query ? `?${query}` : ""}`;
+  }
+
   function renderFieldAnalysis(result) {
     const container = document.getElementById("field-analysis-body");
     const chip = document.getElementById("field-count-chip");
@@ -449,6 +567,9 @@
 
   function renderResult(result) {
     currentAnalysisResult = result;
+    if (result.dataset_id) {
+      currentDatasetId = result.dataset_id;
+    }
     const tone = severityTone(result.severity);
     setText("result-mode-chip", result.mode === "dataset" ? "Dataset" : "Simple");
     setText("severity-text", result.severity);
@@ -520,6 +641,10 @@
     renderRepairs(result);
     renderFeatureImpact(result);
     renderWarnings(result);
+    renderProxyAnalysis(result);
+    renderDatasetRisk(result);
+    renderBiasPattern(result);
+    setExportState(Boolean(currentDatasetId && result.mode === "dataset"), "Exports are ready for this standardized dataset.");
     persistLastResult(result);
 
     // Color-code DIR bar and metric values
@@ -592,6 +717,10 @@
     renderEmptyState("repairs-list", "Repair suggestions are unavailable for this request.");
     renderEmptyState("feature-impact-list", "Feature impact ranking is unavailable for this request.");
     renderEmptyState("warnings-list", "No reliability warnings available.");
+    renderProxyAnalysis({ proxy_analysis: [] });
+    renderDatasetRisk({});
+    renderBiasPattern({});
+    setExportState(false, "Run a dataset audit before exporting.");
     setText("hotspot-count-chip", "0 Hotspots");
     setText("simulation-count-chip", "0 Scenarios");
     setText("repair-count-chip", "0 Suggestions");
@@ -1107,7 +1236,7 @@
       resultPanel.classList.add("hidden");
       errorPanel.classList.add("hidden");
 
-      if (!file || !currentAnalysisResult) {
+      if ((!file && !currentDatasetId) || !currentAnalysisResult) {
         document.getElementById("ai-error-text").textContent = "Please upload a dataset and run the Dataset Audit first.";
         errorPanel.classList.remove("hidden");
         return;
@@ -1121,7 +1250,11 @@
       }
       
       const formData = new FormData();
-      formData.append("file", file);
+      if (currentDatasetId) {
+        formData.append("dataset_id", currentDatasetId);
+      } else {
+        formData.append("file", file);
+      }
       formData.append("analysis_json", JSON.stringify(currentAnalysisResult));
       
       try {
@@ -1156,6 +1289,34 @@
         }
       }
     });
+  }
+
+  function bindExportButtons() {
+    const colabBtn = document.getElementById("export-colab-btn");
+    const whatIfBtn = document.getElementById("export-what-if-btn");
+    setExportState(false);
+
+    if (colabBtn) {
+      colabBtn.addEventListener("click", () => {
+        const url = buildExportUrl("colab");
+        if (!url) {
+          setExportState(false, "Run a dataset audit before exporting.");
+          return;
+        }
+        window.location.href = url;
+      });
+    }
+
+    if (whatIfBtn) {
+      whatIfBtn.addEventListener("click", () => {
+        const url = buildExportUrl("what-if");
+        if (!url) {
+          setExportState(false, "Run a dataset audit before exporting.");
+          return;
+        }
+        window.location.href = url;
+      });
+    }
   }
 
   function generateReportWindow() {
@@ -1386,6 +1547,7 @@
     bindDatasetForm();
     bindAiAnalyzerForm();
     bindDownloadReport();
+    bindExportButtons();
     bindGlobalReset();
     bindSimulator();
     setupPuppyInteractions();

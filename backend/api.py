@@ -16,11 +16,19 @@ import uuid
 
 try:
     from .analysis import AnalysisError, analyze_dataset, analyze_simple_input, detect_columns, load_dataset
+    from .exporters import build_colab_notebook, build_what_if_export
+    from .pattern_detector import detect_bias_pattern
     from .preprocessor import standardize_dataset
+    from .proxy_detector import detect_proxy_features
+    from .risk_profiler import profile_dataset_risk
     from .simulator import simulate_fairness_scenario
 except ImportError:  # pragma: no cover - direct script fallback
     from analysis import AnalysisError, analyze_dataset, analyze_simple_input, detect_columns, load_dataset
+    from exporters import build_colab_notebook, build_what_if_export
+    from pattern_detector import detect_bias_pattern
     from preprocessor import standardize_dataset
+    from proxy_detector import detect_proxy_features
+    from risk_profiler import profile_dataset_risk
     from simulator import simulate_fairness_scenario
 
 
@@ -158,8 +166,38 @@ TEMP_DATASETS.mkdir(exist_ok=True)
 api_bp = Blueprint("api", __name__)
 
 
+def _temp_dataset_path(dataset_id: str) -> Path:
+    safe_id = Path(str(dataset_id)).name
+    return TEMP_DATASETS / f"{safe_id}.csv"
+
+
+def _save_temp_dataset(df: pd.DataFrame) -> str:
+    dataset_id = str(uuid.uuid4())
+    df.to_csv(_temp_dataset_path(dataset_id), index=False)
+    return dataset_id
+
+
+def _load_temp_dataset(dataset_id: str) -> pd.DataFrame:
+    temp_path = _temp_dataset_path(dataset_id)
+    if not temp_path.exists():
+        raise AnalysisError("Dataset session expired. Please re-upload.")
+    return pd.read_csv(temp_path)
+
+
 def _json_error(message: str, status: int = 400):
     return jsonify({"error": message}), status
+
+
+def _export_metadata(dataset_id: str, df: pd.DataFrame) -> dict[str, Any]:
+    return {
+        "dataset_id": dataset_id,
+        "row_count": int(len(df)),
+        "columns": list(df.columns),
+        "protected_attribute": request.args.get("protected_attribute", ""),
+        "outcome_column": request.args.get("outcome_column", ""),
+        "qualification_column": request.args.get("qualification_column", ""),
+        "source": "bAIsed standardized temp dataset",
+    }
 
 
 def humanize_column(col: str) -> str:
@@ -211,6 +249,9 @@ def _compact_ml_summary(analysis_data: dict[str, Any]) -> str:
         "recommendations": (analysis_data.get("recommendations") or [])[:5],
         "bias_hotspots": (analysis_data.get("bias_hotspots") or [])[:3],
         "feature_impact_ranking": (analysis_data.get("feature_impact_ranking") or [])[:5],
+        "proxy_analysis": (analysis_data.get("proxy_analysis") or [])[:5],
+        "dataset_risk": analysis_data.get("dataset_risk") or {},
+        "bias_pattern": analysis_data.get("bias_pattern") or {},
     }
     return json.dumps(clean_for_json(compact), default=str)
 
@@ -507,6 +548,38 @@ def download_whitepaper():
     )
 
 
+@api_bp.get("/api/export/colab/<dataset_id>")
+def export_colab(dataset_id: str):
+    try:
+        df = _load_temp_dataset(dataset_id)
+    except AnalysisError as exc:
+        return _json_error(str(exc), 404)
+
+    buffer = build_colab_notebook(df, _export_metadata(dataset_id, df))
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"baised-colab-{dataset_id}.ipynb",
+        mimetype="application/x-ipynb+json",
+    )
+
+
+@api_bp.get("/api/export/what-if/<dataset_id>")
+def export_what_if(dataset_id: str):
+    try:
+        df = _load_temp_dataset(dataset_id)
+    except AnalysisError as exc:
+        return _json_error(str(exc), 404)
+
+    buffer = build_what_if_export(df, _export_metadata(dataset_id, df))
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"baised-what-if-{dataset_id}.zip",
+        mimetype="application/zip",
+    )
+
+
 @api_bp.post("/analyze")
 def analyze():
     payload = request.get_json(silent=True)
@@ -536,9 +609,7 @@ def scan():
         df = load_dataset(file)
         df, preprocessor_report = standardize_dataset(df)
 
-        dataset_id = str(uuid.uuid4())
-        temp_path = TEMP_DATASETS / f"{dataset_id}.csv"
-        df.to_csv(temp_path, index=False)
+        dataset_id = _save_temp_dataset(df)
 
         try:
             from .analysis import _profile_columns  # type: ignore
@@ -570,10 +641,7 @@ def upload():
 
     try:
         if dataset_id:
-            temp_path = TEMP_DATASETS / f"{dataset_id}.csv"
-            if not temp_path.exists():
-                return jsonify({"error": "Dataset session expired. Please re-upload."}), 400
-            df = pd.read_csv(temp_path)
+            df = _load_temp_dataset(dataset_id)
             preprocessor_report = {"status": "Loaded from standardized workspace"}
         else:
             file = request.files.get("file")
@@ -581,6 +649,7 @@ def upload():
                 return jsonify({"error": "A file upload or dataset ID is required."}), 400
             df = load_dataset(file)
             df, preprocessor_report = standardize_dataset(df)
+            dataset_id = _save_temp_dataset(df)
 
         resolved_protected, resolved_outcome = detect_columns(
             df,
@@ -610,11 +679,27 @@ def upload():
     response["derived_outcome"] = result.stats.get("derived_outcome")
     response["qualification_column"] = result.stats.get("qualification_column")
     response["row_count"] = int(len(df))
+    response["dataset_id"] = dataset_id
 
     file_obj = request.files.get("file")
     response["file_name"] = file_obj.filename if file_obj else f"dataset_{dataset_id}.csv"
 
     response["preprocessor_report"] = preprocessor_report
+    protected_columns = result.stats.get("protected_attributes", [resolved_protected])
+    excluded_columns = [resolved_outcome]
+    qualification_resolved = result.stats.get("qualification_column")
+    if qualification_resolved:
+        excluded_columns.append(qualification_resolved)
+    proxy_findings = detect_proxy_features(
+        df,
+        protected_columns,
+        excluded_columns=excluded_columns,
+    )
+    dataset_risk = profile_dataset_risk(df, result, proxy_findings)
+    bias_pattern = detect_bias_pattern(result, proxy_findings, dataset_risk)
+    response["proxy_analysis"] = proxy_findings
+    response["dataset_risk"] = dataset_risk
+    response["bias_pattern"] = bias_pattern
     return jsonify(clean_for_json(response))
 
 
@@ -639,9 +724,10 @@ def ai_analyze():
     import urllib.request
     import time
 
+    dataset_id = request.form.get("dataset_id")
     file = request.files.get("file")
-    if file is None:
-        return jsonify({"error": "A file upload is required."}), 400
+    if file is None and not dataset_id:
+        return jsonify({"error": "A file upload or dataset ID is required."}), 400
 
     analysis_json = request.form.get("analysis_json", "{}")
     try:
@@ -655,7 +741,13 @@ def ai_analyze():
         return jsonify({"error": "GEMINI_API_KEY is not configured on the server."}), 500
 
     try:
-        df = load_dataset(file)
+        if dataset_id:
+            df = _load_temp_dataset(dataset_id)
+        else:
+            df = load_dataset(file)
+            df, _ = standardize_dataset(df)
+    except AnalysisError as exc:
+        return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": f"File processing failed: {str(exc)}"}), 400
 
