@@ -729,16 +729,11 @@
   }
 
   async function requestSimulatorPreview() {
-    const slider = document.getElementById("simulator-diversity-weight");
-    const constraintText = document.getElementById("simulator-constraint-text");
-    if (!slider || !constraintText) {
-      return;
-    }
+    const currentScenario = typeof window._getCurrentScenario === "function" ? window._getCurrentScenario() : "threshold";
 
     try {
       const preview = await postJson("/simulate", {
-        diversity_weight: Number(slider.value || 0.75),
-        fairness_constraint: constraintText.textContent || "Optimal",
+        scenario_type: currentScenario,
         analysis_result: currentAnalysisResult,
       });
 
@@ -748,8 +743,19 @@
 
       setText("simulator-instant-label", preview.instant_label || "Instant");
       setText("simulator-change-text", preview.change || "-");
-      setText("simulator-dir-text", formatDecimal(preview.metrics?.new_DIR || 0, 2));
-      setText("simulator-spd-text", formatDecimal(preview.metrics?.new_SPD || 0, 2));
+      
+      // Update Baseline metrics
+      setText("simulator-dir-baseline", formatDecimal(preview.metrics?.baseline_DIR || 0, 4));
+      setText("simulator-spd-baseline", formatDecimal(preview.metrics?.baseline_SPD || 0, 4));
+      setText("simulator-score-baseline", formatDecimal(preview.metrics?.baseline_bias_score || 0, 1));
+      setText("simulator-severity-baseline", preview.metrics?.baseline_severity || "LOW");
+
+      // Update New metrics
+      setText("simulator-dir-text", formatDecimal(preview.metrics?.new_DIR || 0, 4));
+      setText("simulator-spd-text", formatDecimal(preview.metrics?.new_SPD || 0, 4));
+      setText("simulator-score-text", formatDecimal(preview.metrics?.new_bias_score || 0, 1));
+      setText("simulator-severity-text", preview.metrics?.new_severity || "LOW");
+
       setText("simulator-accuracy-text", formatPercent(preview.metrics?.estimated_accuracy || 0));
       setText("simulator-improvement-text", formatSignedPercent(preview.metrics?.parity_improvement_percent || 0));
 
@@ -802,17 +808,30 @@
     const flags = Array.isArray(report.compliance_flags) ? report.compliance_flags : [];
     const root = report.root_cause || {};
     const groups = report.group_comparison || {};
+    
+    // New schema fields
+    const proxyRisks = Array.isArray(report.proxy_risks) ? report.proxy_risks : [];
+    const compRisks = Array.isArray(report.compliance_risks) ? report.compliance_risks : flags;
+    const mitigationPlan = Array.isArray(report.mitigation_plan) ? report.mitigation_plan : actions;
 
-    const actionLines = actions
+    const actionLines = mitigationPlan
       .map((item) => `> - **${item.priority || "ACTION"}**: ${item.action || ""}`)
       .join("\n");
-    const flagLines = flags.map((item) => `- ${item}`).join("\n");
+    const flagLines = compRisks.map((item) => `- ${item}`).join("\n");
+    
+    const proxyLines = proxyRisks.map((item) => `- **${item.feature}** (${item.risk}): ${item.explanation}`).join("\n");
 
     return [
       "### Executive Summary",
       `**${report.severity_label || "LOW"} Bias** - ${report.headline || "No headline generated."}`,
       "",
-      report.metrics_summary || "Metric summary unavailable.",
+      report.executive_summary || report.metrics_summary || "Metric summary unavailable.",
+      "",
+      "### Technical Audit",
+      report.technical_audit || `**DIR**=${report.DIR || "-"}, **SPD**=${report.SPD || "-"}`,
+      "",
+      "### Bias Pattern",
+      `**Detected Pattern:** ${report.pattern_detected || "None"}`,
       "",
       "### Root Cause",
       `**Primary Driver:** ${root.primary_driver || "-"}`,
@@ -826,52 +845,51 @@
       "",
       groups.plain_english || "",
       "",
-      "### Recommended Action",
+      "### Proxy Risks",
+      proxyLines || "- No significant proxy risks detected.",
+      "",
+      "### Mitigation Plan",
       actionLines || "> - No actions returned.",
       "",
-      "### Compliance Flags",
+      "### Compliance Risks",
       flagLines || "- No compliance flags returned.",
       "",
       `### Confidence`,
       `**${report.confidence || "LOW"}** - ${report.confidence_reason || "No confidence rationale returned."}`,
-    ].join("\n");
+      report.confidence_notes ? `*${report.confidence_notes}*` : ""
+    ].filter(line => line !== null).join("\n");
   }
 
   function bindSimulator() {
-    const slider = document.getElementById("simulator-diversity-weight");
-    const value = document.getElementById("simulator-diversity-value");
-    const constraintText = document.getElementById("simulator-constraint-text");
-    const buttons = Array.from(document.querySelectorAll("[data-simulator-constraint]"));
+    const buttons = Array.from(document.querySelectorAll("[data-scenario]"));
+    if (!buttons.length) return;
 
-    if (!slider || !value || !constraintText) {
-      return;
-    }
+    let currentScenario = "threshold";
 
-    const applyConstraintState = (selected) => {
-      constraintText.textContent = selected;
+    const applyScenarioState = (selected) => {
+      currentScenario = selected;
       buttons.forEach((button) => {
-        const active = button.dataset.simulatorConstraint === selected;
-        button.className = active
-          ? "rounded-xl border border-secondary bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition"
-          : "rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low";
+        const active = button.dataset.scenario === selected;
+        if (active) {
+          button.className = "w-full rounded-xl border border-secondary bg-secondary/10 px-4 py-3 text-left text-sm font-semibold text-secondary transition";
+        } else {
+          button.className = "w-full rounded-xl border border-outline-variant bg-white px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-surface-container-low dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700";
+        }
       });
     };
 
-    slider.addEventListener("input", () => {
-      value.textContent = Number(slider.value || 0).toFixed(2);
-      requestSimulatorPreview();
-    });
-
     buttons.forEach((button) => {
       button.addEventListener("click", () => {
-        const selected = button.dataset.simulatorConstraint || "Optimal";
-        applyConstraintState(selected);
+        const selected = button.dataset.scenario || "threshold";
+        applyScenarioState(selected);
         requestSimulatorPreview();
       });
     });
 
-    applyConstraintState("Optimal");
-    value.textContent = Number(slider.value || 0).toFixed(2);
+    applyScenarioState("threshold");
+    
+    // Make requestSimulatorPreview use currentScenario
+    window._getCurrentScenario = () => currentScenario;
     requestSimulatorPreview();
   }
 

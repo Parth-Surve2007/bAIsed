@@ -310,6 +310,13 @@ def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int) -> 
         ],
         "confidence": confidence,
         "confidence_reason": f"Confidence is {confidence} based on sample size ({row_count} rows) and deterministic metric consistency.",
+        "executive_summary": f"Audit of {row_count} records shows {severity_label} bias toward {least_advantaged}.",
+        "technical_audit": f"DIR is {dir_value} and SPD is {spd_value}. Top proxy feature: {top_feature}.",
+        "pattern_detected": analysis_data.get("bias_pattern", {}).get("pattern_type", "None"),
+        "proxy_risks": [],
+        "compliance_risks": ["Periodic bias monitoring recommended."],
+        "mitigation_plan": recommended_actions,
+        "confidence_notes": f"Based on {row_count} rows.",
     }
 
 
@@ -361,6 +368,25 @@ def _normalize_ai_report(report: dict[str, Any], analysis_data: dict[str, Any], 
     merged["metrics_summary"] = str(merged.get("metrics_summary", fallback["metrics_summary"]))
     merged["confidence"] = str(merged.get("confidence", fallback["confidence"])).upper()
     merged["confidence_reason"] = str(merged.get("confidence_reason", fallback["confidence_reason"]))
+    
+    # Normalize new fields
+    merged["executive_summary"] = str(merged.get("executive_summary", fallback["executive_summary"]))
+    merged["technical_audit"] = str(merged.get("technical_audit", fallback["technical_audit"]))
+    merged["pattern_detected"] = str(merged.get("pattern_detected", fallback["pattern_detected"]))
+    
+    proxy_risks = merged.get("proxy_risks")
+    if not isinstance(proxy_risks, list):
+        merged["proxy_risks"] = fallback["proxy_risks"]
+        
+    comp_risks = merged.get("compliance_risks")
+    if not isinstance(comp_risks, list):
+        merged["compliance_risks"] = fallback["compliance_risks"]
+        
+    mit_plan = merged.get("mitigation_plan")
+    if not isinstance(mit_plan, list):
+        merged["mitigation_plan"] = fallback["mitigation_plan"]
+        
+    merged["confidence_notes"] = str(merged.get("confidence_notes", fallback["confidence_notes"]))
     return merged
 
 
@@ -545,6 +571,27 @@ def download_whitepaper():
         as_attachment=True,
         download_name="baised-whitepaper.md",
         mimetype="text/markdown",
+    )
+
+
+@api_bp.get("/api/demo-dataset/<demo_type>")
+def get_demo_dataset(demo_type: str):
+    try:
+        from .demo_datasets import generate_demo_csv
+    except ImportError:  # pragma: no cover
+        from demo_datasets import generate_demo_csv
+
+    try:
+        csv_content = generate_demo_csv(demo_type)
+    except ValueError as e:
+        return _json_error(str(e), 400)
+    
+    buffer = BytesIO(csv_content.encode("utf-8"))
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"demo_{demo_type}_dataset.csv",
+        mimetype="text/csv",
     )
 
 
@@ -791,7 +838,16 @@ def ai_analyze():
         "  ],\n"
         '  "compliance_flags": ["One-line compliance concern"],\n'
         '  "confidence": "HIGH | MEDIUM | LOW",\n'
-        '  "confidence_reason": "One sentence confidence rationale"\n'
+        '  "confidence_reason": "One sentence confidence rationale",\n'
+        '  "executive_summary": "1 paragraph overview of the audit.",\n'
+        '  "technical_audit": "Detailed technical breakdown of metrics.",\n'
+        '  "pattern_detected": "PROXY_BIAS | INTERSECTIONAL_HIDDEN_BIAS | SMALL_SAMPLE_UNRELIABLE | None",\n'
+        '  "proxy_risks": [{"feature": "...", "risk": "HIGH", "explanation": "..."}],\n'
+        '  "compliance_risks": ["Specific risk point"],\n'
+        '  "mitigation_plan": [\n'
+        '    {"priority": "IMMEDIATE", "action": "Detailed step"}\n'
+        "  ],\n"
+        '  "confidence_notes": "Additional sample size caveats"\n'
         "}"
     )
 
