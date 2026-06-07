@@ -27,10 +27,77 @@ bAIsed helps users to:
 - run fairness checks using simple percentage inputs or real datasets (`.csv`, `.xlsx`)
 - compute core parity metrics such as **DIR**, **SPD**, **EOD**, and **AOD**
 - detect root-cause feature impact and subgroup hotspots
-- generate counterfactual repair suggestions and simulation outputs
-- produce AI-written analysis reports using **Google Gemini**
-- export audit reports as **PDF**
-- revisit past runs through **user-specific audit history**
+- **detect proxy features** that act as protected-attribute proxies (Cramer's V, correlation)
+- **profile dataset risk** for missing values, group imbalance, and outcome reliability
+- **classify bias patterns** (proxy bias, intersectional, threshold-driven, etc.)
+- **generate what-if simulations** to estimate fairness improvements
+- generate AI-written analysis reports using **Google Gemini**
+- **export to Google Colab** for exploratory analysis
+- **export to What-If Tool** format for TensorBoard integration
+- produce actionable remediation suggestions
+
+---
+
+## Architecture
+
+```mermaid
+graph LR
+    A["Frontend<br/>(Workbench UI)"] -->|HTTP| B["Flask API"]
+    C["Demo Dataset<br/>Generator"] -->|CSV| A
+    B --> D["Analysis Pipeline"]
+    D --> E["Deterministic Metrics<br/>(DIR, SPD, EOD, AOD)"]
+    D --> F["Proxy Detector<br/>(Cramer's V)"]
+    D --> G["Risk Profiler<br/>(Reliability Scoring)"]
+    D --> H["Pattern Detector<br/>(Classification)"]
+    D --> I["Simulator<br/>(What-If)"]
+    E --> J["Gemini AI"]
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+    J -->|Report| A
+    A -->|Export| K["Colab Notebook"]
+    A -->|Export| L["What-If Tool Bundle"]
+    
+    style A fill:#4285F4,color:#fff
+    style J fill:#EA4335,color:#fff
+    style K fill:#F9AB00,color:#000
+    style L fill:#34A853,color:#fff
+```
+
+---
+
+## New Phase 2-3 Modules
+
+### Proxy Bias Detector (`proxy_detector.py`)
+Detects whether features act as proxies for protected attributes:
+- **Cramer's V** for categorical vs categorical associations
+- **Correlation** for numeric features
+- **Eta-squared** for numeric vs categorical
+- Output: Association scores and risk levels (HIGH/MEDIUM/LOW)
+
+### Dataset Risk Profiler (`risk_profiler.py`)
+Scores dataset reliability for audit interpretation:
+- Missing value ratios
+- Small subgroup sizes
+- Group imbalance
+- Outcome imbalance  
+- Proxy feature risk factors
+- Output: Risk score (0–100) and confidence level
+
+### Bias Pattern Detector (`pattern_detector.py`)
+Classifies the type of bias detected:
+- `PROXY_BIAS` - Feature strongly associated with protected attribute
+- `INTERSECTIONAL_HIDDEN_BIAS` - Subgroup-level disparities
+- `THRESHOLD_DRIVEN_DISPARITY` - Selection threshold effect
+- `SMALL_SAMPLE_UNRELIABLE` - Low reliability due to sample size
+- `GROUP_UNDERREPRESENTATION` - Insufficient samples for a group
+- `GLOBAL_SELECTION_DISPARITY` - Overall selection rate gap
+- `NO_SIGNIFICANT_BIAS` - No actionable bias detected
+
+### Export Modules (`exporters.py`)
+- **Colab Export**: Generates Jupyter notebooks with dataset, metrics, and fairness analysis
+- **What-If Tool Export**: Creates ZIP bundles compatible with Google TensorBoard What-If Tool
 
 ---
 
@@ -75,15 +142,18 @@ bAIsed helps users to:
 - Estimated changes in parity and accuracy
 - Interactive trade-off analysis
 
-### Authentication and Product UI
-- Firebase-based sign-in flow
-- Email/password login support
-- Google sign-in support
-- Clean multi-page frontend experience
+### Demo Datasets
+Built-in bias examples for quick testing:
+- **Credit/Lending**: Age-based discrimination via income and ZIP code proxy
+- **Hiring/Resume**: Gender bias with tech club membership as proxy
+- **Policing**: Race-based bias with neighborhood as proxy
 
-### Reporting and History
-- PDF audit report export
-- User-specific audit history for revisiting past analyses
+Load demos instantly from the workbench UI without uploading files.
+
+### Export and Integration
+- **Google Colab**: Export standardized datasets with fairness analysis cells
+- **What-If Tool**: Export for TensorBoard What-If Tool workflows
+- **Gemini Integration**: AI-powered audit reports with evidence and recommendations
 
 ---
 
@@ -145,6 +215,11 @@ bAIsed/
 │  ├─ preprocessor.py
 │  ├─ auth.py
 │  ├─ fb_admin.py
+│  ├─ proxy_detector.py      (NEW)
+│  ├─ risk_profiler.py       (NEW)
+│  ├─ pattern_detector.py    (NEW)
+│  ├─ demo_datasets.py       (NEW)
+│  ├─ exporters.py           (NEW)
 │  ├─ requirements.txt
 │  ├─ .env
 │  └─ temp_datasets/
@@ -169,6 +244,7 @@ bAIsed/
 │  └─ css/
 │     └─ custom.css
 ├─ run.py
+├─ test_comprehensive.py     (NEW - Test suite)
 ├─ app.yaml
 ├─ .env.example
 ├─ test_data.csv
@@ -189,12 +265,15 @@ bAIsed/
 - `GET /api/downloads/whitepaper`
 
 ### Workbench Endpoints
-- `POST /analyze`
-- `POST /scan`
-- `POST /upload`
-- `POST /simulate`
-- `POST /ai-analyze`
-- `POST /reset`
+- `POST /analyze` - Quick fairness check with group percentages
+- `POST /scan` - Analyze dataset structure and detect columns
+- `POST /upload` - Upload CSV/XLSX and run complete analysis
+- `POST /simulate` - What-if fairness improvement scenarios
+- `POST /ai-analyze` - Generate Gemini-powered audit report
+- `GET /api/demo-dataset/<type>` - Download demo dataset (credit, resume, policing)
+- `GET /api/export/colab/<dataset_id>` - Export Colab notebook
+- `GET /api/export/what-if/<dataset_id>` - Export What-If Tool bundle
+- `POST /reset` - Clear temporary datasets
 
 ### Authentication Endpoints
 - `POST /api/auth/verify`
@@ -280,6 +359,48 @@ gunicorn backend.app:app
 
 ---
 
+## Built with Google AI & Tools
+
+bAIsed integrates Google's AI and fairness tools:
+
+### Google Gemini
+- Powers AI-assisted audit report generation
+- Structured JSON responses with evidence and recommendations
+- Confidence-rated findings and compliance notes
+- Set `GEMINI_API_KEY` environment variable to enable
+
+### Google Colab Integration
+- Export analyzed datasets as Jupyter notebooks
+- Run fairness metrics and charts in Colab
+- Collaborate and share analysis
+
+### Google What-If Tool
+- Export datasets compatible with TensorBoard What-If Tool
+- Explore counterfactual scenarios
+- Visualize fairness metrics by group
+
+---
+
+## Quick Start Demo
+
+### Load a Demo Dataset
+1. Open `http://localhost:5000/workbench`
+2. Click one of the demo buttons (💳 Lending, 👔 Hiring, 🚔 Policing)
+3. Review the fairness metrics dashboard
+4. Check the AI-generated report
+5. Export to Colab or What-If Tool
+
+### Upload Your Own Data
+1. Open the Dataset Audit tab
+2. Upload a CSV or XLSX file
+3. (Optional) Select protected attribute and outcome columns, or let auto-detect work
+4. Review proxy risk, dataset reliability, and bias patterns
+5. Run what-if simulations
+6. Generate Gemini report
+7. Export for further analysis
+
+---
+
 ## Important Notes
 
 - Uploaded standardized files are stored temporarily in `backend/temp_datasets/`.
@@ -287,6 +408,7 @@ gunicorn backend.app:app
 - Do not hardcode API keys or secrets in source files.
 - Keep Firebase admin credentials server-side only.
 - The auth backend is scaffolded and should be completed before production enforcement.
+- Column names are standardized to snake_case during preprocessing.
 
 ---
 

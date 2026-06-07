@@ -1317,6 +1317,91 @@
     if (colabBtn) {
       colabBtn.addEventListener("click", () => {
         const url = buildExportUrl("colab");
+        if (currentDatasetId && currentAnalysisResult) {
+          window.location.href = url;
+        } else {
+          setExportState(false, "Run a dataset audit before exporting.");
+        }
+      });
+    }
+
+    if (whatIfBtn) {
+      whatIfBtn.addEventListener("click", () => {
+        const url = buildExportUrl("what-if");
+        if (currentDatasetId && currentAnalysisResult) {
+          window.location.href = url;
+        } else {
+          setExportState(false, "Run a dataset audit before exporting.");
+        }
+      });
+    }
+  }
+
+  function bindDemoLoaders() {
+    const demoButtons = Array.from(document.querySelectorAll(".demo-loader-btn"));
+    if (!demoButtons.length) return;
+
+    demoButtons.forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const demoType = btn.dataset.demoType;
+        if (!demoType) return;
+
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Loading demo...";
+
+        try {
+          // Fetch the demo CSV
+          const response = await fetch(`/api/demo-dataset/${demoType}`);
+          if (!response.ok) {
+            throw new Error(`Failed to load demo: ${response.statusText}`);
+          }
+
+          const csvText = await response.text();
+
+          // Create a blob and simulate file upload
+          const blob = new Blob([csvText], { type: "text/csv" });
+          const file = new File([blob], `demo_${demoType}_dataset.csv`, { type: "text/csv" });
+
+          // Set the file input programmatically
+          const fileInput = document.getElementById("dataset-file-input");
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          fileInput.files = dataTransfer.files;
+
+          // Trigger the change event (which runs scan)
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+          // Show which demo was loaded
+          const fileNameDisplay = document.getElementById("file-name-display");
+          if (fileNameDisplay) {
+            const demoLabel = {
+              credit: "Demo: Lending Bias (Age Proxy)",
+              resume: "Demo: Hiring Bias (Gender Proxy)",
+              policing: "Demo: Policing Bias (Race/Neighborhood Proxy)"
+            }[demoType] || `Demo: ${demoType}`;
+            fileNameDisplay.textContent = demoLabel;
+          }
+        } catch (error) {
+          console.error("Demo load error:", error);
+          alert(`Failed to load demo: ${error.message}`);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      });
+    });
+  }
+
+  function bindExportButtons() {
+    const colabBtn = document.getElementById("export-colab-btn");
+    const whatIfBtn = document.getElementById("export-what-if-btn");
+    setExportState(false);
+
+    if (colabBtn) {
+      colabBtn.addEventListener("click", () => {
+        const url = buildExportUrl("colab");
         if (!url) {
           setExportState(false, "Run a dataset audit before exporting.");
           return;
@@ -1565,6 +1650,7 @@
     bindDatasetForm();
     bindAiAnalyzerForm();
     bindDownloadReport();
+    bindDemoLoaders();
     bindExportButtons();
     bindGlobalReset();
     bindSimulator();
