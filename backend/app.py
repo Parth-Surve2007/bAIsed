@@ -72,6 +72,30 @@ def create_app() -> Flask:
     def dashboard_page():
         return send_from_directory(pages_dir, "dashboard.html")
 
+    @app.get("/api-status")
+    def api_status_page():
+        return send_from_directory(pages_dir, "api_status.html")
+
+    @app.get("/ai-ethics-hub")
+    def ai_ethics_hub_page():
+        return send_from_directory(pages_dir, "ai_ethics_hub.html")
+
+    @app.get("/documentation")
+    def documentation_page():
+        return send_from_directory(pages_dir, "documentation.html")
+
+    @app.get("/privacy-policy")
+    def privacy_policy_page():
+        return send_from_directory(pages_dir, "privacy_policy.html")
+
+    @app.get("/terms-of-service")
+    def terms_of_service_page():
+        return send_from_directory(pages_dir, "terms_of_service.html")
+
+    @app.get("/contact")
+    def contact_page():
+        return send_from_directory(pages_dir, "contact.html")
+
     @app.errorhandler(404)
     def not_found(_error):
         return send_from_directory(pages_dir, "404.html"), 404

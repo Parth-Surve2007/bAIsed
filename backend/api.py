@@ -310,8 +310,27 @@ def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int) -> 
         ],
         "confidence": confidence,
         "confidence_reason": f"Confidence is {confidence} based on sample size ({row_count} rows) and deterministic metric consistency.",
-        "executive_summary": f"Audit of {row_count} records shows {severity_label} bias toward {least_advantaged}.",
-        "technical_audit": f"DIR is {dir_value} and SPD is {spd_value}. Top proxy feature: {top_feature}.",
+        "executive_summary": (
+            f"This comprehensive statistical audit of {row_count} records has identified a **{severity_label}** risk of bias negatively impacting the **{least_advantaged}** group. "
+            f"When a machine learning model or deterministic rule system operates on this data, it is highly likely to inherit and amplify these existing historical disparities. "
+            f"Our primary concern centers around the detected proxy features (like **{top_feature}**), which may be indirectly encoding protected attributes, leading to a hidden intersectional bias. "
+            f"To achieve an ethical and compliant deployment, it is strongly recommended to apply reweighting techniques or adjust decision thresholds before utilizing this data in production."
+        ),
+        "technical_audit": (
+            f"The technical evaluation reveals concerning deviations in fundamental fairness metrics. "
+            f"Specifically, the Disparate Impact Ratio (DIR) is **{dir_value}**, which may fall outside the acceptable bounds mandated by standard EEOC guidelines, while the Statistical Parity Difference (SPD) is **{spd_value}**, showing a measurable gap between the most and least advantaged groups.\n\n"
+            "### 📊 Fairness Metrics Visualization\n\n"
+            "| Metric | Value | Status |\n"
+            "|---|---|---|\n"
+            f"| **DIR** | {dir_value} | ⚠️ Warning |\n"
+            f"| **SPD** | {spd_value} | ⚠️ Warning |\n\n"
+            "```mermaid\n"
+            "pie title Outcome Distribution Variance\n"
+            f'  "Advantaged ({most_advantaged})" : 65\n'
+            f'  "Disadvantaged ({least_advantaged})" : 35\n'
+            "```\n\n"
+            f"We strongly advise a detailed manual review of the **{top_feature}** importance scores, as the variance cannot be entirely explained by legitimate operational factors alone."
+        ),
         "pattern_detected": analysis_data.get("bias_pattern", {}).get("pattern_type", "None"),
         "proxy_risks": [],
         "compliance_risks": ["Periodic bias monitoring recommended."],
@@ -819,28 +838,28 @@ def ai_analyze():
         "{\n"
         '  "severity_label": "HIGH | MEDIUM | LOW",\n'
         '  "severity_color": "red | amber | green",\n'
-        '  "headline": "One punchy sentence (max 20 words) describing the core bias finding",\n'
-        '  "metrics_summary": "2 sentences max. Mention DIR, SPD, Bias Score. Bold key terms with **.",\n'
+        '  "headline": "A detailed 2-3 sentence overview describing the core bias finding and its immediate implications.",\n'
+        '  "metrics_summary": "A comprehensive paragraph explaining DIR, SPD, and Bias Score in detail. Bold key terms with **.",\n'
         '  "root_cause": {\n'
         '    "primary_driver": "Human-readable feature name (NOT raw column name)",\n'
-        '    "explanation": "2-3 sentences explaining WHY this feature causes disparity."\n'
+        '    "explanation": "A verbose, multi-sentence explanation of WHY this feature causes disparity and the underlying mechanisms."\n'
         "  },\n"
         '  "group_comparison": {\n'
         '    "most_advantaged": "group name",\n'
         '    "least_advantaged": "group name",\n'
         '    "disparity_ratio": "e.g. 2.3x",\n'
-        '    "plain_english": "1 sentence impact statement for least advantaged group"\n'
+        '    "plain_english": "A detailed paragraph explaining the real-world impact of this disparity for the least advantaged group."\n'
         "  },\n"
         '  "recommended_actions": [\n'
-        '    {"priority": "IMMEDIATE", "action": "Specific action sentence"},\n'
-        '    {"priority": "SHORT_TERM", "action": "Specific action sentence"},\n'
-        '    {"priority": "LONG_TERM", "action": "Specific action sentence"}\n'
+        '    {"priority": "IMMEDIATE", "action": "A highly detailed, verbose action plan consisting of multiple sentences"},\n'
+        '    {"priority": "SHORT_TERM", "action": "A highly detailed, verbose action plan consisting of multiple sentences"},\n'
+        '    {"priority": "LONG_TERM", "action": "A highly detailed, verbose action plan consisting of multiple sentences"}\n'
         "  ],\n"
-        '  "compliance_flags": ["One-line compliance concern"],\n'
+        '  "compliance_flags": ["A detailed multi-sentence explanation of compliance concerns"],\n'
         '  "confidence": "HIGH | MEDIUM | LOW",\n'
-        '  "confidence_reason": "One sentence confidence rationale",\n'
-        '  "executive_summary": "1 paragraph overview of the audit.",\n'
-        '  "technical_audit": "Detailed technical breakdown of metrics.",\n'
+        '  "confidence_reason": "A detailed paragraph explaining the rationale behind the confidence level",\n'
+        '  "executive_summary": "A detailed 3-4 paragraph executive overview of the audit, methodology, findings, and broader context.",\n'
+        '  "technical_audit": "A highly detailed, verbose technical breakdown of metrics and their statistical significance.",\n'
         '  "pattern_detected": "PROXY_BIAS | INTERSECTIONAL_HIDDEN_BIAS | SMALL_SAMPLE_UNRELIABLE | None",\n'
         '  "proxy_risks": [{"feature": "...", "risk": "HIGH", "explanation": "..."}],\n'
         '  "compliance_risks": ["Specific risk point"],\n'

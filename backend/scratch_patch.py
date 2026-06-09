@@ -1,6 +1,6 @@
 import pathlib
 
-api_path = pathlib.Path("c:/Users/Parth/Desktop/Github/baised/backend/api.py")
+api_path = pathlib.Path(__file__).parent / "api.py"
 content = api_path.read_text("utf-8")
 
 # 1. Update _build_fallback_ai_report

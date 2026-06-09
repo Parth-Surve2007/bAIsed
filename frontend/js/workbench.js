@@ -729,11 +729,19 @@
   }
 
   async function requestSimulatorPreview() {
-    const currentScenario = typeof window._getCurrentScenario === "function" ? window._getCurrentScenario() : "threshold";
+    let currentScenario = typeof window._getCurrentScenario === "function" ? window._getCurrentScenario() : "diversity_weight";
+    
+    const slider = document.getElementById("simulator-diversity-weight");
+    const constraintText = document.getElementById("simulator-constraint-text");
+    
+    const diversityWeight = slider ? parseFloat(slider.value) : 0.75;
+    const constraint = constraintText ? constraintText.textContent : "Optimal";
 
     try {
       const preview = await postJson("/simulate", {
         scenario_type: currentScenario,
+        diversity_weight: diversityWeight,
+        fairness_constraint: constraint,
         analysis_result: currentAnalysisResult,
       });
 
@@ -1600,6 +1608,36 @@
     
     reportWindow.document.write(html);
     reportWindow.document.close();
+  }
+
+  function bindSimulator() {
+    const slider = document.getElementById("simulator-diversity-weight");
+    const valDisplay = document.getElementById("simulator-diversity-value");
+    const constraintBtns = document.querySelectorAll("[data-simulator-constraint]");
+    const constraintText = document.getElementById("simulator-constraint-text");
+
+    if (slider) {
+      slider.addEventListener("input", (e) => {
+        if (valDisplay) valDisplay.textContent = e.target.value;
+        requestSimulatorPreview();
+      });
+    }
+
+    if (constraintBtns.length > 0) {
+      constraintBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          constraintBtns.forEach(b => {
+            b.className = "rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-surface-container-low";
+          });
+          const clicked = e.target;
+          clicked.className = "rounded-xl border border-secondary bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary transition";
+          
+          const constraint = clicked.getAttribute("data-simulator-constraint");
+          if (constraintText) constraintText.textContent = constraint;
+          requestSimulatorPreview();
+        });
+      });
+    }
   }
 
   function bindGlobalReset() {

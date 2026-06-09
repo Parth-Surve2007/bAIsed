@@ -519,8 +519,9 @@
         <div>
           <p class="text-sm font-bold text-slate-900 dark:text-white">Legal</p>
           <div class="mt-3 space-y-2">
-            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Privacy Policy</a>
-            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/methodology">Terms of Service</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/privacy-policy">Privacy Policy</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/terms-of-service">Terms of Service</a>
+            <a class="block text-sm text-slate-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400" href="/contact">Contact Us</a>
           </div>
         </div>
       </div>
