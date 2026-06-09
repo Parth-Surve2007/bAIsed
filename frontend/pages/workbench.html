@@ -217,6 +217,19 @@
                   </select>
                   <span class="mt-2 block text-xs text-slate-400 dark:text-zinc-500">Subgroup context, EOD/AOD, and hidden-bias detection.</span>
                 </label>
+                
+                <div class="mt-6 p-4 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-800">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <div class="flex items-center h-5">
+                      <input id="advanced-mode-toggle" type="checkbox" class="w-4 h-4 text-indigo-600 bg-white border-slate-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-slate-800 focus:ring-2 dark:bg-slate-700 dark:border-slate-600">
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-indigo-900 dark:text-indigo-200">Enable Advanced Fairness Analytics</span>
+                      <span class="text-xs text-indigo-700 dark:text-indigo-300 mt-1">Computes intersectional subgroups, algorithmic mitigation paths, and bootstrap confidence intervals.</span>
+                      <span class="text-xs text-amber-600 dark:text-amber-400 mt-2 font-semibold">⚠️ Note: Bootstrapping increases computation time. If your dataset is very large, the number of iterations will be automatically capped to prevent timeouts.</span>
+                    </div>
+                  </label>
+                </div>
               </div>
               <div class="flex flex-wrap gap-3 pt-2">
                 <button class="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 text-sm font-bold shadow-sm" type="submit">Upload And Analyze</button>
@@ -471,6 +484,11 @@
               <p class="mt-2 text-lg font-black text-slate-900">Download WIT bundle</p>
               <p class="mt-2 text-sm leading-6 text-slate-600">Exports CSV, metadata, and instructions for Google TensorBoard What-If Tool workflows.</p>
             </button>
+            <button class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-left transition hover:border-indigo-400 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50" id="export-advanced-json-btn" type="button" style="display: none;">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-indigo-700">Advanced JSON</p>
+              <p class="mt-2 text-lg font-black text-slate-900">Download Metrics</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Export the comprehensive advanced fairness data and intersectional analytics to JSON format.</p>
+            </button>
           </div>
           <p class="mt-4 text-sm text-slate-500" id="export-status-text">Run a dataset audit before exporting.</p>
         </section>
@@ -614,6 +632,58 @@
           </div>
           <div class="space-y-3 workbench-list-container" id="repairs-list">
             <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Repair suggestions appear after analysis.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="advanced-analytics-container" style="display: none;">
+        <div class="dive-section-label">Advanced Fairness Analytics</div>
+        
+        <div class="mt-6 grid gap-6 lg:grid-cols-2">
+          <div class="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-900/10">
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-indigo-900 dark:text-indigo-200">Custom Fairness Metric</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Select a specific fairness definition to view its score.</p>
+              </div>
+            </div>
+            <div class="mb-4">
+              <select class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-indigo-300 dark:border-indigo-700 text-indigo-900 dark:text-indigo-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-sm outline-none" id="advanced-metric-dropdown">
+                <option value="demographic_parity_difference">Demographic Parity Difference (SPD)</option>
+                <option value="demographic_parity_ratio">Demographic Parity Ratio (DIR)</option>
+                <option value="equalized_odds_difference">Equalized Odds Difference (AOD)</option>
+                <option value="equal_opportunity_difference">Equal Opportunity Difference (EOD)</option>
+              </select>
+            </div>
+            <div class="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm text-center dark:bg-zinc-900 dark:border-indigo-800">
+              <p class="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2" id="advanced-metric-label">Demographic Parity Difference</p>
+              <p class="text-4xl font-black text-indigo-900 dark:text-indigo-100" id="advanced-metric-value">-</p>
+              <div id="advanced-metric-ci" class="mt-2 text-sm text-indigo-600 dark:text-indigo-400">CI: [ -, - ]</div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-900/10">
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-indigo-900 dark:text-indigo-200">Intersectional Group Assessment</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Compares selection rates across combinations of protected features.</p>
+              </div>
+            </div>
+            <div class="space-y-3 workbench-list-container" id="intersectional-list">
+              <div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">Intersectional assessment will appear here.</div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-900/10">
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-indigo-900 dark:text-indigo-200">Algorithmic Mitigation</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Post-processing, in-processing, and pre-processing suggestions based on metrics.</p>
+              </div>
+            </div>
+            <div class="space-y-3 workbench-list-container" id="algorithmic-mitigation-list">
+              <div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">Mitigation strategies will appear here.</div>
+            </div>
           </div>
         </div>
       </div>

@@ -42,6 +42,7 @@ class FairnessResult:
     repair_suggestions: list[dict[str, Any]]
     feature_impact_ranking: list[dict[str, Any]]
     stats: dict[str, Any]
+    advanced_fairness: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -64,6 +65,7 @@ class FairnessResult:
             "repair_suggestions": self.repair_suggestions,
             "stats": self.stats,
             "feature_impact_ranking": self.feature_impact_ranking,
+            "advanced_fairness": self.advanced_fairness,
         }
 
 
@@ -777,6 +779,7 @@ def analyze_group_rates(
     hidden_bias_detected: bool = False,
     simulations: list[dict[str, Any]] | None = None,
     repair_suggestions: list[dict[str, Any]] | None = None,
+    advanced_fairness: dict[str, Any] | None = None,
 ) -> FairnessResult:
     normalized_rates, max_group, min_group, max_rate, min_rate = _normalize_group_rates(group_rates)
     metrics, _, _, _, _ = _build_metrics(normalized_rates, qualified_group_rates)
@@ -855,6 +858,7 @@ def analyze_group_rates(
             "simulations": simulations or [],
             "repair_suggestions": repair_suggestions or [],
         },
+        advanced_fairness=advanced_fairness,
     )
 
 
@@ -1204,6 +1208,7 @@ def analyze_dataset(
     protected_attribute: str | None = None,
     outcome_column: str | None = None,
     qualification_column: str | None = None,
+    advanced_mode: bool = False,
 ) -> FairnessResult:
     # Step 1: Scan all columns and fields (Profile)
     column_profile = _profile_columns(df)
@@ -1346,6 +1351,29 @@ def analyze_dataset(
         bias_hotspots,
     )
 
+    advanced_fairness = None
+    if advanced_mode:
+        try:
+            from .fairness_advanced import (
+                calculate_advanced_metrics,
+                bootstrap_confidence_intervals,
+                generate_mitigation_suggestions,
+                perform_intersectional_analysis
+            )
+            adv_metrics = calculate_advanced_metrics(working_df, protected_columns, resolved_outcome, qualification_resolved)
+            adv_intervals = bootstrap_confidence_intervals(working_df, protected_columns, resolved_outcome)
+            adv_mitigations = generate_mitigation_suggestions(adv_metrics, bias_hotspots)
+            adv_intersectional = perform_intersectional_analysis(working_df, protected_columns, intersectional_columns, resolved_outcome)
+            
+            advanced_fairness = {
+                "metrics": adv_metrics,
+                "confidence_intervals": adv_intervals,
+                "mitigations": adv_mitigations,
+                "intersectional": adv_intersectional
+            }
+        except Exception as e:
+            warnings.append(f"Advanced fairness analysis failed: {str(e)}")
+
     result = analyze_group_rates(
         group_rates,
         qualified_group_rates=qualified_group_rates,
@@ -1357,6 +1385,7 @@ def analyze_dataset(
         hidden_bias_detected=hidden_bias_detected,
         simulations=simulations,
         repair_suggestions=repair_suggestions,
+        advanced_fairness=advanced_fairness,
     )
 
     stats = dict(result.stats)

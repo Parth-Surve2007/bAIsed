@@ -565,6 +565,53 @@
     });
   }
 
+  function renderIntersectional(intersectional) {
+    const container = document.getElementById("intersectional-list");
+    if (!container) return;
+    
+    container.innerHTML = "";
+    if (!intersectional || !intersectional.group_rates) {
+      container.innerHTML = '<div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">No intersectional data available.</div>';
+      return;
+    }
+
+    const rates = intersectional.group_rates;
+    Object.entries(rates).forEach(([groupName, data]) => {
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm dark:bg-zinc-900 dark:border-indigo-800";
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-slate-900 dark:text-zinc-100">${groupName}</p>
+          <p class="text-sm font-black text-indigo-700 dark:text-indigo-400">${formatPercent(data.rate * 100)}</p>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">Sample size: ${data.size}</p>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function renderMitigations(mitigations) {
+    const container = document.getElementById("algorithmic-mitigation-list");
+    if (!container) return;
+
+    container.innerHTML = "";
+    if (!mitigations || !mitigations.length) {
+      container.innerHTML = '<div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">No mitigation suggestions available.</div>';
+      return;
+    }
+
+    mitigations.forEach(mitigation => {
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm dark:bg-zinc-900 dark:border-indigo-800";
+      card.innerHTML = `
+        <p class="text-sm font-bold text-slate-900 dark:text-zinc-100 mb-1">${mitigation.strategy}</p>
+        <p class="text-xs text-slate-600 dark:text-zinc-400 mb-2">${mitigation.description}</p>
+        <p class="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Implementation: ${mitigation.action}</p>
+      `;
+      container.appendChild(card);
+    });
+  }
+
   function renderResult(result) {
     currentAnalysisResult = result;
     if (result.dataset_id) {
@@ -645,6 +692,55 @@
     renderDatasetRisk(result);
     renderBiasPattern(result);
     setExportState(Boolean(currentDatasetId && result.mode === "dataset"), "Exports are ready for this standardized dataset.");
+    
+    const advancedContainer = document.getElementById("advanced-analytics-container");
+    const advJsonBtn = document.getElementById("export-advanced-json-btn");
+    if (result.advanced_fairness) {
+      if (advancedContainer) advancedContainer.style.display = "block";
+      if (advJsonBtn) advJsonBtn.style.display = "block";
+      renderIntersectional(result.advanced_fairness.intersectional);
+      renderMitigations(result.advanced_fairness.mitigations);
+      
+      const updateAdvancedMetric = () => {
+        const dropdown = document.getElementById("advanced-metric-dropdown");
+        const labelEl = document.getElementById("advanced-metric-label");
+        const valEl = document.getElementById("advanced-metric-value");
+        const ciEl = document.getElementById("advanced-metric-ci");
+        if (!dropdown || !valEl) return;
+        
+        const metricKey = dropdown.value;
+        const metrics = result.advanced_fairness.metrics?.metrics || {};
+        const ci = result.advanced_fairness.confidence_intervals || {};
+        
+        let val = metrics[metricKey];
+        if (val !== undefined) {
+          valEl.textContent = formatDecimal(val, 4);
+        } else {
+          valEl.textContent = "-";
+        }
+        
+        labelEl.textContent = dropdown.options[dropdown.selectedIndex].text;
+        
+        const ciKey = metricKey === "demographic_parity_ratio" ? "DIR" : metricKey === "demographic_parity_difference" ? "SPD" : null;
+        if (ciKey && ci[ciKey]) {
+          ciEl.textContent = `CI: [ ${ci[ciKey].lower}, ${ci[ciKey].upper} ]`;
+        } else {
+          ciEl.textContent = "CI: [ -, - ]";
+        }
+      };
+      
+      const dropdown = document.getElementById("advanced-metric-dropdown");
+      if (dropdown) {
+        dropdown.removeEventListener("change", window._updateAdvancedMetricHandler);
+        window._updateAdvancedMetricHandler = updateAdvancedMetric;
+        dropdown.addEventListener("change", window._updateAdvancedMetricHandler);
+        updateAdvancedMetric();
+      }
+    } else {
+      if (advancedContainer) advancedContainer.style.display = "none";
+      if (advJsonBtn) advJsonBtn.style.display = "none";
+    }
+
     persistLastResult(result);
 
     // Color-code DIR bar and metric values
@@ -1202,6 +1298,11 @@
         formData.append("qualification_column", qualificationColumn);
       }
 
+      const advancedModeToggle = document.getElementById("advanced-mode-toggle");
+      if (advancedModeToggle && advancedModeToggle.checked) {
+        formData.append("advanced_mode", "true");
+      }
+
       try {
         if (submitBtn) {
           submitBtn.disabled = true;
@@ -1349,6 +1450,18 @@
     if (whatIfBtn) {
       whatIfBtn.addEventListener("click", () => {
         const url = buildExportUrl("what-if");
+        if (currentDatasetId && currentAnalysisResult) {
+          window.location.href = url;
+        } else {
+          setExportState(false, "Run a dataset audit before exporting.");
+        }
+      });
+    }
+
+    const advJsonBtn = document.getElementById("export-advanced-json-btn");
+    if (advJsonBtn) {
+      advJsonBtn.addEventListener("click", () => {
+        const url = buildExportUrl("advanced-json");
         if (currentDatasetId && currentAnalysisResult) {
           window.location.href = url;
         } else {

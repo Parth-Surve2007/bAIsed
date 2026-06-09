@@ -708,6 +708,43 @@ def export_what_if(dataset_id: str):
     )
 
 
+@api_bp.get("/api/export/advanced-json/<dataset_id>")
+def export_advanced_json(dataset_id: str):
+    try:
+        df = _load_temp_dataset(dataset_id)
+    except AnalysisError as exc:
+        return _json_error(str(exc), 404)
+
+    protected_attribute = request.args.get("protected_attribute")
+    outcome_column = request.args.get("outcome_column")
+    qualification_column = request.args.get("qualification_column")
+
+    try:
+        result = analyze_dataset(
+            df,
+            protected_attribute=protected_attribute,
+            outcome_column=outcome_column,
+            qualification_column=qualification_column,
+            advanced_mode=True,
+        )
+    except AnalysisError as exc:
+        return _json_error(str(exc), 400)
+
+    export_data = {
+        "metadata": _export_metadata(dataset_id, df),
+        "advanced_fairness": result.advanced_fairness,
+        "metrics": result.metrics,
+        "stats": result.stats
+    }
+    
+    buffer = BytesIO(json.dumps(clean_for_json(export_data), indent=2).encode("utf-8"))
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"baised-advanced-metrics-{dataset_id}.json",
+        mimetype="application/json",
+    )
+
 @api_bp.post("/analyze")
 def analyze():
     payload = request.get_json(silent=True)
@@ -766,6 +803,7 @@ def upload():
     protected_attribute = request.form.get("protected_attribute")
     outcome_column = request.form.get("outcome_column")
     qualification_column = request.form.get("qualification_column")
+    advanced_mode = str(request.form.get("advanced_mode", "")).lower() == "true"
 
     try:
         if dataset_id:
@@ -789,6 +827,7 @@ def upload():
             protected_attribute=protected_attribute,
             outcome_column=outcome_column,
             qualification_column=qualification_column,
+            advanced_mode=advanced_mode,
         )
     except AnalysisError as exc:
         return jsonify({"error": str(exc)}), 400
