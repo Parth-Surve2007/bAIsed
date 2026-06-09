@@ -570,21 +570,21 @@
     if (!container) return;
     
     container.innerHTML = "";
-    if (!intersectional || !intersectional.group_rates) {
+    if (!intersectional || !intersectional.length) {
       container.innerHTML = '<div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">No intersectional data available.</div>';
       return;
     }
 
-    const rates = intersectional.group_rates;
-    Object.entries(rates).forEach(([groupName, data]) => {
+    intersectional.forEach(data => {
       const card = document.createElement("div");
       card.className = "rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm dark:bg-zinc-900 dark:border-indigo-800";
+      const groupName = typeof data.group === "object" ? Object.entries(data.group).map(([k, v]) => `${k}:${v}`).join(" & ") : data.group;
       card.innerHTML = `
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm font-bold text-slate-900 dark:text-zinc-100">${groupName}</p>
-          <p class="text-sm font-black text-indigo-700 dark:text-indigo-400">${formatPercent(data.rate * 100)}</p>
+          <p class="text-sm font-black text-indigo-700 dark:text-indigo-400">${formatPercent(data.selection_rate * 100)}</p>
         </div>
-        <p class="text-xs text-slate-500 dark:text-zinc-400">Sample size: ${data.size}</p>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">Sample size: ${data.sample_size}</p>
       `;
       container.appendChild(card);
     });

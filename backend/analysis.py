@@ -1372,6 +1372,9 @@ def analyze_dataset(
                 "intersectional": adv_intersectional
             }
         except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            print("ADVANCED FAIRNESS EXCEPTION:", tb)
             warnings.append(f"Advanced fairness analysis failed: {str(e)}")
 
     result = analyze_group_rates(
