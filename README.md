@@ -1,6 +1,6 @@
 # bAIsed
 
-![bAIsed Banner](Screenshot%202026-06-09%20163702.png)
+<img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed Banner" width="800"/>
 
 <p align="center">
   <img src="https://img.shields.io/badge/AI%20Fairness-Workbench-blueviolet?style=for-the-badge" alt="AI Fairness Workbench" />
