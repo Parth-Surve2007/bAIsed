@@ -1,52 +1,54 @@
-<p align="center"><img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed Banner" width="100" height="70"/></p>
+<p align="center">
+  <img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed logo" width="100" height="70" />
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/AI%20Fairness-Workbench-blueviolet?style=for-the-badge" alt="AI Fairness Workbench" />
   <img src="https://img.shields.io/badge/Bias%20Detection-Enabled-ff6f61?style=for-the-badge" alt="Bias Detection" />
-  <img src="https://img.shields.io/badge/Full%20Stack-Flask%20%2B%20Frontend-2ea44f?style=for-the-badge" alt="Full Stack" />
+  <img src="https://img.shields.io/badge/Stack-Flask%20%2B%20Frontend-2ea44f?style=for-the-badge" alt="Flask and frontend stack" />
 </p>
 
+<h1 align="center">bAIsed</h1>
+
 <p align="center">
-  AI fairness workbench for dataset bias auditing, disparity diagnostics, simulation, and actionable remediation guidance.
+  A full-stack AI fairness workbench for dataset bias auditing, disparity diagnostics, scenario simulation, and actionable remediation guidance.
 </p>
 
 ---
 
 ## Overview
 
-**bAIsed** is a full‑stack AI fairness auditing platform that helps teams detect, explain, and reduce bias in machine‑learning models and datasets.
+**bAIsed** helps teams evaluate, explain, and reduce bias in datasets and machine-learning decision workflows. It combines deterministic fairness metrics, dataset diagnostics, proxy detection, risk profiling, simulation, export tooling, and Gemini-assisted reporting in a browser-based workflow.
 
-It combines deterministic fairness metrics, a browser‑based analysis interface, what‑if simulation, and Gemini‑powered reporting in one workflow so users can move from detection to remediation quickly.
+The project is designed for researchers, students, and builders who need a practical fairness audit surface without stitching together multiple notebooks, scripts, and reporting tools by hand.
 
 ---
 
-## What This Project Does
+## Core Capabilities
 
-bAIsed helps users to:
+- Run quick fairness checks from simple group selection-rate inputs.
+- Upload `.csv` or `.xlsx` datasets for structured fairness analysis.
+- Auto-detect likely protected attributes, outcome columns, and qualification signals.
+- Compute fairness metrics including DIR, SPD, EOD, AOD, and an aggregate bias score.
+- Identify bias hotspots, intersectional disparities, and high-impact feature patterns.
+- Detect proxy features using association and correlation signals.
+- Profile dataset reliability based on missingness, imbalance, subgroup size, and outcome quality.
+- Classify likely bias patterns such as proxy bias, threshold-driven disparity, and underrepresentation.
+- Simulate what-if remediation scenarios and estimate trade-offs.
+- Generate Gemini-powered audit reports with findings and recommendations.
+- Export analysis assets for Google Colab, TensorBoard What-If Tool, and advanced JSON workflows.
 
-- Run fairness checks using simple percentage inputs or real datasets (`.csv`, `.xlsx`).
-- Compute core parity metrics such as **DIR**, **SPD**, **EOD**, and **AOD**.
-- Detect root‑cause feature impact and subgroup hotspots.
-- Detect proxy features that act as protected‑attribute proxies (Cramer's V, correlation).
-- Profile dataset risk for missing values, group imbalance, and outcome reliability.
+---
 
-### Competitive Advantages over Fairlearn
+## Why bAIsed
 
-- **End‑to‑end UI**: bAIsed provides an interactive web interface for data upload, metric visualisation, bias‑hotspot analysis, and simulation, whereas Fairlearn is primarily a Python library.
-- **What‑If Simulation**: Built‑in what‑if tool lets users explore remediation scenarios instantly; Fairlearn focuses on post‑processing algorithms.
-- **Gemini‑Powered AI Analyst**: Generates natural‑language audit reports with actionable recommendations, a feature not present in Fairlearn.
-- **Export Bundles**: Direct export to Google Colab notebooks and TensorBoard What‑If Tool for seamless downstream work.
-- **Risk Profiling & Proxy Detection**: Additional modules (risk_profiler, proxy_detector) assess dataset quality and hidden proxy features beyond Fairlearn's mitigation algorithms.
-- **Modular Architecture**: Flask backend + Tailwind frontend enables easy extension, custom visualisations, and integration with other services.
-- **Open‑Source Community Focus**: Designed for researchers and developers to contribute, with comprehensive documentation and examples.
+bAIsed complements fairness libraries such as Fairlearn by focusing on an end-to-end audit experience:
 
-These points highlight how bAIsed complements and extends the capabilities of Fairlearn, offering a richer user experience and broader tooling for AI fairness auditing.
-- Classify bias patterns (proxy bias, intersectional, threshold‑driven, etc.).
-- Generate what‑if simulations to estimate fairness improvements.
-- Generate AI‑written analysis reports using **Google Gemini**.
-- Export to Google Colab for exploratory analysis.
-- Export to What‑If Tool format for TensorBoard integration.
-- Produce actionable remediation suggestions.
+- **Interactive workbench:** Upload data, inspect metrics, review hotspots, run simulations, and generate reports from one UI.
+- **Dataset-first diagnostics:** Risk profiling, proxy detection, and column detection help users understand whether an audit result is reliable.
+- **AI-assisted reporting:** Gemini integration translates metric outputs into readable audit findings and remediation guidance.
+- **Exportable workflows:** Colab notebooks, What-If Tool bundles, and JSON exports make it easier to continue analysis outside the app.
+- **Modular Flask backend:** Analysis, simulation, risk profiling, proxy detection, pattern classification, and export logic are separated for easier extension.
 
 ---
 
@@ -54,57 +56,90 @@ These points highlight how bAIsed complements and extends the capabilities of Fa
 
 ```mermaid
 graph LR
-    A["Frontend<br/>(Workbench UI)"] -->|HTTP| B["Flask API"]
-    C["Demo Dataset<br/>Generator"] -->|CSV| A
+    A["Frontend Workbench"] -->|HTTP| B["Flask API"]
+    C["Demo Dataset Generator"] --> A
     B --> D["Analysis Pipeline"]
-    D --> E["Deterministic Metrics<br/>(DIR, SPD, EOD, AOD)"]
-    D --> F["Proxy Detector<br/>(Cramer's V)"]
-    D --> G["Risk Profiler<br/>(Reliability Scoring)"]
-    D --> H["Pattern Detector<br/>(Classification)"]
-    D --> I["Simulator<br/>(What‑If)"]
-    E --> J["Gemini AI"]
-    F --> J
-    G --> J
-    H --> J
-    I --> J
-    J -->|Report| A
-    A -->|Export| K["Colab Notebook"]
-    A -->|Export| L["What‑If Tool Bundle"]
-    style A fill:#4285F4,color:#fff
-    style J fill:#EA4335,color:#fff
-    style K fill:#F9AB00,color:#000
-    style L fill:#34A853,color:#fff
+    D --> E["Fairness Metrics"]
+    D --> F["Proxy Detector"]
+    D --> G["Risk Profiler"]
+    D --> H["Pattern Detector"]
+    D --> I["Advanced Metrics"]
+    D --> J["Simulator"]
+    E --> K["Gemini AI Report"]
+    F --> K
+    G --> K
+    H --> K
+    I --> K
+    J --> K
+    K --> A
+    A --> L["Colab Export"]
+    A --> M["What-If Tool Export"]
+    A --> N["Advanced JSON Export"]
 ```
 
 ---
 
-## New Phase 2‑3 Modules
+## Feature Modules
 
-### Proxy Bias Detector (`proxy_detector.py`)
-- Detects whether features act as proxies for protected attributes.
-- **Cramer's V** for categorical‑vs‑categorical associations.
-- **Correlation** for numeric features.
-- **Eta‑squared** for numeric‑vs‑categorical.
-- Output: Association scores and risk levels (HIGH/MEDIUM/LOW).
+### Fairness Analysis
 
-### Dataset Risk Profiler (`risk_profiler.py`)
-- Scores dataset reliability for audit interpretation.
-- Missing value ratios, small subgroup sizes, group imbalance, outcome imbalance, proxy feature risk factors.
-- Output: Risk score (0–100) and confidence level.
+The main analysis pipeline computes group-level outcomes, selection-rate disparities, warning signals, feature influence, repair suggestions, and structured metric explanations.
 
-### Bias Pattern Detector (`pattern_detector.py`)
-- Classifies the type of bias detected:
-  - `PROXY_BIAS`
-  - `INTERSECTIONAL_HIDDEN_BIAS`
-  - `THRESHOLD_DRIVEN_DISPARITY`
-  - `SMALL_SAMPLE_UNRELIABLE`
-  - `GROUP_UNDERREPRESENTATION`
-  - `GLOBAL_SELECTION_DISPARITY`
-  - `NO_SIGNIFICANT_BIAS`
+Implemented metrics include:
 
-### Export Modules (`exporters.py`)
-- **Colab Export**: Generates Jupyter notebooks with dataset, metrics, and fairness analysis.
-- **What‑If Tool Export**: Creates ZIP bundles compatible with Google TensorBoard What‑If Tool.
+- **DIR - Disparate Impact Ratio:** lowest group selection rate divided by highest group selection rate.
+- **SPD - Statistical Parity Difference:** difference between the highest and lowest group rates.
+- **EOD - Equal Opportunity Difference:** disparity within a qualified subset when qualification data is available.
+- **AOD - Average Odds Difference:** combined disparity signal.
+- **Bias Score:** normalized 0-100 severity score derived from the metric set.
+
+### Advanced Fairness Analysis
+
+`backend/fairness_advanced.py` adds:
+
+- Bootstrap confidence intervals.
+- Mitigation suggestions.
+- Intersectional analysis across multiple protected attributes.
+- Additional advanced metric packaging for export.
+
+### Proxy Bias Detection
+
+`backend/proxy_detector.py` identifies features that may act as proxies for protected attributes:
+
+- Cramer's V for categorical associations.
+- Correlation for numeric relationships.
+- Eta-squared for numeric-to-categorical association.
+- Risk levels for high, medium, and low proxy signals.
+
+### Dataset Risk Profiling
+
+`backend/risk_profiler.py` scores audit reliability using:
+
+- Missing value ratios.
+- Small subgroup sizes.
+- Group imbalance.
+- Outcome imbalance.
+- Proxy-risk indicators.
+
+### Bias Pattern Detection
+
+`backend/pattern_detector.py` classifies common bias patterns:
+
+- `PROXY_BIAS`
+- `INTERSECTIONAL_HIDDEN_BIAS`
+- `THRESHOLD_DRIVEN_DISPARITY`
+- `SMALL_SAMPLE_UNRELIABLE`
+- `GROUP_UNDERREPRESENTATION`
+- `GLOBAL_SELECTION_DISPARITY`
+- `NO_SIGNIFICANT_BIAS`
+
+### Export Tools
+
+`backend/exporters.py` supports:
+
+- Google Colab notebook export.
+- TensorBoard What-If Tool bundle export.
+- Advanced JSON export for downstream analysis.
 
 ---
 
@@ -114,96 +149,12 @@ graph LR
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask" />
   <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="Pandas" />
-  <img src="https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white" alt="NumPy" />
   <img src="https://img.shields.io/badge/OpenPyXL-107C10?style=for-the-badge&logo=microsoft-excel&logoColor=white" alt="OpenPyXL" />
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" />
-  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
   <img src="https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google Gemini" />
-  <img src="https://img.shields.io/badge/Google%20App%20Engine-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Google App Engine" />
 </p>
-
----
-
-## Key Features
-
-### Fairness Evaluation
-- Instant fairness checks using manual group inputs.
-- Dataset‑based bias analysis for uploaded `.csv` and `.xlsx` files.
-- Structured metric output for clear interpretation.
-
-### Deep Dataset Diagnostics
-- Group statistics and disparity detection.
-- Feature impact ranking.
-- Bias hotspot identification.
-- Suggested remediation paths.
-
-### AI‑Assisted Reporting
-- Gemini‑powered report synthesis.
-- Plain‑language summaries of metrics and findings.
-- Faster analysis for technical and non‑technical users.
-
-### Simulation and Exploration
-- What‑if simulation for fairness improvement.
-- Estimated changes in parity and accuracy.
-- Interactive trade‑off analysis.
-
-### Demo Datasets
-- Built‑in bias examples for quick testing:
-  - **Credit/Lending**: Age‑based discrimination via income and ZIP code proxy.
-  - **Hiring/Resume**: Gender bias with tech club membership as proxy.
-  - **Policing**: Race‑based bias with neighborhood as proxy.
-
-### Export and Integration
-- **Google Colab**: Export standardized datasets with fairness analysis cells.
-- **What‑If Tool**: Export for TensorBoard What‑If Tool workflows.
-- **Gemini Integration**: AI‑powered audit reports with evidence and recommendations.
-
----
-
-## Metrics Implemented
-
-bAIsed computes the following fairness signals:
-
-- **DIR (Disparate Impact Ratio)**: minimum selection rate divided by maximum selection rate.
-- **SPD (Statistical Parity Difference)**: difference between the highest and lowest group rates.
-- **EOD (Equal Opportunity Difference)**: disparity inside the qualified subset.
-- **AOD (Average Odds Difference)**: combined disparity signal.
-- **Bias Score (0–100)**: weighted aggregate of DIR gap, SPD, EOD, and AOD.
-
-### Severity Thresholds
-
-- **HIGH**: DIR < 0.5
-- **MODERATE**: 0.5 ≤ DIR < 0.8
-- **LOW**: DIR ≥ 0.8
-
----
-
-## System Flow
-
-1. The user opens the **Workbench**.
-2. The frontend sends requests for either quick analysis or dataset analysis.
-3. The backend processes the data and computes fairness metrics.
-4. Results are returned as structured JSON.
-5. The UI renders metrics, hotspots, feature analysis, and repair suggestions.
-6. The simulator estimates how fairness and accuracy change under alternative settings.
-7. The AI analyzer generates a readable fairness report with Gemini.
-8. The user can export the report as PDF or revisit the run later from their audit history.
-
----
-
-## Wireframes / Mock UI
-
-The solution is designed as a multi‑panel fairness workbench with screens for:
-
-- Landing/dashboard overview
-- Dataset upload and schema detection
-- Fairness metrics dashboard
-- Bias hotspot and intersectional analysis
-- Fairness simulator
-- AI‑generated report and recommendations
-- PDF export and user history
 
 ---
 
@@ -211,50 +162,49 @@ The solution is designed as a multi‑panel fairness workbench with screens for:
 
 ```text
 bAIsed/
-├─ backend/
-│  ├─ __init__.py
-│  ├─ app.py
-│  ├─ api.py
-│  ├─ analysis.py
-│  ├─ simulator.py
-│  ├─ preprocessor.py
-│  ├─ auth.py
-│  ├─ fb_admin.py
-│  ├─ proxy_detector.py      (NEW)
-│  ├─ risk_profiler.py       (NEW)
-│  ├─ pattern_detector.py    (NEW)
-│  ├─ demo_datasets.py       (NEW)
-│  ├─ exporters.py           (NEW)
-│  ├─ requirements.txt
-│  ├─ .env
-│  └─ temp_datasets/
-├─ frontend/
-│  ├─ pages/
-│  │  ├─ workbench.html
-│  │  ├─ landing.html
-│  │  ├─ about.html
-│  │  ├─ solutions.html
-│  │  ├─ methodology.html
-│  │  ├─ case_study.html
-│  │  ├─ pricing.html
-│  │  ├─ login.html
-│  │  ├─ signup.html
-│  │  ├─ dashboard.html
-│  │  └─ 404.html
-│  ├─ js/
-│  │  ├─ workbench.js
-│  │  ├─ site.js
-│  │  ├─ auth.js
-│  │  └─ firebase-config.js
-│  └─ css/
-│     └─ custom.css
-├─ run.py
-├─ test_comprehensive.py     (NEW - Test suite)
-├─ app.yaml
-├─ .env.example
-├─ test_data.csv
-├─ README.md
-└─ .gitignore
+|-- backend/
+|   |-- __init__.py
+|   |-- app.py
+|   |-- api.py
+|   |-- analysis.py
+|   |-- auth.py
+|   |-- demo_datasets.py
+|   |-- exporters.py
+|   |-- fairness_advanced.py
+|   |-- fb_admin.py
+|   |-- pattern_detector.py
+|   |-- preprocessor.py
+|   |-- proxy_detector.py
+|   |-- requirements.txt
+|   |-- risk_profiler.py
+|   |-- simulator.py
+|   `-- temp_datasets/
+|-- frontend/
+|   |-- css/
+|   |   `-- custom.css
+|   |-- js/
+|   |   |-- auth.js
+|   |   |-- firebase-config.js
+|   |   |-- site.js
+|   |   `-- workbench.js
+|   `-- pages/
+|       |-- 404.html
+|       |-- about.html
+|       |-- case_study.html
+|       |-- contact.html
+|       |-- dashboard.html
+|       |-- landing.html
+|       |-- login.html
+|       |-- methodology.html
+|       |-- pricing.html
+|       |-- privacy_policy.html
+|       |-- signup.html
+|       |-- solutions.html
+|       |-- terms_of_service.html
+|       `-- workbench.html
+|-- run.py
+|-- test_data.csv
+`-- README.md
 ```
 
 ---
@@ -262,6 +212,7 @@ bAIsed/
 ## API Overview
 
 ### Site and Utility Endpoints
+
 - `GET /api/health`
 - `GET /api/site-content/<page_name>`
 - `GET /api/search?query=...`
@@ -270,38 +221,45 @@ bAIsed/
 - `GET /api/downloads/whitepaper`
 
 ### Workbench Endpoints
-- `POST /analyze` – Quick fairness check with group percentages.
-- `POST /scan` – Analyze dataset structure and detect columns.
-- `POST /upload` – Upload CSV/XLSX and run complete analysis.
-- `POST /simulate` – What‑if fairness improvement scenarios.
-- `POST /ai-analyze` – Generate Gemini‑powered audit report.
-- `GET /api/demo-dataset/<type>` – Download demo dataset (credit, resume, policing).
-- `GET /api/export/colab/<dataset_id>` – Export Colab notebook.
-- `GET /api/export/what-if/<dataset_id>` – Export What‑If Tool bundle.
-- `POST /reset` – Clear temporary datasets.
+
+- `POST /analyze` - quick fairness check from group percentages.
+- `POST /scan` - inspect uploaded data and detect likely columns.
+- `POST /upload` - upload a dataset and run the full analysis pipeline.
+- `POST /simulate` - run what-if fairness improvement scenarios.
+- `POST /ai-analyze` - generate a Gemini-assisted audit report.
+- `GET /api/demo-dataset/<type>` - download demo data for `credit`, `resume`, or `policing`.
+- `GET /api/export/colab/<dataset_id>` - export a Google Colab notebook.
+- `GET /api/export/what-if/<dataset_id>` - export a TensorBoard What-If Tool bundle.
+- `GET /api/export/advanced-json/<dataset_id>` - export advanced analysis JSON.
+- `POST /reset` - clear temporary uploaded datasets.
 
 ### Authentication Endpoints
+
 - `POST /api/auth/verify`
 - `GET /api/auth/profile`
 - `POST /api/auth/profile`
 
-> **Note:** Firebase admin profile operations are scaffolded and not fully implemented yet.
+> Firebase profile operations are scaffolded and should be completed before production enforcement.
 
 ---
 
 ## Local Setup
 
 ### Prerequisites
-- Python 3.11 or higher
-- pip
+
+- Python 3.11 or newer
+- `pip`
 
 ### Install Dependencies
+
 ```bash
 pip install -r backend/requirements.txt
 ```
 
 ### Configure Environment Variables
-Create `backend/.env` or export the variables in your environment:
+
+Create `backend/.env` or export the variables in your shell:
+
 ```env
 GEMINI_API_KEY=your_google_ai_key
 GEMINI_MODEL=gemini-1.5-flash
@@ -311,127 +269,98 @@ FLASK_SECRET_KEY=change-me
 
 GOOGLE_APPLICATION_CREDENTIALS=serviceAccountKey.json
 ```
-Reference `.env.example` for additional placeholders.
 
 ### Run the Application
+
 ```bash
 python run.py
 ```
 
 Open:
+
 - `http://127.0.0.1:5000/`
 - `http://127.0.0.1:5000/workbench`
 
 ---
 
+## Quick Start
+
+### Try a Demo Dataset
+
+1. Start the Flask app with `python run.py`.
+2. Open `http://127.0.0.1:5000/workbench`.
+3. Load a demo dataset for lending, hiring, or policing.
+4. Review the metrics, proxy risks, reliability score, and recommended actions.
+5. Export the result to Colab, What-If Tool, or JSON if needed.
+
+### Audit Your Own Dataset
+
+1. Open the Dataset Audit workflow in the workbench.
+2. Upload a `.csv` or `.xlsx` file.
+3. Select protected attribute and outcome columns, or use auto-detection.
+4. Review fairness metrics, hotspots, feature impact, and risk profiling.
+5. Run simulations to compare remediation options.
+6. Generate an AI-assisted report and export the analysis.
+
+---
+
 ## Deployment
 
-This repository includes Google App Engine configuration in `app.yaml`:
-```yaml
-runtime: python311
-entrypoint: gunicorn -b :$PORT backend.app:app
-```
+This project can run anywhere that supports a Python Flask application. A typical production start command is:
 
-### Render Deployment
-If you deploy on Render, use:
-
-**Build Command**
-```bash
-pip install -r backend/requirements.txt
-```
-**Start Command**
 ```bash
 gunicorn backend.app:app
 ```
 
-### Deploy Steps
-1. Create or select a Google Cloud project.
-2. Enable App Engine and the Generative Language API.
-3. Set the required environment variables, especially `GEMINI_API_KEY`.
-4. Deploy the application:
+For Render, use:
+
 ```bash
-gcloud app deploy
-```
-5. Open the deployed service:
-```bash
-gcloud app browse
+pip install -r backend/requirements.txt
 ```
 
----
+as the build command, and:
 
-## Built with Google AI & Tools
+```bash
+gunicorn backend.app:app
+```
 
-bAIsed integrates Google's AI and fairness tools:
+as the start command.
 
-### Google Gemini
-- Powers AI‑assisted audit report generation.
-- Structured JSON responses with evidence and recommendations.
-- Confidence‑rated findings and compliance notes.
-- Set `GEMINI_API_KEY` environment variable to enable.
-
-### Google Colab Integration
-- Export analyzed datasets as Jupyter notebooks.
-- Run fairness metrics and charts in Colab.
-- Collaborate and share analysis.
-
-### Google What‑If Tool
-- Export datasets compatible with TensorBoard What‑If Tool.
-- Explore counterfactual scenarios.
-- Visualize fairness metrics by group.
-
----
-
-## Quick Start Demo
-
-### Load a Demo Dataset
-1. Open `http://localhost:5000/workbench`
-2. Click one of the demo buttons (💳 Lending, 👔 Hiring, 🚔 Policing)
-3. Review the fairness metrics dashboard
-4. Check the AI‑generated report
-5. Export to Colab or What‑If Tool
-
-### Upload Your Own Data
-1. Open the Dataset Audit tab
-2. Upload a CSV or XLSX file
-3. (Optional) Select protected attribute and outcome columns, or let auto‑detect work
-4. Review proxy risk, dataset reliability, and bias patterns
-5. Run what‑if simulations
-6. Generate Gemini report
-7. Export for further analysis
+Before deploying, configure the required environment variables, keep credentials out of source control, and ensure Firebase and Gemini credentials are available only on the server.
 
 ---
 
 ## Important Notes
 
-- Uploaded standardized files are stored temporarily in `backend/temp_datasets/`.
-- The `/reset` endpoint clears temporary uploads.
-- Do not hardcode API keys or secrets in source files.
-- Keep Firebase admin credentials server‑side only.
-- The auth backend is scaffolded and should be completed before production enforcement.
-- Column names are standardized to snake_case during preprocessing.
+- Temporary uploaded datasets are stored in `backend/temp_datasets/`.
+- The `/reset` endpoint clears temporary uploaded datasets.
+- Column names are standardized during preprocessing.
+- Gemini reporting requires `GEMINI_API_KEY`.
+- Firebase admin credentials must remain server-side.
+- Authentication is scaffolded and should be hardened before production use.
+- Do not commit `.env`, service account files, or generated temporary datasets.
 
 ---
 
 ## Troubleshooting
 
-- **Gemini errors**: Verify `GEMINI_API_KEY` and API enablement in Google Cloud.
-- **Upload parsing issues**: Make sure the file is a valid `.csv` or `.xlsx`.
-- **Unexpected fairness output**: Use at least two valid groups and a binary or derivable outcome signal.
-- **Auth failures**: Check Firebase configuration and credential wiring.
-- **Render import errors**: Confirm `backend/__init__.py` exists and the start command points to `backend.app:app`.
+- **Gemini report errors:** Confirm `GEMINI_API_KEY` is configured and the Generative Language API is enabled.
+- **Upload parsing errors:** Validate that the file is a readable `.csv` or `.xlsx`.
+- **Unexpected fairness output:** Check that the selected outcome is binary or can be converted into a binary decision signal.
+- **Weak audit confidence:** Review subgroup size, missing data, and outcome imbalance warnings.
+- **Render import errors:** Use `gunicorn backend.app:app` as the start command and confirm dependencies are installed.
 
 ---
 
-## Suggested Documentation Split
+## Roadmap
 
-For cleaner maintenance, this README can be split into:
-
-- `README.md` for overview and quickstart
-- `docs/ARCHITECTURE.md` for system internals
-- `docs/API.md` for request and response schemas
+- Complete production-ready Firebase profile enforcement.
+- Add formal automated tests for the full API and analysis pipeline.
+- Expand mitigation recommendations with configurable policy constraints.
+- Split long-form technical documentation into dedicated `docs/` files.
 
 ---
 
 ## License
 
-Add your preferred license here before publishing the repository.
+Add a license before publishing or distributing this repository.
