@@ -135,40 +135,40 @@
 <button class="w-full py-2 border border-primary dark:border-teal-600 text-primary dark:text-teal-400 font-label-sm text-label-sm rounded group-hover:bg-primary-fixed-dim dark:group-hover:bg-zinc-800 transition-all active:scale-95" data-action="Read Case Study">READ CASE STUDY</button>
 </div>
 <!-- Small Grid Items -->
-<div class="col-span-12 md:col-span-4 bg-white dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 rounded-xl p-lg card-shadow group">
+<div class="col-span-12 md:col-span-4 bg-white dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 rounded-xl p-lg card-shadow group cursor-pointer transition hover:border-primary/40 dark:hover:border-teal-500/40" data-case-card="healthcare" data-demo-type="resume" data-action="Explore Healthcare Case Study" role="button" tabindex="0">
 <div class="flex items-center gap-sm mb-md">
 <span class="material-symbols-outlined text-on-primary-fixed-variant dark:text-zinc-400" data-icon="health_and_safety">health_and_safety</span>
 <span class="font-label-sm text-label-sm uppercase text-outline dark:text-zinc-500">Healthcare</span>
 </div>
-<h3 class="font-h3 text-h3 mb-sm dark:text-white">Predictive Diagnostics</h3>
-<p class="text-body-md text-on-surface-variant mb-md dark:text-zinc-400">Correcting diagnostic model skew for underrepresented populations.</p>
+<h3 class="font-h3 text-h3 mb-sm dark:text-white" id="case-card-healthcare-title">Predictive Diagnostics</h3>
+<p class="text-body-md text-on-surface-variant mb-md dark:text-zinc-400" id="case-card-healthcare-summary">Correcting diagnostic model skew for underrepresented populations.</p>
 <div class="flex items-baseline gap-xs">
-<span class="font-h2 text-h2 text-primary dark:text-teal-400" id="case-healthcare-parity">99.2%</span>
-<span class="text-xs text-outline dark:text-zinc-500">Accuracy Parity</span>
+<span class="font-h2 text-h2 text-primary dark:text-teal-400" id="case-card-healthcare-metric">99.2%</span>
+<span class="text-xs text-outline dark:text-zinc-500" data-case-metric-label="healthcare">Accuracy Parity</span>
 </div>
 </div>
-<div class="col-span-12 md:col-span-4 bg-white dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 rounded-xl p-lg card-shadow group">
+<div class="col-span-12 md:col-span-4 bg-white dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 rounded-xl p-lg card-shadow group cursor-pointer transition hover:border-primary/40 dark:hover:border-teal-500/40" data-case-card="public_sector" data-demo-type="policing" data-action="Explore Public Sector Case Study" role="button" tabindex="0">
 <div class="flex items-center gap-sm mb-md">
 <span class="material-symbols-outlined text-on-primary-fixed-variant dark:text-zinc-400" data-icon="gavel">gavel</span>
 <span class="font-label-sm text-label-sm uppercase text-outline dark:text-zinc-500">Public Sector</span>
 </div>
-<h2 class="font-h3 text-h3 mb-sm dark:text-white">Judicial Risk Engines</h2>
-<p class="text-body-md text-on-surface-variant mb-md dark:text-zinc-400">Independent audit of sentencing recommendation software.</p>
+<h2 class="font-h3 text-h3 mb-sm dark:text-white" id="case-card-public_sector-title">Judicial Risk Engines</h2>
+<p class="text-body-md text-on-surface-variant mb-md dark:text-zinc-400" id="case-card-public_sector-summary">Independent audit of sentencing recommendation software.</p>
 <div class="flex items-baseline gap-xs">
-<span class="font-h2 text-h2 text-primary dark:text-teal-400" id="case-public-sector-audit">Full</span>
-<span class="text-xs text-outline dark:text-zinc-500">Transparency Audit</span>
+<span class="font-h2 text-h2 text-primary dark:text-teal-400" id="case-card-public_sector-metric">Full</span>
+<span class="text-xs text-outline dark:text-zinc-500" data-case-metric-label="public_sector">Transparency Audit</span>
 </div>
 </div>
-<div class="col-span-12 md:col-span-4 bg-white dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 rounded-xl p-lg card-shadow group">
+<div class="col-span-12 md:col-span-4 bg-white dark:bg-zinc-900 border border-outline-variant dark:border-zinc-800 rounded-xl p-lg card-shadow group cursor-pointer transition hover:border-primary/40 dark:hover:border-teal-500/40" data-case-card="retail" data-demo-type="credit" data-action="Explore Retail Case Study" role="button" tabindex="0">
 <div class="flex items-center gap-sm mb-md">
 <span class="material-symbols-outlined text-on-primary-fixed-variant dark:text-zinc-400" data-icon="shopping_cart">shopping_cart</span>
 <span class="font-label-sm text-label-sm uppercase text-outline dark:text-zinc-500">Retail</span>
 </div>
-<h3 class="font-h3 text-h3 mb-sm dark:text-white">Dynamic Pricing Audit</h3>
-<p class="text-body-md text-on-surface-variant mb-md dark:text-zinc-400">Eliminating price discrimination in localized e-commerce algorithms.</p>
+<h3 class="font-h3 text-h3 mb-sm dark:text-white" id="case-card-retail-title">Dynamic Pricing Audit</h3>
+<p class="text-body-md text-on-surface-variant mb-md dark:text-zinc-400" id="case-card-retail-summary">Eliminating price discrimination in localized e-commerce algorithms.</p>
 <div class="flex items-baseline gap-xs">
-<span class="font-h2 text-h2 text-primary dark:text-teal-400" id="case-retail-bias">Zero</span>
-<span class="text-xs text-outline dark:text-zinc-500">Bias Variance</span>
+<span class="font-h2 text-h2 text-primary dark:text-teal-400" id="case-card-retail-metric">Zero</span>
+<span class="text-xs text-outline dark:text-zinc-500" data-case-metric-label="retail">Bias Variance</span>
 </div>
 </div>
 </div>
@@ -179,19 +179,19 @@
 <div class="flex flex-col md:flex-row gap-xl items-center">
 <div class="w-full md:w-1/2">
 <h2 class="font-h2 text-h2 mb-md dark:text-white">Quantifying the Impact</h2>
-<p class="text-body-lg text-on-surface-variant mb-lg dark:text-zinc-400">Our lab-grade methodology doesn't just find bias; it provides the mathematical blueprint for its removal. Over 150+ organizations have seen these aggregate results:</p>
+<p class="text-body-lg text-on-surface-variant mb-lg dark:text-zinc-400">Our lab-grade methodology doesn't just find bias; it provides the mathematical blueprint for its removal. Over <span id="case-impact-organizations">150+</span> organizations have seen these aggregate results:</p>
 <div class="space-y-md">
 <div class="flex items-center justify-between p-md bg-surface-container-low dark:bg-zinc-900 rounded">
 <span class="font-body-md font-semibold dark:text-zinc-300">Average Disparity Reduction</span>
-<span class="font-mono-data text-primary dark:text-teal-400 text-h3">38%</span>
+<span class="font-mono-data text-primary dark:text-teal-400 text-h3" id="case-impact-disparity">38%</span>
 </div>
 <div class="flex items-center justify-between p-md bg-surface-container-low dark:bg-zinc-900 rounded">
 <span class="font-body-md font-semibold dark:text-zinc-300">Regulatory Compliance Score</span>
-<span class="font-mono-data text-primary dark:text-teal-400 text-h3">A+</span>
+<span class="font-mono-data text-primary dark:text-teal-400 text-h3" id="case-impact-compliance">A+</span>
 </div>
 <div class="flex items-center justify-between p-md bg-surface-container-low dark:bg-zinc-900 rounded">
 <span class="font-body-md font-semibold dark:text-zinc-300">Client ROI in Year 1</span>
-<span class="font-mono-data text-primary dark:text-teal-400 text-h3">4.2x</span>
+<span class="font-mono-data text-primary dark:text-teal-400 text-h3" id="case-impact-roi">4.2x</span>
 </div>
 </div>
 </div>
