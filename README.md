@@ -29,6 +29,18 @@ bAIsed helps users to:
 - Detect root‑cause feature impact and subgroup hotspots.
 - Detect proxy features that act as protected‑attribute proxies (Cramer's V, correlation).
 - Profile dataset risk for missing values, group imbalance, and outcome reliability.
+
+### Competitive Advantages over Fairlearn
+
+- **End‑to‑end UI**: bAIsed provides an interactive web interface for data upload, metric visualisation, bias‑hotspot analysis, and simulation, whereas Fairlearn is primarily a Python library.
+- **What‑If Simulation**: Built‑in what‑if tool lets users explore remediation scenarios instantly; Fairlearn focuses on post‑processing algorithms.
+- **Gemini‑Powered AI Analyst**: Generates natural‑language audit reports with actionable recommendations, a feature not present in Fairlearn.
+- **Export Bundles**: Direct export to Google Colab notebooks and TensorBoard What‑If Tool for seamless downstream work.
+- **Risk Profiling & Proxy Detection**: Additional modules (risk_profiler, proxy_detector) assess dataset quality and hidden proxy features beyond Fairlearn's mitigation algorithms.
+- **Modular Architecture**: Flask backend + Tailwind frontend enables easy extension, custom visualisations, and integration with other services.
+- **Open‑Source Community Focus**: Designed for researchers and developers to contribute, with comprehensive documentation and examples.
+
+These points highlight how bAIsed complements and extends the capabilities of Fairlearn, offering a richer user experience and broader tooling for AI fairness auditing.
 - Classify bias patterns (proxy bias, intersectional, threshold‑driven, etc.).
 - Generate what‑if simulations to estimate fairness improvements.
 - Generate AI‑written analysis reports using **Google Gemini**.
