@@ -1424,4 +1424,5 @@ def analyze_dataset(
         repair_suggestions=result.repair_suggestions,
         feature_impact_ranking=result.feature_impact_ranking,
         stats=stats,
+        advanced_fairness=result.advanced_fairness,
     )

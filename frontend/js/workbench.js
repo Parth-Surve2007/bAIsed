@@ -606,7 +606,7 @@
       card.innerHTML = `
         <p class="text-sm font-bold text-slate-900 dark:text-zinc-100 mb-1">${mitigation.strategy}</p>
         <p class="text-xs text-slate-600 dark:text-zinc-400 mb-2">${mitigation.description}</p>
-        <p class="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Implementation: ${mitigation.action}</p>
+        <p class="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Implementation: ${mitigation.type || "Recommended mitigation"}</p>
       `;
       container.appendChild(card);
     });
