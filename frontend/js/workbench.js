@@ -603,6 +603,78 @@
     },
   ];
 
+  function metricVisualValue(row, metricKey) {
+    if (metricKey === "demographic_parity_ratio") {
+      return Number(row.demographic_parity_ratio || 0);
+    }
+    if (metricKey === "demographic_parity_difference") {
+      return Number(row.demographic_parity_difference || 0);
+    }
+    if (metricKey === "equal_opportunity_difference") {
+      return Number(row.equal_opportunity_rate || 0);
+    }
+    return Number(row.equal_opportunity_rate ?? row.selection_rate ?? 0);
+  }
+
+  function renderAdvancedMetricVisual(advancedFairness, metricKey) {
+    const container = document.getElementById("advanced-metric-visual");
+    const title = document.getElementById("advanced-visual-title");
+    const subtitle = document.getElementById("advanced-visual-subtitle");
+    const scale = document.getElementById("advanced-visual-scale");
+    if (!container) return;
+
+    const frame = advancedFairness?.metric_frame || [];
+    const metricLabel = ADVANCED_METRIC_LABELS[metricKey] || "Metric Profile";
+    if (title) title.textContent = `${metricLabel} Profile`;
+    if (subtitle) {
+      subtitle.textContent = metricKey === "demographic_parity_ratio"
+        ? "Higher bars are closer to the best observed group."
+        : metricKey === "demographic_parity_difference"
+          ? "Shorter bars indicate less distance from the best observed group."
+          : "Bars compare qualified positive-rate behavior by group.";
+    }
+
+    container.innerHTML = "";
+    if (!frame.length) {
+      container.innerHTML = '<div class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900">Metric visual appears after analysis.</div>';
+      return;
+    }
+
+    const values = frame.map((row) => metricVisualValue(row, metricKey));
+    const maxValue = Math.max(1, ...values);
+    const minValue = Math.min(...values);
+    if (scale) scale.textContent = `${formatDecimal(minValue, 2)} - ${formatDecimal(maxValue, 2)}`;
+
+    frame.forEach((row) => {
+      const value = metricVisualValue(row, metricKey);
+      const width = Math.max(4, Math.min(100, (value / maxValue) * 100));
+      const isLeast = row.advantage === "least_advantaged";
+      const isMost = row.advantage === "most_advantaged";
+      const barClass = isLeast
+        ? "bg-red-500"
+        : isMost
+          ? "bg-emerald-500"
+          : "bg-indigo-500";
+
+      const item = document.createElement("div");
+      item.className = "rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900";
+      item.innerHTML = `
+        <div class="mb-2 flex items-center justify-between gap-3">
+          <p class="text-sm font-bold text-slate-950 dark:text-white">${escapeHtml(row.group)}</p>
+          <p class="font-mono text-xs font-bold text-slate-600 dark:text-zinc-300">${formatDecimal(value, 4)}</p>
+        </div>
+        <div class="relative h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800">
+          <div class="h-3 rounded-full ${barClass} transition-all duration-300 ease-out" style="width: ${width}%"></div>
+        </div>
+        <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+          <span>${row.sample_size ?? "-"} rows</span>
+          <span>${formatPercent((row.selection_rate || 0) * 100)} selected</span>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+  }
+
   function renderAdvancedMetricFrame(advancedFairness) {
     const container = document.getElementById("advanced-metric-frame-body");
     const featureChip = document.getElementById("advanced-feature-chip");
@@ -765,7 +837,7 @@
           <span class="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">${escapeHtml(mitigation.type || "Mitigation")}</span>
         </div>
         <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-zinc-400">${escapeHtml(mitigation.description)}</p>
-        <p class="mt-3 font-mono text-xs text-slate-500">${mitigation.type === "Post-processing" ? "threshold_optimizer.fit(...)" : mitigation.type === "In-processing" ? "reductions.ExponentiatedGradient(...)" : "preprocessing.CorrelationRemover(...)"}</p>
+        <p class="mt-3 font-mono text-xs text-slate-500">${mitigation.type === "Post-processing" ? "threshold_adjustment.fit(...)" : mitigation.type === "In-processing" ? "constrained_optimizer.fit(...)" : "correlation_filter.transform(...)"}</p>
       `;
       container.appendChild(card);
     });
@@ -873,6 +945,7 @@
         const metricKey = dropdown.value;
         const metrics = result.advanced_fairness.metrics?.metrics || {};
         const ci = result.advanced_fairness.confidence_intervals || {};
+        renderAdvancedMetricVisual(result.advanced_fairness, metricKey);
         
         let val = metrics[metricKey];
         if (val !== undefined) {

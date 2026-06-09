@@ -637,7 +637,7 @@
       </div>
 
       <div id="advanced-analytics-container" style="display: none;">
-        <div class="dive-section-label">Fairlearn-Compatible Metrics Mode</div>
+        <div class="dive-section-label">Advanced Metrics Mode</div>
 
         <div class="mt-6 rounded-3xl border border-indigo-200 bg-white p-6 shadow-sm dark:border-indigo-900/50 dark:bg-zinc-900">
           <div class="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
@@ -645,7 +645,7 @@
               <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <h2 class="text-2xl font-bold text-slate-950 dark:text-white">Assessment</h2>
-                  <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">MetricFrame-style subgroup comparison across the selected sensitive feature.</p>
+                  <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Advanced subgroup comparison across the selected sensitive feature.</p>
                 </div>
                 <div class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" id="advanced-feature-chip">0 Features</div>
               </div>
@@ -669,6 +669,19 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 class="text-base font-bold text-slate-950 dark:text-white" id="advanced-visual-title">Metric Profile</h3>
+                    <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400" id="advanced-visual-subtitle">Choose a metric definition to compare group movement.</p>
+                  </div>
+                  <div class="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 shadow-sm dark:bg-zinc-900" id="advanced-visual-scale">0.00 - 1.00</div>
+                </div>
+                <div class="mt-5 space-y-3" id="advanced-metric-visual">
+                  <div class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-5 text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900">Metric visual appears after analysis.</div>
+                </div>
               </div>
             </div>
 
@@ -739,7 +752,7 @@
             <div class="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 class="text-2xl font-bold text-slate-950 dark:text-white">Mitigation</h2>
-                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Fairlearn-style pre-processing, in-processing, and post-processing paths.</p>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Pre-processing, in-processing, and post-processing paths based on the current audit.</p>
               </div>
               <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="advanced-mitigation-count-chip">0 Paths</div>
             </div>
