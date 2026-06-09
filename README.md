@@ -1,28 +1,42 @@
 # bAIsed
 
-![bAIsed Banner](file:///C:/Users/Parth/.gemini/antigravity-ide/brain/4b79c9da-40b2-4848-9c3c-2e4b494c61f6/baised_banner_1781003072473.png)
+![bAIsed Banner](file:///C:/Users/Parth/Desktop/Github/baised/Screenshot%202026-06-09%20163702.png)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/AI%20Fairness-Workbench-blueviolet?style=for-the-badge" alt="AI Fairness Workbench" />
+  <img src="https://img.shields.io/badge/Bias%20Detection-Enabled-ff6f61?style=for-the-badge" alt="Bias Detection" />
+  <img src="https://img.shields.io/badge/Full%20Stack-Flask%20%2B%20Frontend-2ea44f?style=for-the-badge" alt="Full Stack" />
+</p>
+
+<p align="center">
+  AI fairness workbench for dataset bias auditing, disparity diagnostics, simulation, and actionable remediation guidance.
+</p>
 
 ---
 
 ## Overview
 
-**bAIsed** is a full‑stack AI fairness auditing platform that helps teams detect, explain, and reduce bias in machine learning models and datasets. It combines deterministic fairness metrics, a browser‑based analysis interface, what‑if simulation, and Gemini‑powered reporting in one workflow so users can move from detection to remediation quickly.
+**bAIsed** is a full‑stack AI fairness auditing platform that helps teams detect, explain, and reduce bias in machine‑learning models and datasets.
+
+It combines deterministic fairness metrics, a browser‑based analysis interface, what‑if simulation, and Gemini‑powered reporting in one workflow so users can move from detection to remediation quickly.
 
 ---
 
 ## What This Project Does
 
+bAIsed helps users to:
+
 - Run fairness checks using simple percentage inputs or real datasets (`.csv`, `.xlsx`).
 - Compute core parity metrics such as **DIR**, **SPD**, **EOD**, and **AOD**.
 - Detect root‑cause feature impact and subgroup hotspots.
-- **Detect proxy features** that act as protected‑attribute proxies (Cramer's V, correlation).
-- **Profile dataset risk** for missing values, group imbalance, and outcome reliability.
-- **Classify bias patterns** (proxy bias, intersectional, threshold‑driven, etc.).
-- Generate **what‑if simulations** to estimate fairness improvements.
-- Produce AI‑written analysis reports using **Google Gemini**.
-- Export to **Google Colab** for exploratory analysis.
-- Export to **What‑If Tool** format for TensorBoard integration.
-- Provide actionable remediation suggestions.
+- Detect proxy features that act as protected‑attribute proxies (Cramer's V, correlation).
+- Profile dataset risk for missing values, group imbalance, and outcome reliability.
+- Classify bias patterns (proxy bias, intersectional, threshold‑driven, etc.).
+- Generate what‑if simulations to estimate fairness improvements.
+- Generate AI‑written analysis reports using **Google Gemini**.
+- Export to Google Colab for exploratory analysis.
+- Export to What‑If Tool format for TensorBoard integration.
+- Produce actionable remediation suggestions.
 
 ---
 
@@ -57,30 +71,26 @@ graph LR
 ## New Phase 2‑3 Modules
 
 ### Proxy Bias Detector (`proxy_detector.py`)
-- Detects whether features act as proxies for protected attributes:
-  - **Cramer's V** for categorical vs categorical associations.
-  - **Correlation** for numeric features.
-  - **Eta‑squared** for numeric vs categorical.
-  - Output: Association scores and risk levels (HIGH/MEDIUM/LOW).
+- Detects whether features act as proxies for protected attributes.
+- **Cramer's V** for categorical‑vs‑categorical associations.
+- **Correlation** for numeric features.
+- **Eta‑squared** for numeric‑vs‑categorical.
+- Output: Association scores and risk levels (HIGH/MEDIUM/LOW).
 
 ### Dataset Risk Profiler (`risk_profiler.py`)
-- Scores dataset reliability for audit interpretation:
-  - Missing value ratios.
-  - Small subgroup sizes.
-  - Group imbalance.
-  - Outcome imbalance.
-  - Proxy feature risk factors.
-  - Output: Risk score (0‑100) and confidence level.
+- Scores dataset reliability for audit interpretation.
+- Missing value ratios, small subgroup sizes, group imbalance, outcome imbalance, proxy feature risk factors.
+- Output: Risk score (0–100) and confidence level.
 
 ### Bias Pattern Detector (`pattern_detector.py`)
 - Classifies the type of bias detected:
-  - `PROXY_BIAS` – Feature strongly associated with protected attribute.
-  - `INTERSECTIONAL_HIDDEN_BIAS` – Subgroup‑level disparities.
-  - `THRESHOLD_DRIVEN_DISPARITY` – Selection threshold effect.
-  - `SMALL_SAMPLE_UNRELIABLE` – Low reliability due to sample size.
-  - `GROUP_UNDERREPRESENTATION` – Insufficient samples for a group.
-  - `GLOBAL_SELECTION_DISPARITY` – Overall selection rate gap.
-  - `NO_SIGNIFICANT_BIAS` – No actionable bias detected.
+  - `PROXY_BIAS`
+  - `INTERSECTIONAL_HIDDEN_BIAS`
+  - `THRESHOLD_DRIVEN_DISPARITY`
+  - `SMALL_SAMPLE_UNRELIABLE`
+  - `GROUP_UNDERREPRESENTATION`
+  - `GLOBAL_SELECTION_DISPARITY`
+  - `NO_SIGNIFICANT_BIAS`
 
 ### Export Modules (`exporters.py`)
 - **Colab Export**: Generates Jupyter notebooks with dataset, metrics, and fairness analysis.
@@ -125,33 +135,35 @@ graph LR
 - Faster analysis for technical and non‑technical users.
 
 ### Simulation and Exploration
-- What‑if simulation for fairness improvement scenarios.
+- What‑if simulation for fairness improvement.
 - Estimated changes in parity and accuracy.
 - Interactive trade‑off analysis.
 
 ### Demo Datasets
 - Built‑in bias examples for quick testing:
-  - **Credit/Lending** – Age‑based discrimination via income and ZIP code proxy.
-  - **Hiring/Resume** – Gender bias with tech club membership as proxy.
-  - **Policing** – Race‑based bias with neighborhood as proxy.
-- Load demos instantly from the workbench UI without uploading files.
+  - **Credit/Lending**: Age‑based discrimination via income and ZIP code proxy.
+  - **Hiring/Resume**: Gender bias with tech club membership as proxy.
+  - **Policing**: Race‑based bias with neighborhood as proxy.
 
 ### Export and Integration
-- **Google Colab** – Export standardized datasets with fairness analysis cells.
-- **What‑If Tool** – Export for TensorBoard What‑If Tool workflows.
-- **Gemini Integration** – AI‑powered audit reports with evidence and recommendations.
+- **Google Colab**: Export standardized datasets with fairness analysis cells.
+- **What‑If Tool**: Export for TensorBoard What‑If Tool workflows.
+- **Gemini Integration**: AI‑powered audit reports with evidence and recommendations.
 
 ---
 
 ## Metrics Implemented
 
-- **DIR (Disparate Impact Ratio)** – Minimum selection rate divided by maximum selection rate.
-- **SPD (Statistical Parity Difference)** – Difference between the highest and lowest group rates.
-- **EOD (Equal Opportunity Difference)** – Disparity inside the qualified subset.
-- **AOD (Average Odds Difference)** – Combined disparity signal.
-- **Bias Score (0‑100)** – Weighted aggregate of DIR gap, SPD, EOD, and AOD.
+bAIsed computes the following fairness signals:
+
+- **DIR (Disparate Impact Ratio)**: minimum selection rate divided by maximum selection rate.
+- **SPD (Statistical Parity Difference)**: difference between the highest and lowest group rates.
+- **EOD (Equal Opportunity Difference)**: disparity inside the qualified subset.
+- **AOD (Average Odds Difference)**: combined disparity signal.
+- **Bias Score (0–100)**: weighted aggregate of DIR gap, SPD, EOD, and AOD.
 
 ### Severity Thresholds
+
 - **HIGH**: DIR < 0.5
 - **MODERATE**: 0.5 ≤ DIR < 0.8
 - **LOW**: DIR ≥ 0.8
@@ -174,6 +186,7 @@ graph LR
 ## Wireframes / Mock UI
 
 The solution is designed as a multi‑panel fairness workbench with screens for:
+
 - Landing/dashboard overview
 - Dataset upload and schema detection
 - Fairness metrics dashboard
@@ -262,6 +275,8 @@ bAIsed/
 - `GET /api/auth/profile`
 - `POST /api/auth/profile`
 
+> **Note:** Firebase admin profile operations are scaffolded and not fully implemented yet.
+
 ---
 
 ## Local Setup
@@ -286,12 +301,13 @@ FLASK_SECRET_KEY=change-me
 
 GOOGLE_APPLICATION_CREDENTIALS=serviceAccountKey.json
 ```
-Reference `.env.example` for additional client and server placeholders.
+Reference `.env.example` for additional placeholders.
 
 ### Run the Application
 ```bash
 python run.py
 ```
+
 Open:
 - `http://127.0.0.1:5000/`
 - `http://127.0.0.1:5000/workbench`
@@ -308,6 +324,7 @@ entrypoint: gunicorn -b :$PORT backend.app:app
 
 ### Render Deployment
 If you deploy on Render, use:
+
 **Build Command**
 ```bash
 pip install -r backend/requirements.txt
@@ -322,13 +339,13 @@ gunicorn backend.app:app
 2. Enable App Engine and the Generative Language API.
 3. Set the required environment variables, especially `GEMINI_API_KEY`.
 4. Deploy the application:
-   ```bash
-   gcloud app deploy
-   ```
+```bash
+gcloud app deploy
+```
 5. Open the deployed service:
-   ```bash
-   gcloud app browse
-   ```
+```bash
+gcloud app browse
+```
 
 ---
 
@@ -357,20 +374,20 @@ bAIsed integrates Google's AI and fairness tools:
 ## Quick Start Demo
 
 ### Load a Demo Dataset
-1. Open `http://localhost:5000/workbench`.
-2. Click one of the demo buttons (💳 Lending, 👔 Hiring, 🚔 Policing).
-3. Review the fairness metrics dashboard.
-4. Check the AI‑generated report.
-5. Export to Colab or What‑If Tool.
+1. Open `http://localhost:5000/workbench`
+2. Click one of the demo buttons (💳 Lending, 👔 Hiring, 🚔 Policing)
+3. Review the fairness metrics dashboard
+4. Check the AI‑generated report
+5. Export to Colab or What‑If Tool
 
 ### Upload Your Own Data
-1. Open the Dataset Audit tab.
-2. Upload a CSV or XLSX file.
-3. (Optional) Select protected attribute and outcome columns, or let auto‑detect work.
-4. Review proxy risk, dataset reliability, and bias patterns.
-5. Run what‑if simulations.
-6. Generate Gemini report.
-7. Export for further analysis.
+1. Open the Dataset Audit tab
+2. Upload a CSV or XLSX file
+3. (Optional) Select protected attribute and outcome columns, or let auto‑detect work
+4. Review proxy risk, dataset reliability, and bias patterns
+5. Run what‑if simulations
+6. Generate Gemini report
+7. Export for further analysis
 
 ---
 
@@ -388,7 +405,7 @@ bAIsed integrates Google's AI and fairness tools:
 ## Troubleshooting
 
 - **Gemini errors**: Verify `GEMINI_API_KEY` and API enablement in Google Cloud.
-- **Upload parsing issues**: Ensure the file is a valid `.csv` or `.xlsx`.
+- **Upload parsing issues**: Make sure the file is a valid `.csv` or `.xlsx`.
 - **Unexpected fairness output**: Use at least two valid groups and a binary or derivable outcome signal.
 - **Auth failures**: Check Firebase configuration and credential wiring.
 - **Render import errors**: Confirm `backend/__init__.py` exists and the start command points to `backend.app:app`.
@@ -398,9 +415,10 @@ bAIsed integrates Google's AI and fairness tools:
 ## Suggested Documentation Split
 
 For cleaner maintenance, this README can be split into:
-- `README.md` for overview and quickstart.
-- `docs/ARCHITECTURE.md` for system internals.
-- `docs/API.md` for request and response schemas.
+
+- `README.md` for overview and quickstart
+- `docs/ARCHITECTURE.md` for system internals
+- `docs/API.md` for request and response schemas
 
 ---
 
