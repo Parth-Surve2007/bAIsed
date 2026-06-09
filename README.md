@@ -1,5 +1,3 @@
-# bAIsed
-
 <img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed Banner" width="80" height="50"/>
 
 <p align="center">
