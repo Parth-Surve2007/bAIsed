@@ -101,13 +101,46 @@ SITE_CONTENT: dict[str, dict[str, Any]] = {
             ),
             "bias_reduction": "-42%",
             "hiring_speed": "+18%",
+            "demo": "resume",
         },
         "secondary": {
-            "credit_gap": "-14% to -2%",
+            "credit_gap": "-14% → -2%",
             "healthcare_parity": "99.2%",
             "public_sector_audit": "Full",
             "retail_bias": "Zero",
         },
+        "impact": {
+            "organizations": "150+",
+            "disparity_reduction": "38%",
+            "compliance_score": "A+",
+            "client_roi": "4.2x",
+        },
+        "cards": [
+            {
+                "id": "healthcare",
+                "title": "Predictive Diagnostics",
+                "summary": "Correcting diagnostic model skew for underrepresented populations.",
+                "metric_label": "Accuracy Parity",
+                "metric_value": "99.2%",
+                "demo": "resume",
+            },
+            {
+                "id": "public_sector",
+                "title": "Judicial Risk Engines",
+                "summary": "Independent audit of sentencing recommendation software.",
+                "metric_label": "Transparency Audit",
+                "metric_value": "Full",
+                "demo": "policing",
+            },
+            {
+                "id": "retail",
+                "title": "Dynamic Pricing Audit",
+                "summary": "Eliminating price discrimination in localized e-commerce algorithms.",
+                "metric_label": "Bias Variance",
+                "metric_value": "Zero",
+                "demo": "credit",
+            },
+        ],
     },
     "pricing_demo": {
         "plans": {
@@ -289,6 +322,18 @@ def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int) -> 
         pass
 
     confidence = "LOW" if row_count < 30 else "MEDIUM" if row_count < 100 else "HIGH"
+    proxy_risks = []
+    for item in (analysis_data.get("proxy_analysis") or [])[:5]:
+        if not isinstance(item, dict):
+            continue
+        proxy_risks.append(
+            {
+                "feature": humanize_column(str(item.get("feature", "Unknown"))),
+                "risk": str(item.get("risk", "LOW")),
+                "explanation": str(item.get("reason", item.get("explanation", "Associated with protected attribute."))),
+            }
+        )
+
     return {
         "severity_label": severity_label,
         "severity_color": severity_color,
@@ -331,12 +376,26 @@ def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int) -> 
             "```\n\n"
             f"We strongly advise a detailed manual review of the **{top_feature}** importance scores, as the variance cannot be entirely explained by legitimate operational factors alone."
         ),
-        "pattern_detected": analysis_data.get("bias_pattern", {}).get("pattern_type", "None"),
-        "proxy_risks": [],
+        "pattern_detected": (analysis_data.get("bias_pattern") or {}).get("pattern_type", "None"),
+        "proxy_risks": proxy_risks,
         "compliance_risks": ["Periodic bias monitoring recommended."],
         "mitigation_plan": recommended_actions,
         "confidence_notes": f"Based on {row_count} rows.",
     }
+
+
+def _return_fallback_ai_report(
+    analysis_data: dict[str, Any],
+    row_count: int,
+    columns: list[str],
+    warning: str,
+) -> Any:
+    fallback_report = _build_fallback_ai_report(analysis_data, row_count)
+    fallback_report["_source"] = "deterministic-fallback"
+    fallback_report["_warning"] = warning
+    fallback_report["_row_count"] = row_count
+    fallback_report["_columns"] = [humanize_column(col) for col in columns]
+    return jsonify(clean_for_json(fallback_report))
 
 
 def _normalize_ai_report(report: dict[str, Any], analysis_data: dict[str, Any], row_count: int) -> dict[str, Any]:
@@ -448,15 +507,18 @@ def _resolve_action_payload(action: str, page: str) -> dict[str, str]:
         "forgot password",
     }
     case_actions = {
-        "explore hiring analytics",
-        "read case study",
-        "view full analysis",
+        "explore hiring analytics": "/workbench?demo=resume",
+        "read case study": "/workbench?demo=credit",
+        "view full analysis": "/workbench?demo=resume",
+        "explore healthcare case study": "/workbench?demo=resume",
+        "explore public sector case study": "/workbench?demo=policing",
+        "explore retail case study": "/workbench?demo=credit",
     }
 
     if action in workbench_actions:
         return {"target": "/workbench", "message": "Opening the live fairness workbench."}
     if action in pricing_actions:
-        return {"target": "/pricing", "message": "Routing you to the demo request workspace."}
+        return {"target": "/pricing#demo-request-form", "message": "Routing you to the consultation request form."}
     if action in docs_actions:
         if action == "download whitepaper":
             return {"target": "/api/downloads/whitepaper", "message": "Preparing the whitepaper download."}
@@ -464,7 +526,7 @@ def _resolve_action_payload(action: str, page: str) -> dict[str, str]:
     if action in login_actions:
         return {"target": "/login", "message": "Opening secure sign-in."}
     if action in case_actions:
-        return {"target": "/case-study", "message": "Opening the impact report."}
+        return {"target": case_actions[action], "message": "Opening the live audit for this case study."}
 
     page_targets = {
         "landing": "/",
@@ -801,11 +863,6 @@ def ai_analyze():
     except Exception:
         analysis_data = {}
 
-    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-    if not gemini_api_key:
-        return jsonify({"error": "GEMINI_API_KEY is not configured on the server."}), 500
-
     try:
         if dataset_id:
             df = _load_temp_dataset(dataset_id)
@@ -819,6 +876,16 @@ def ai_analyze():
 
     row_count = int(len(df))
     columns = list(df.columns)
+
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    if not gemini_api_key:
+        return _return_fallback_ai_report(
+            analysis_data,
+            row_count,
+            columns,
+            "GEMINI_API_KEY is not configured. Showing a deterministic report from your fairness metrics.",
+        )
 
     dataset_summary = safe_dataset_summary(df, max_rows=8)
     ml_summary = _compact_ml_summary(analysis_data)
@@ -951,26 +1018,21 @@ def ai_analyze():
         if ai_text:
             break
 
-    if not ai_text and saw_rate_limit:
-        fallback_report = _build_fallback_ai_report(analysis_data, row_count)
-        fallback_report["_source"] = "deterministic-fallback"
-        fallback_report["_warning"] = "Gemini API is currently rate-limited."
-        fallback_report["_row_count"] = row_count
-        fallback_report["_columns"] = [humanize_column(col) for col in columns]
-        return jsonify(clean_for_json(fallback_report))
-
     if not ai_text:
-        if last_http_error is not None:
-            return (
-                jsonify(
-                    {
-                        "error": f"Gemini API Error: {last_http_error.code} - {last_http_error.reason}. "
-                        f"Tried models: {', '.join(model_candidates)}"
-                    }
-                ),
-                500,
+        if saw_rate_limit:
+            warning = "Gemini API is currently rate-limited. Showing a deterministic report from your fairness metrics."
+        elif last_http_error is not None:
+            warning = (
+                f"Gemini API error ({last_http_error.code} - {last_http_error.reason}). "
+                f"Tried models: {', '.join(model_candidates)}. "
+                "Showing a deterministic report from your fairness metrics."
             )
-        return jsonify({"error": f"Gemini request failed: {last_reason or 'unknown error'}"}), 500
+        else:
+            warning = (
+                f"Gemini request failed: {last_reason or 'unknown error'}. "
+                "Showing a deterministic report from your fairness metrics."
+            )
+        return _return_fallback_ai_report(analysis_data, row_count, columns, warning)
 
     try:
         ai_report = json.loads(ai_text)

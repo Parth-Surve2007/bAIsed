@@ -3,6 +3,7 @@
     home: "/",
     solutions: "/solutions",
     methodology: "/methodology",
+    docs: "/methodology",
     caseStudies: "/case-study",
     pricing: "/pricing",
     
@@ -37,10 +38,13 @@
     ["book demo", routes.pricing],
     ["start free audit", routes.workbench],
     ["start analyzing your data now", routes.workbench],
-    ["explore hiring analytics", routes.caseStudies],
-    ["read case study", routes.caseStudies],
-    ["view full analysis", routes.caseStudies],
-    ["schedule a consultation", routes.pricing],
+    ["explore hiring analytics", "/workbench?demo=resume"],
+    ["read case study", "/workbench?demo=credit"],
+    ["view full analysis", "/workbench?demo=resume"],
+    ["explore healthcare case study", "/workbench?demo=resume"],
+    ["explore public sector case study", "/workbench?demo=policing"],
+    ["explore retail case study", "/workbench?demo=credit"],
+    ["schedule a consultation", "/pricing#demo-request-form"],
     ["download whitepaper", "/api/downloads/whitepaper"],
     ["request custom demo", routes.pricing],
     ["explore documentation", routes.docs],
@@ -126,8 +130,12 @@
     return { email: safeEmail, initials };
   }
 
+  function normalizeRoute(route) {
+    return (route || "").split("#")[0].split("?")[0].replace(/\/+$/, "") || "/";
+  }
+
   function isProtectedRoute(route) {
-    return PROTECTED_ROUTES.has(route);
+    return PROTECTED_ROUTES.has(normalizeRoute(route));
   }
 
   function buildLoginRedirect(target = window.location.pathname) {
@@ -562,6 +570,47 @@
     }
   }
 
+  function navigateToTarget(target) {
+    if (!target) {
+      return;
+    }
+
+    if (target.startsWith("/api/downloads/")) {
+      const link = document.createElement("a");
+      link.href = target;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+
+    const resolved = routeToAuthAwareTarget(target);
+    if (resolved.startsWith("/login") && target.includes("?")) {
+      const redirectTarget = encodeURIComponent(target);
+      window.location.href = resolved.includes("redirect=")
+        ? resolved
+        : `${resolved}${resolved.includes("?") ? "&" : "?"}redirect=${redirectTarget}`;
+      return;
+    }
+
+    window.location.href = resolved;
+  }
+
+  function scrollToPageTarget() {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) {
+      return;
+    }
+
+    const target = document.getElementById(hash);
+    if (target) {
+      window.setTimeout(() => {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+    }
+  }
+
   async function resolveAction(action) {
     return requestJson("/api/actions/resolve", {
       method: "POST",
@@ -604,7 +653,7 @@
 
           if (result.target) {
             window.setTimeout(() => {
-              window.location.href = routeToAuthAwareTarget(result.target);
+              navigateToTarget(result.target);
             }, 200);
           }
         } catch (error) {
@@ -1085,14 +1134,74 @@
   function renderCaseStudyPage(data) {
     const featured = data.featured || {};
     const secondary = data.secondary || {};
+    const impact = data.impact || {};
     setText("case-feature-title", featured.title);
     setText("case-feature-summary", featured.summary);
     setText("case-feature-bias-reduction", featured.bias_reduction);
     setText("case-feature-hiring-speed", featured.hiring_speed);
     setText("case-credit-gap", secondary.credit_gap);
-    setText("case-healthcare-parity", secondary.healthcare_parity);
-    setText("case-public-sector-audit", secondary.public_sector_audit);
-    setText("case-retail-bias", secondary.retail_bias);
+    setText("case-impact-organizations", impact.organizations);
+    setText("case-impact-disparity", impact.disparity_reduction);
+    setText("case-impact-compliance", impact.compliance_score);
+    setText("case-impact-roi", impact.client_roi);
+
+    const featuredAction = document.querySelector('[data-action="View Full Analysis"]');
+    if (featuredAction && featured.demo) {
+      featuredAction.dataset.demoType = featured.demo;
+    }
+
+    const creditAction = document.querySelector('[data-action="Read Case Study"]');
+    if (creditAction) {
+      creditAction.dataset.demoType = "credit";
+    }
+
+    (data.cards || []).forEach((card) => {
+      const cardEl = document.querySelector(`[data-case-card="${card.id}"]`);
+      if (!cardEl) {
+        return;
+      }
+      cardEl.dataset.demoType = card.demo || "";
+      setText(`case-card-${card.id}-title`, card.title);
+      setText(`case-card-${card.id}-summary`, card.summary);
+      setText(`case-card-${card.id}-metric`, card.metric_value);
+      const metricLabel = cardEl.querySelector(`[data-case-metric-label="${card.id}"]`);
+      if (metricLabel) {
+        metricLabel.textContent = card.metric_label || "";
+      }
+    });
+  }
+
+  function bindCaseStudyCards() {
+    if (getCurrentPage() !== "case_study") {
+      return;
+    }
+
+    document.querySelectorAll("[data-demo-type]").forEach((element) => {
+      if (element.dataset.caseStudyBound === "true") {
+        return;
+      }
+      element.dataset.caseStudyBound = "true";
+      element.style.cursor = "pointer";
+
+      element.addEventListener("click", (event) => {
+        if (element.tagName === "BUTTON" && element.type === "submit") {
+          return;
+        }
+
+        const demoType = element.dataset.demoType;
+        if (!demoType) {
+          return;
+        }
+
+        if (element.hasAttribute("data-action")) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        navigateToTarget(`/workbench?demo=${encodeURIComponent(demoType)}`);
+      });
+    });
   }
 
   function renderPricingPage(data) {
@@ -1367,12 +1476,15 @@
     renderAuthState();
     bindElements();
     bindActionButtons();
+    bindCaseStudyCards();
     enhanceDocumentationAnchors();
     bindLoginFlow();
     bindDemoRequestForm();
     bindPersonaTabs();
     renderGlobalFooter();
     await hydratePage();
+    bindCaseStudyCards();
+    scrollToPageTarget();
     await bindDocsSearch();
     
     // Fun interactive pricing page logic
