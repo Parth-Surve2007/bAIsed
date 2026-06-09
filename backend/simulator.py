@@ -47,55 +47,109 @@ def _selection_rates_from_payload(payload: dict[str, Any]) -> tuple[float, float
 
 
 def simulate_fairness_scenario(payload: dict[str, Any]) -> dict[str, Any]:
-    diversity_weight = _safe_float(payload.get("diversity_weight"), 0.75)
-    if diversity_weight > 1:
-        diversity_weight = diversity_weight / 100.0
-    diversity_weight = max(0.0, min(1.0, diversity_weight))
-
-    constraint = _normalize_constraint(payload.get("fairness_constraint"))
-    settings = CONSTRAINT_SETTINGS[constraint]
-
+    scenario_type = payload.get("scenario_type", "diversity_weight")
+    
     result = payload.get("analysis_result")
     analysis_result = result if isinstance(result, dict) else {}
 
     max_rate, min_rate = _selection_rates_from_payload(analysis_result)
     baseline_dir = 1.0 if max_rate == 0 else min_rate / max_rate
     baseline_spd = max(0.0, max_rate - min_rate)
+    
+    baseline_bias_score = _safe_float(analysis_result.get("bias_score"), 0.0)
+    baseline_severity = analysis_result.get("severity", "LOW")
 
-    target_gap = max(0.0, max_rate * 0.2)
-    current_gap = max(0.0, max_rate - min_rate)
-    improvement_window = max(0.0, current_gap - target_gap)
+    simulated_min_rate = min_rate
+    simulated_max_rate = max_rate
+    estimated_accuracy = 94.8
+    action_text = ""
 
-    uplift = improvement_window * diversity_weight * settings["uplift_multiplier"]
-    simulated_min_rate = min(max_rate, min_rate + uplift)
-    simulated_max_rate = max(simulated_min_rate, max_rate - (settings["advantaged_drag"] * diversity_weight))
+    if scenario_type == "threshold":
+        # Simulate dropping the threshold for everyone
+        simulated_min_rate = min(1.0, min_rate * 1.15)
+        simulated_max_rate = min(1.0, max_rate * 1.05)
+        estimated_accuracy -= 1.2
+        action_text = "Lowered global decision threshold, increasing selection rates for all groups."
+        
+    elif scenario_type == "proxy":
+        # Simulate removing proxy feature
+        simulated_min_rate = min(1.0, min_rate + (max_rate - min_rate) * 0.4)
+        simulated_max_rate = max(0.0, max_rate - (max_rate - min_rate) * 0.1)
+        estimated_accuracy -= 2.5
+        action_text = "Removed top proxy feature, closing the gap significantly with slight accuracy drop."
+        
+    elif scenario_type == "rebalance":
+        # Simulate rebalancing data
+        simulated_min_rate = min(1.0, min_rate + (max_rate - min_rate) * 0.6)
+        simulated_max_rate = max_rate
+        estimated_accuracy += 0.5
+        action_text = "Synthetically rebalanced training data, boosting disadvantaged group without harming advantaged group."
+        
+    elif scenario_type == "boost":
+        # Simulate targeted boost
+        simulated_min_rate = min(1.0, min_rate + (max_rate - min_rate) * 0.8)
+        simulated_max_rate = max_rate
+        estimated_accuracy -= 1.8
+        action_text = "Applied targeted algorithmic boost to disadvantaged group to achieve near parity."
+        
+    else: # Fallback to original diversity weight logic
+        diversity_weight = _safe_float(payload.get("diversity_weight"), 0.75)
+        if diversity_weight > 1:
+            diversity_weight = diversity_weight / 100.0
+        diversity_weight = max(0.0, min(1.0, diversity_weight))
 
+        constraint = _normalize_constraint(payload.get("fairness_constraint"))
+        settings = CONSTRAINT_SETTINGS[constraint]
+        
+        target_gap = max(0.0, max_rate * 0.2)
+        current_gap = max(0.0, max_rate - min_rate)
+        improvement_window = max(0.0, current_gap - target_gap)
+
+        uplift = improvement_window * diversity_weight * settings["uplift_multiplier"]
+        simulated_min_rate = min(max_rate, min_rate + uplift)
+        simulated_max_rate = max(simulated_min_rate, max_rate - (settings["advantaged_drag"] * diversity_weight))
+        
+        estimated_accuracy = 94.8 - (diversity_weight * settings["accuracy_penalty"]) - (0.35 if constraint == "Strict" else 0.0)
+        
+        if diversity_weight < 0.15:
+            action_text = "Maintain current policy mix with only light monitoring."
+        elif constraint == "Strict":
+            action_text = f"Increase diversity weight to {diversity_weight:.2f} and tighten decision thresholds for the lowest-performing group."
+        else:
+            action_text = f"Increase diversity weight to {diversity_weight:.2f} and apply mild reweighting."
+
+    estimated_accuracy = max(84.0, min(99.0, estimated_accuracy))
     new_dir = 1.0 if simulated_max_rate == 0 else simulated_min_rate / simulated_max_rate
     new_spd = simulated_max_rate - simulated_min_rate
     parity_improvement = max(0.0, (new_dir - baseline_dir) * 100.0)
-
-    estimated_accuracy = 94.8 - (diversity_weight * settings["accuracy_penalty"]) - (0.35 if constraint == "Strict" else 0.0)
-    estimated_accuracy = max(84.0, min(99.0, estimated_accuracy))
-
-    bias_reduced = new_dir >= baseline_dir and new_spd <= baseline_spd
-    if diversity_weight < 0.15:
-        action_text = "Maintain current policy mix with only light monitoring."
-    elif constraint == "Strict":
-        action_text = f"Increase diversity weight to {diversity_weight:.2f} and tighten decision thresholds for the lowest-performing group."
+    
+    bias_reduced = new_dir > baseline_dir and new_spd < baseline_spd
+    
+    # Calculate simulated severity and score
+    if new_dir < 0.5:
+        new_severity = "HIGH"
+        new_bias_score = min(100.0, baseline_bias_score if baseline_bias_score > 66 else 85.0)
+    elif new_dir < 0.8:
+        new_severity = "MODERATE"
+        new_bias_score = min(66.0, baseline_bias_score if 33 < baseline_bias_score <= 66 else 50.0)
     else:
-        action_text = f"Increase diversity weight to {diversity_weight:.2f} and apply mild reweighting."
+        new_severity = "LOW"
+        new_bias_score = min(33.0, baseline_bias_score if baseline_bias_score <= 33 else 15.0)
 
     return {
         "scenario": {
-            "diversity_weight": _round(diversity_weight, 2),
-            "fairness_constraint": constraint,
+            "type": scenario_type,
         },
         "change": action_text,
         "metrics": {
             "baseline_DIR": _round(baseline_dir),
             "baseline_SPD": _round(-baseline_spd),
+            "baseline_bias_score": _round(baseline_bias_score, 1),
+            "baseline_severity": baseline_severity,
             "new_DIR": _round(new_dir),
             "new_SPD": _round(-new_spd),
+            "new_bias_score": _round(new_bias_score, 1),
+            "new_severity": new_severity,
             "estimated_accuracy": _round(estimated_accuracy, 1),
             "parity_improvement_percent": _round(parity_improvement, 1),
         },
