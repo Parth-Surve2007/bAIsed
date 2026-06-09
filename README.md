@@ -361,6 +361,4 @@ Before deploying, configure the required environment variables, keep credentials
 
 ---
 
-## License
 
-Add a license before publishing or distributing this repository.
