@@ -1364,12 +1364,30 @@ def analyze_dataset(
             adv_intervals = bootstrap_confidence_intervals(working_df, protected_columns, resolved_outcome)
             adv_mitigations = generate_mitigation_suggestions(adv_metrics, bias_hotspots)
             adv_intersectional = perform_intersectional_analysis(working_df, protected_columns, intersectional_columns, resolved_outcome)
+            metric_frame = []
+            for group, rate in sorted(group_rates.items(), key=lambda item: item[1], reverse=True):
+                qualified_rate = None
+                if qualified_group_rates:
+                    qualified_rate = qualified_group_rates.get(group)
+                metric_frame.append({
+                    "group": str(group),
+                    "sample_size": group_counts.get(group, 0),
+                    "selection_rate": _round(rate),
+                    "demographic_parity_difference": _round(max_rate - rate),
+                    "demographic_parity_ratio": _round(1.0 if max_rate == 0 else rate / max_rate),
+                    "equal_opportunity_rate": _round(qualified_rate) if qualified_rate is not None else None,
+                    "advantage": "most_advantaged" if group == max_group else "least_advantaged" if group == min_group else "comparison",
+                })
             
             advanced_fairness = {
                 "metrics": adv_metrics,
                 "confidence_intervals": adv_intervals,
                 "mitigations": adv_mitigations,
-                "intersectional": adv_intersectional
+                "intersectional": adv_intersectional,
+                "metric_frame": metric_frame,
+                "sensitive_features": protected_columns,
+                "outcome_column": resolved_outcome,
+                "qualification_column": qualification_resolved,
             }
         except Exception as e:
             import traceback

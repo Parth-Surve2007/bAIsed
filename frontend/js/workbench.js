@@ -175,6 +175,19 @@
       .join(" | ");
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatNullableDecimal(value, digits) {
+    return value === null || value === undefined ? "-" : formatDecimal(value, digits);
+  }
+
   function renderRecommendations(recommendations) {
     const container = document.getElementById("recommendations-list");
     if (!container) {
@@ -565,26 +578,167 @@
     });
   }
 
+  const ADVANCED_METRIC_LABELS = {
+    demographic_parity_difference: "Demographic Parity Difference",
+    demographic_parity_ratio: "Demographic Parity Ratio",
+    equalized_odds_difference: "Equalized Odds Difference",
+    equal_opportunity_difference: "Equal Opportunity Difference",
+  };
+
+  const ADVANCED_RULES = [
+    {
+      name: "Demographic Parity",
+      target: "DP ratio >= 0.8",
+      metric: "Selection-rate parity across sensitive groups.",
+    },
+    {
+      name: "Equal Opportunity",
+      target: "|EOD| <= 0.1",
+      metric: "Qualified positive-rate gap across groups.",
+    },
+    {
+      name: "Equalized Odds",
+      target: "|AOD| <= 0.1",
+      metric: "Average error tradeoff gap across groups.",
+    },
+  ];
+
+  function renderAdvancedMetricFrame(advancedFairness) {
+    const container = document.getElementById("advanced-metric-frame-body");
+    const featureChip = document.getElementById("advanced-feature-chip");
+    if (!container) return;
+
+    const frame = advancedFairness?.metric_frame || [];
+    const sensitiveFeatures = advancedFairness?.sensitive_features || [];
+    if (featureChip) {
+      featureChip.textContent = sensitiveFeatures.length
+        ? `${sensitiveFeatures.join(" x ")}`
+        : `${frame.length} Groups`;
+    }
+
+    container.innerHTML = "";
+    if (!frame.length) {
+      container.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500 italic">No advanced subgroup metrics available.</td></tr>';
+      return;
+    }
+
+    frame.forEach((row) => {
+      const roleLabel = row.advantage === "most_advantaged"
+        ? "Most advantaged"
+        : row.advantage === "least_advantaged"
+          ? "Least advantaged"
+          : "Comparison";
+      const roleClass = row.advantage === "least_advantaged"
+        ? "bg-red-50 text-red-700"
+        : row.advantage === "most_advantaged"
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-slate-100 text-slate-600";
+
+      const tr = document.createElement("tr");
+      tr.className = "bg-white dark:bg-zinc-900";
+      tr.innerHTML = `
+        <td class="px-4 py-4 font-semibold text-slate-950 dark:text-zinc-100">${escapeHtml(row.group)}</td>
+        <td class="px-4 py-4 text-slate-600 dark:text-zinc-400">${row.sample_size ?? "-"}</td>
+        <td class="px-4 py-4 text-slate-900 dark:text-zinc-100">${formatPercent((row.selection_rate || 0) * 100)}</td>
+        <td class="px-4 py-4 font-mono text-xs text-slate-700 dark:text-zinc-300">${formatNullableDecimal(row.demographic_parity_ratio, 4)}</td>
+        <td class="px-4 py-4 font-mono text-xs text-slate-700 dark:text-zinc-300">${formatNullableDecimal(row.demographic_parity_difference, 4)}</td>
+        <td class="px-4 py-4 font-mono text-xs text-slate-700 dark:text-zinc-300">${formatNullableDecimal(row.equal_opportunity_rate, 4)}</td>
+        <td class="px-4 py-4"><span class="rounded-full px-2.5 py-1 text-xs font-bold ${roleClass}">${roleLabel}</span></td>
+      `;
+      container.appendChild(tr);
+    });
+  }
+
+  function renderCustomMetricRules(advancedFairness) {
+    const container = document.getElementById("custom-metric-rule-list");
+    if (!container) return;
+
+    const metrics = advancedFairness?.metrics?.metrics || {};
+    container.innerHTML = "";
+    ADVANCED_RULES.forEach((rule) => {
+      const active = rule.name === "Demographic Parity"
+        ? Number(metrics.demographic_parity_ratio || 0) >= 0.8
+        : Math.abs(Number(rule.name === "Equal Opportunity" ? metrics.equal_opportunity_difference : metrics.equalized_odds_difference) || 0) <= 0.1;
+      const card = document.createElement("div");
+      card.className = "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900";
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-sm font-bold text-slate-950 dark:text-white">${rule.name}</p>
+          <span class="rounded-full px-2 py-0.5 text-xs font-bold ${active ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}">${active ? "Pass" : "Review"}</span>
+        </div>
+        <p class="mt-1 text-xs text-slate-600 dark:text-zinc-400">${rule.metric}</p>
+        <p class="mt-2 font-mono text-xs text-slate-500">${rule.target}</p>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function bindCustomMetricEvaluator(advancedFairness) {
+    const metricSelect = document.getElementById("custom-metric-select");
+    const thresholdInput = document.getElementById("custom-metric-threshold");
+    const evaluation = document.getElementById("custom-metric-evaluation");
+    if (!metricSelect || !thresholdInput || !evaluation) return;
+
+    const metrics = advancedFairness?.metrics?.metrics || {};
+    const evaluate = () => {
+      const metricKey = metricSelect.value;
+      const threshold = Number(thresholdInput.value || 0);
+      const value = Number(metrics[metricKey] || 0);
+      const higherIsBetter = metricKey === "demographic_parity_ratio";
+      const passes = higherIsBetter ? value >= threshold : Math.abs(value) <= threshold;
+      evaluation.className = `mt-3 rounded-xl border px-4 py-3 text-sm ${
+        passes
+          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+          : "border-amber-200 bg-amber-50 text-amber-800"
+      }`;
+      evaluation.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <span class="font-bold">${ADVANCED_METRIC_LABELS[metricKey] || "Custom Metric"}</span>
+          <span class="rounded-full bg-white/70 px-2 py-0.5 text-xs font-black">${passes ? "Pass" : "Review"}</span>
+        </div>
+        <p class="mt-1 font-mono text-xs">value ${formatDecimal(value, 4)} ${higherIsBetter ? ">=" : "<="} threshold ${formatDecimal(threshold, 2)}</p>
+      `;
+    };
+
+    metricSelect.removeEventListener("change", window._customMetricEvaluateHandler);
+    thresholdInput.removeEventListener("input", window._customMetricEvaluateHandler);
+    window._customMetricEvaluateHandler = evaluate;
+    metricSelect.addEventListener("change", window._customMetricEvaluateHandler);
+    thresholdInput.addEventListener("input", window._customMetricEvaluateHandler);
+    evaluate();
+  }
+
   function renderIntersectional(intersectional) {
     const container = document.getElementById("intersectional-list");
+    const countChip = document.getElementById("intersectional-count-chip");
     if (!container) return;
     
     container.innerHTML = "";
+    if (countChip) countChip.textContent = `${(intersectional || []).length} Groups`;
     if (!intersectional || !intersectional.length) {
-      container.innerHTML = '<div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">No intersectional data available.</div>';
+      container.innerHTML = '<div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">No intersectional data available.</div>';
       return;
     }
 
     intersectional.forEach(data => {
       const card = document.createElement("div");
-      card.className = "rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm dark:bg-zinc-900 dark:border-indigo-800";
+      card.className = "rounded-2xl border border-outline-variant bg-surface-container-low p-4";
       const groupName = typeof data.group === "object" ? Object.entries(data.group).map(([k, v]) => `${k}:${v}`).join(" & ") : data.group;
+      const dir = Number(data.DIR || 0);
       card.innerHTML = `
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-sm font-bold text-slate-900 dark:text-zinc-100">${groupName}</p>
-          <p class="text-sm font-black text-indigo-700 dark:text-indigo-400">${formatPercent(data.selection_rate * 100)}</p>
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <p class="text-sm font-bold text-slate-900 dark:text-zinc-100">${escapeHtml(groupName)}</p>
+            <p class="mt-1 text-xs text-slate-500 dark:text-zinc-400">Sample size: ${data.sample_size}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-black text-slate-950 dark:text-white">${formatPercent(data.selection_rate * 100)}</p>
+            <p class="text-xs font-semibold ${dir < 0.8 ? "text-red-700" : "text-emerald-700"}">DIR ${formatDecimal(dir, 4)}</p>
+          </div>
         </div>
-        <p class="text-xs text-slate-500 dark:text-zinc-400">Sample size: ${data.sample_size}</p>
+        <div class="mt-3 h-2 rounded-full bg-slate-200">
+          <div class="h-2 rounded-full ${dir < 0.8 ? "bg-red-500" : "bg-emerald-500"}" style="width: ${Math.max(4, Math.min(100, dir * 100))}%"></div>
+        </div>
       `;
       container.appendChild(card);
     });
@@ -592,21 +746,26 @@
 
   function renderMitigations(mitigations) {
     const container = document.getElementById("algorithmic-mitigation-list");
+    const countChip = document.getElementById("advanced-mitigation-count-chip");
     if (!container) return;
 
     container.innerHTML = "";
+    if (countChip) countChip.textContent = `${(mitigations || []).length} Paths`;
     if (!mitigations || !mitigations.length) {
-      container.innerHTML = '<div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">No mitigation suggestions available.</div>';
+      container.innerHTML = '<div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">No mitigation suggestions available.</div>';
       return;
     }
 
     mitigations.forEach(mitigation => {
       const card = document.createElement("div");
-      card.className = "rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm dark:bg-zinc-900 dark:border-indigo-800";
+      card.className = "rounded-2xl border border-outline-variant bg-surface-container-low p-4";
       card.innerHTML = `
-        <p class="text-sm font-bold text-slate-900 dark:text-zinc-100 mb-1">${mitigation.strategy}</p>
-        <p class="text-xs text-slate-600 dark:text-zinc-400 mb-2">${mitigation.description}</p>
-        <p class="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Implementation: ${mitigation.type || "Recommended mitigation"}</p>
+        <div class="flex items-start justify-between gap-3">
+          <p class="text-sm font-bold text-slate-900 dark:text-zinc-100">${escapeHtml(mitigation.strategy)}</p>
+          <span class="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">${escapeHtml(mitigation.type || "Mitigation")}</span>
+        </div>
+        <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-zinc-400">${escapeHtml(mitigation.description)}</p>
+        <p class="mt-3 font-mono text-xs text-slate-500">${mitigation.type === "Post-processing" ? "threshold_optimizer.fit(...)" : mitigation.type === "In-processing" ? "reductions.ExponentiatedGradient(...)" : "preprocessing.CorrelationRemover(...)"}</p>
       `;
       container.appendChild(card);
     });
@@ -698,6 +857,9 @@
     if (result.advanced_fairness) {
       if (advancedContainer) advancedContainer.style.display = "block";
       if (advJsonBtn) advJsonBtn.style.display = "block";
+      renderAdvancedMetricFrame(result.advanced_fairness);
+      renderCustomMetricRules(result.advanced_fairness);
+      bindCustomMetricEvaluator(result.advanced_fairness);
       renderIntersectional(result.advanced_fairness.intersectional);
       renderMitigations(result.advanced_fairness.mitigations);
       
@@ -719,13 +881,15 @@
           valEl.textContent = "-";
         }
         
-        labelEl.textContent = dropdown.options[dropdown.selectedIndex].text;
+        if (labelEl) {
+          labelEl.textContent = ADVANCED_METRIC_LABELS[metricKey] || dropdown.options[dropdown.selectedIndex].text;
+        }
         
         const ciKey = metricKey === "demographic_parity_ratio" ? "DIR" : metricKey === "demographic_parity_difference" ? "SPD" : null;
         if (ciKey && ci[ciKey]) {
-          ciEl.textContent = `CI: [ ${ci[ciKey].lower}, ${ci[ciKey].upper} ]`;
+          ciEl.textContent = `[ ${ci[ciKey].lower}, ${ci[ciKey].upper} ]`;
         } else {
-          ciEl.textContent = "CI: [ -, - ]";
+          ciEl.textContent = "[ -, - ]";
         }
       };
       

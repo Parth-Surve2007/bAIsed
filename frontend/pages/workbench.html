@@ -637,52 +637,114 @@
       </div>
 
       <div id="advanced-analytics-container" style="display: none;">
-        <div class="dive-section-label">Advanced Fairness Analytics</div>
-        
-        <div class="mt-6 grid gap-6 lg:grid-cols-2">
-          <div class="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-900/10">
-            <div class="mb-5 flex items-center justify-between">
-              <div>
-                <h2 class="text-2xl font-bold text-indigo-900 dark:text-indigo-200">Custom Fairness Metric</h2>
-                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Select a specific fairness definition to view its score.</p>
+        <div class="dive-section-label">Fairlearn-Compatible Metrics Mode</div>
+
+        <div class="mt-6 rounded-3xl border border-indigo-200 bg-white p-6 shadow-sm dark:border-indigo-900/50 dark:bg-zinc-900">
+          <div class="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 class="text-2xl font-bold text-slate-950 dark:text-white">Assessment</h2>
+                  <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">MetricFrame-style subgroup comparison across the selected sensitive feature.</p>
+                </div>
+                <div class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" id="advanced-feature-chip">0 Features</div>
+              </div>
+
+              <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200 dark:border-zinc-800">
+                <table class="w-full min-w-[760px] text-left text-sm">
+                  <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:bg-zinc-950 dark:text-zinc-400">
+                    <tr>
+                      <th class="px-4 py-3">Group</th>
+                      <th class="px-4 py-3">N</th>
+                      <th class="px-4 py-3">Selection Rate</th>
+                      <th class="px-4 py-3">DP Ratio</th>
+                      <th class="px-4 py-3">DP Difference</th>
+                      <th class="px-4 py-3">Equal Opportunity</th>
+                      <th class="px-4 py-3">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody id="advanced-metric-frame-body" class="divide-y divide-slate-200 dark:divide-zinc-800">
+                    <tr>
+                      <td colspan="7" class="px-4 py-8 text-center text-slate-500 italic">Enable advanced analytics and run a dataset audit.</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div class="mb-4">
-              <select class="w-full rounded-xl bg-white dark:bg-zinc-900 border border-indigo-300 dark:border-indigo-700 text-indigo-900 dark:text-indigo-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-sm outline-none" id="advanced-metric-dropdown">
-                <option value="demographic_parity_difference">Demographic Parity Difference (SPD)</option>
-                <option value="demographic_parity_ratio">Demographic Parity Ratio (DIR)</option>
-                <option value="equalized_odds_difference">Equalized Odds Difference (AOD)</option>
-                <option value="equal_opportunity_difference">Equal Opportunity Difference (EOD)</option>
-              </select>
-            </div>
-            <div class="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm text-center dark:bg-zinc-900 dark:border-indigo-800">
-              <p class="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2" id="advanced-metric-label">Demographic Parity Difference</p>
-              <p class="text-4xl font-black text-indigo-900 dark:text-indigo-100" id="advanced-metric-value">-</p>
-              <div id="advanced-metric-ci" class="mt-2 text-sm text-indigo-600 dark:text-indigo-400">CI: [ -, - ]</div>
+
+            <div class="grid gap-4">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                <label class="block">
+                  <span class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Metric Definition</span>
+                  <select class="mt-2 w-full rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 px-4 py-3 text-sm outline-none" id="advanced-metric-dropdown">
+                    <option value="demographic_parity_difference">Demographic Parity Difference</option>
+                    <option value="demographic_parity_ratio">Demographic Parity Ratio</option>
+                    <option value="equalized_odds_difference">Equalized Odds Difference</option>
+                    <option value="equal_opportunity_difference">Equal Opportunity Difference</option>
+                  </select>
+                </label>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                  <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400" id="advanced-metric-label">Metric</p>
+                    <p class="mt-2 text-3xl font-black text-slate-950 dark:text-white" id="advanced-metric-value">-</p>
+                  </div>
+                  <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Bootstrap CI</p>
+                    <p class="mt-2 text-lg font-black text-slate-950 dark:text-white" id="advanced-metric-ci">[ -, - ]</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                <h3 class="text-base font-bold text-slate-950 dark:text-white">Custom Metrics Engine</h3>
+                <div class="mt-4 grid gap-3 sm:grid-cols-[1fr_120px]">
+                  <label class="block">
+                    <span class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Rule Metric</span>
+                    <select class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" id="custom-metric-select">
+                      <option value="demographic_parity_ratio">DP Ratio</option>
+                      <option value="demographic_parity_difference">DP Difference</option>
+                      <option value="equal_opportunity_difference">Equal Opportunity Difference</option>
+                      <option value="equalized_odds_difference">Equalized Odds Difference</option>
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Threshold</span>
+                    <input class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" id="custom-metric-threshold" min="0" max="1" step="0.01" type="number" value="0.8">
+                  </label>
+                </div>
+                <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900" id="custom-metric-evaluation">Custom rule appears after analysis.</div>
+                <div class="mt-3 grid gap-2" id="custom-metric-rule-list">
+                  <div class="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500">Metric rules appear after analysis.</div>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div class="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-900/10">
-            <div class="mb-5 flex items-center justify-between">
+        <div class="mt-6 grid gap-6 xl:grid-cols-2">
+          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="mb-5 flex items-start justify-between gap-4">
               <div>
-                <h2 class="text-2xl font-bold text-indigo-900 dark:text-indigo-200">Intersectional Group Assessment</h2>
-                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Compares selection rates across combinations of protected features.</p>
+                <h2 class="text-2xl font-bold text-slate-950 dark:text-white">Intersectional Analysis</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Combinations like protected attribute x qualification bucket, ranked by disparity.</p>
               </div>
+              <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="intersectional-count-chip">0 Groups</div>
             </div>
             <div class="space-y-3 workbench-list-container" id="intersectional-list">
-              <div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">Intersectional assessment will appear here.</div>
+              <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Intersectional assessment will appear here.</div>
             </div>
           </div>
 
-          <div class="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-900/10">
-            <div class="mb-5 flex items-center justify-between">
+          <div class="rounded-3xl border border-outline-variant bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="mb-5 flex items-start justify-between gap-4">
               <div>
-                <h2 class="text-2xl font-bold text-indigo-900 dark:text-indigo-200">Algorithmic Mitigation</h2>
-                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Post-processing, in-processing, and pre-processing suggestions based on metrics.</p>
+                <h2 class="text-2xl font-bold text-slate-950 dark:text-white">Mitigation</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-zinc-400">Fairlearn-style pre-processing, in-processing, and post-processing paths.</p>
               </div>
+              <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" id="advanced-mitigation-count-chip">0 Paths</div>
             </div>
             <div class="space-y-3 workbench-list-container" id="algorithmic-mitigation-list">
-              <div class="rounded-2xl border border-dashed border-indigo-200 bg-white px-4 py-5 text-sm text-slate-500 dark:bg-zinc-900 dark:border-indigo-800">Mitigation strategies will appear here.</div>
+              <div class="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low px-4 py-5 text-sm text-slate-500">Mitigation strategies will appear here.</div>
             </div>
           </div>
         </div>
