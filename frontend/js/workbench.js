@@ -859,6 +859,11 @@
     if (result.dataset_id) {
       currentDatasetId = result.dataset_id;
     }
+    if (result.mode === "model") {
+      setAuditFlipMode("model");
+    } else {
+      setAuditFlipMode("dataset");
+    }
     const tone = severityTone(result.severity);
     setText("result-mode-chip", result.mode === "model" ? "Model" : result.mode === "dataset" ? "Dataset" : "Simple");
     setText("severity-text", result.severity);
@@ -1552,6 +1557,34 @@
     }
   }
 
+  function syncAuditFlipHeight() {
+    const card = document.getElementById("audit-flip-card");
+    const inner = document.getElementById("audit-flip-inner");
+    if (!card || !inner) return;
+    card.style.height = "";
+    inner.style.height = "";
+  }
+
+  function setAuditFlipMode(mode) {
+    const card = document.getElementById("audit-flip-card");
+    if (!card) return;
+    card.classList.toggle("is-model", mode === "model");
+  }
+
+  function bindAuditFlipControls() {
+    const showModelBtn = document.getElementById("show-model-audit");
+    const showDatasetBtn = document.getElementById("show-dataset-audit");
+    if (showModelBtn) {
+      showModelBtn.addEventListener("click", () => setAuditFlipMode("model"));
+    }
+    if (showDatasetBtn) {
+      showDatasetBtn.addEventListener("click", () => setAuditFlipMode("dataset"));
+    }
+    window.addEventListener("resize", syncAuditFlipHeight);
+    window.addEventListener("load", syncAuditFlipHeight, { once: true });
+    requestAnimationFrame(syncAuditFlipHeight);
+  }
+
   function bindDatasetForm() {
     const form = document.getElementById("dataset-analysis-form");
     const reset = document.getElementById("dataset-reset");
@@ -2233,6 +2266,7 @@
     bindSimpleForm();
     bindScanOnSelect();
     bindDragAndDrop();
+    bindAuditFlipControls();
     bindDatasetForm();
     bindModelAuditForm();
     bindAiAnalyzerForm();
