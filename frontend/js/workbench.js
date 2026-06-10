@@ -1557,18 +1557,14 @@
     }
   }
 
-  function syncAuditFlipHeight() {
-    const card = document.getElementById("audit-flip-card");
-    const inner = document.getElementById("audit-flip-inner");
-    if (!card || !inner) return;
-    card.style.height = "";
-    inner.style.height = "";
-  }
-
   function setAuditFlipMode(mode) {
     const card = document.getElementById("audit-flip-card");
     if (!card) return;
+    card.classList.add("is-flipping");
     card.classList.toggle("is-model", mode === "model");
+    window.setTimeout(() => {
+      card.classList.remove("is-flipping");
+    }, 580);
   }
 
   function bindAuditFlipControls() {
@@ -1580,9 +1576,6 @@
     if (showDatasetBtn) {
       showDatasetBtn.addEventListener("click", () => setAuditFlipMode("dataset"));
     }
-    window.addEventListener("resize", syncAuditFlipHeight);
-    window.addEventListener("load", syncAuditFlipHeight, { once: true });
-    requestAnimationFrame(syncAuditFlipHeight);
   }
 
   function bindDatasetForm() {
