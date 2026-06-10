@@ -31,6 +31,15 @@
     }
   }
 
+  function clearLoggedOutState() {
+    localStorage.removeItem(FORCE_LOGOUT_KEY);
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("logged_out")) {
+      url.searchParams.delete("logged_out");
+      window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+    }
+  }
+
   function bindPasswordVisibilityToggles() {
     document.querySelectorAll("[data-password-toggle]").forEach((button) => {
       if (button.dataset.toggleBound === "true") {
@@ -131,6 +140,7 @@
 
   async function signInWithEmail(email, password) {
     validateEmailPassword(email, password);
+    clearLoggedOutState();
     const auth = getAuth();
     const credential = await auth.signInWithEmailAndPassword(email.trim(), password);
     await persistAuthSession(credential.user, "firebase-password");
@@ -150,6 +160,7 @@
       throw new Error("Passwords do not match.");
     }
 
+    clearLoggedOutState();
     const auth = getAuth();
     const credential = await auth.createUserWithEmailAndPassword(email.trim(), password);
     if (trimmedName) {
@@ -167,6 +178,7 @@
     const auth = getAuth();
     const provider = new window.firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
+    clearLoggedOutState();
     googleSignInPromise = (async () => {
       const credential = await auth.signInWithPopup(provider);
       await persistAuthSession(credential.user, "firebase-google");
@@ -203,11 +215,11 @@
   async function handlePendingAuthRedirect() {
     const page = document.body.dataset.page || "";
     const auth = getAuth();
-    const params = new URLSearchParams(window.location.search);
-    const isLoggedOutLanding = params.get("logged_out") === "1";
-    const forceLoggedOut = localStorage.getItem(FORCE_LOGOUT_KEY) === "1";
 
     auth.onIdTokenChanged(async (user) => {
+      const params = new URLSearchParams(window.location.search);
+      const isLoggedOutLanding = params.get("logged_out") === "1";
+      const forceLoggedOut = localStorage.getItem(FORCE_LOGOUT_KEY) === "1";
       if (!user) {
         clearStoredSession();
         if (PROTECTED_PAGES.has(page)) {
@@ -235,6 +247,8 @@
       }
     });
 
+    const params = new URLSearchParams(window.location.search);
+    const isLoggedOutLanding = params.get("logged_out") === "1";
     if (isLoggedOutLanding) {
       return;
     }
@@ -244,6 +258,7 @@
       return;
     }
 
+    const forceLoggedOut = localStorage.getItem(FORCE_LOGOUT_KEY) === "1";
     if (forceLoggedOut) {
       try {
         await auth.signOut();
