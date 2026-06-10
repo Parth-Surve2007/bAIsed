@@ -1,5 +1,9 @@
 (function () {
-  const API_BASE = (window.BAISED_API_BASE || "").replace(/\/$/, "");
+  const explicitApiBase = window.BAISED_API_BASE || "";
+  const isStaticPreview =
+    window.location.protocol === "file:" ||
+    (["127.0.0.1", "localhost"].includes(window.location.hostname) && window.location.port && window.location.port !== "5000");
+  const API_BASE = (explicitApiBase || (isStaticPreview ? "http://127.0.0.1:5000" : "")).replace(/\/$/, "");
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
   let currentDatasetId = null;
@@ -1273,6 +1277,16 @@
     return `${API_BASE}${path}`;
   }
 
+  function describeRequestError(error) {
+    if (error?.name === "AbortError") {
+      return "The request timed out. Please try again with a smaller file or restart the backend.";
+    }
+    if (error instanceof TypeError && /fetch/i.test(error.message || "")) {
+      return `Could not reach the bAIsed backend at ${API_BASE || window.location.origin}. Start Flask with \`python run.py\` and open http://127.0.0.1:5000/workbench.`;
+    }
+    return error?.message || String(error);
+  }
+
   async function parseApiResponse(response) {
     const text = await response.text();
     const trimmed = text.trim();
@@ -1493,7 +1507,7 @@
 
       } catch (err) {
         console.error("Scan error:", err);
-        renderError(err.message || "Failed to scan dataset schema.");
+        renderError(describeRequestError(err) || "Failed to scan dataset schema.");
       }
     });
   }
@@ -1704,7 +1718,7 @@
         console.error("Upload error:", error);
         const errorMsg = error.name === "AbortError" 
           ? "Upload timed out. Please try again with a smaller file."
-          : `Upload failed: ${error.message || error}`;
+          : `Upload failed: ${describeRequestError(error)}`;
         renderError(errorMsg);
       } finally {
         if (submitBtn) {
@@ -1769,7 +1783,7 @@
         return scanResult;
       } catch (error) {
         console.error("Model test data scan error:", error);
-        renderError(error.message || "Failed to scan model test data.");
+        renderError(describeRequestError(error) || "Failed to scan model test data.");
         if (display) display.textContent = "Scan failed";
         return null;
       }
@@ -1851,7 +1865,7 @@
         console.error("Model audit error:", error);
         const errorMsg = error.name === "AbortError"
           ? "Model audit timed out. Please try a smaller test dataset."
-          : `Model audit failed: ${error.message || error}`;
+          : `Model audit failed: ${describeRequestError(error)}`;
         renderError(errorMsg);
       } finally {
         if (submitBtn) {
@@ -1938,7 +1952,7 @@
           resultPanel.classList.remove("hidden");
         }
       } catch (error) {
-        document.getElementById("ai-error-text").textContent = error.message || String(error);
+        document.getElementById("ai-error-text").textContent = describeRequestError(error);
         errorPanel.classList.remove("hidden");
       } finally {
         if (submitBtn) submitBtn.disabled = false;

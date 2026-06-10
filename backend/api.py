@@ -543,24 +543,14 @@ def _append_model_predictions(
     qualification_column: str | None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     model, model_type = _load_uploaded_model(model_file)
-    feature_frame, feature_columns = _prepare_model_feature_frame(
+    feature_frame, _feature_columns = _prepare_model_feature_frame(
         df,
         model,
         protected_attribute=protected_attribute,
         true_label_column=true_label_column,
         qualification_column=qualification_column,
     )
-    try:
-        if hasattr(model, "predict_proba"):
-            predictions = model.predict_proba(feature_frame)
-        elif hasattr(model, "predict"):
-            predictions = model.predict(feature_frame)
-        else:
-            raise AnalysisError("The uploaded model does not expose a predict or predict_proba method.")
-    except AnalysisError:
-        raise
-    except Exception as exc:
-        raise AnalysisError(f"Model prediction failed. Check that the test-data feature columns match the trained model. Details: {exc}") from exc
+    predictions, prediction_frame = _predict_with_fallbacks(model, feature_frame)
 
     labels, scores = _prediction_vector(predictions)
     if len(labels) != len(df):
@@ -574,7 +564,7 @@ def _append_model_predictions(
     return scored_df, {
         "model_type": model_type,
         "model_file_name": model_file.filename,
-        "feature_columns": [str(column) for column in feature_frame.columns],
+        "feature_columns": [str(column) for column in prediction_frame.columns],
         "prediction_column": MODEL_PREDICTION_COLUMN,
         "prediction_score_column": MODEL_SCORE_COLUMN if MODEL_SCORE_COLUMN in scored_df.columns else None,
         "true_label_column": true_label_column,
@@ -1018,6 +1008,7 @@ def _search_docs(query: str) -> list[dict[str, str]]:
 @api_bp.route("/api/demo-request", methods=["OPTIONS"])
 @api_bp.route("/api/actions/resolve", methods=["OPTIONS"])
 @api_bp.route("/scan", methods=["OPTIONS"])
+@api_bp.route("/model-upload", methods=["OPTIONS"])
 @api_bp.route("/reset", methods=["OPTIONS"])
 def preflight():
     return ("", 204)
