@@ -1697,6 +1697,7 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
     last_http_error = None
     last_reason = ""
     saw_rate_limit = False
+    fatal_gemini_error = ""
 
     for candidate_model in model_candidates:
         endpoint = (
@@ -1739,14 +1740,16 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
             except urllib_error.HTTPError as exc:
                 last_http_error = exc
                 if exc.code == 401:
-                    return jsonify({"error": "Invalid Gemini API key."}), 401
-                if exc.code == 403:
+                    fatal_gemini_error = "Gemini API key was rejected."
+                    break
+                elif exc.code == 403:
                     try:
                         err_msg = exc.read().decode("utf-8")
                     except Exception:
                         err_msg = exc.reason
-                    return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
-                if exc.code in {404, 429}:
+                    fatal_gemini_error = f"Gemini API access was forbidden: {err_msg}"
+                    break
+                elif exc.code in {404, 429}:
                     if exc.code == 429:
                         saw_rate_limit = True
                         last_reason = "Rate limit exceeded on Gemini API."
@@ -1764,9 +1767,13 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
 
         if ai_text:
             break
+        if fatal_gemini_error:
+            break
 
     if not ai_text:
-        if saw_rate_limit:
+        if fatal_gemini_error:
+            warning = f"{fatal_gemini_error} Showing a deterministic report from your fairness metrics."
+        elif saw_rate_limit:
             warning = "Gemini API is currently rate-limited. Showing a deterministic report from your fairness metrics."
         elif last_http_error is not None:
             warning = (
