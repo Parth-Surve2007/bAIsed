@@ -28,6 +28,7 @@ The project is designed for researchers, students, and builders who need a pract
 
 - Run quick fairness checks from simple group selection-rate inputs.
 - Upload `.csv` or `.xlsx` datasets for structured fairness analysis.
+- Upload trained `.pkl`, `.joblib`, or TensorFlow/Keras models with test data for direct prediction fairness analysis.
 - Auto-detect likely protected attributes, outcome columns, and qualification signals.
 - Compute fairness metrics including DIR, SPD, EOD, AOD, and an aggregate bias score.
 - Identify bias hotspots, intersectional disparities, and high-impact feature patterns.
@@ -92,6 +93,17 @@ Implemented metrics include:
 - **EOD - Equal Opportunity Difference:** disparity within a qualified subset when qualification data is available.
 - **AOD - Average Odds Difference:** combined disparity signal.
 - **Bias Score:** normalized 0-100 severity score derived from the metric set.
+
+### Model Fairness Analysis
+
+The workbench also supports a trained-model audit path:
+
+1. Upload a CSV/XLSX test dataset.
+2. Choose a protected attribute and true label column.
+3. Upload a `.pkl`, `.joblib`, `.keras`, `.h5`, or `.hdf5` model.
+4. bAIsed runs model predictions, stores them in `model_prediction`, and audits those predictions across protected groups.
+
+When true labels are available, the response includes group-level accuracy, error rate, true-positive-rate, false-positive-rate, and false-negative-rate gaps. Model upload support requires compatible server dependencies for the model artifact, such as scikit-learn/joblib or TensorFlow.
 
 ### Advanced Fairness Analysis
 
@@ -225,6 +237,7 @@ bAIsed/
 - `POST /analyze` - quick fairness check from group percentages.
 - `POST /scan` - inspect uploaded data and detect likely columns.
 - `POST /upload` - upload a dataset and run the full analysis pipeline.
+- `POST /model-upload` - upload a trained model plus test data and run a direct prediction fairness audit.
 - `POST /simulate` - run what-if fairness improvement scenarios.
 - `POST /ai-analyze` - generate a Gemini-assisted audit report.
 - `GET /api/demo-dataset/<type>` - download demo data for `credit`, `resume`, or `policing`.
@@ -302,6 +315,14 @@ Open:
 5. Run simulations to compare remediation options.
 6. Generate an AI-assisted report and export the analysis.
 
+### Audit A Trained Model
+
+1. Open the Model Audit workflow in the workbench.
+2. Upload test data with protected attributes, model features, and a true label.
+3. Upload a `.pkl`, `.joblib`, `.keras`, `.h5`, or `.hdf5` model.
+4. Select the protected attribute and true label columns.
+5. Run the audit to evaluate the model's generated predictions and group-level error disparities.
+
 ---
 
 ## Deployment
@@ -360,5 +381,3 @@ Before deploying, configure the required environment variables, keep credentials
 - Split long-form technical documentation into dedicated `docs/` files.
 
 ---
-
-

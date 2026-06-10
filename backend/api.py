@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from flask import Blueprint, jsonify, request, send_file
+from io import BytesIO
 import json
 import math
 import numpy as np
@@ -195,6 +196,8 @@ DEMO_REQUESTS: list[dict[str, Any]] = []
 
 TEMP_DATASETS = Path(__file__).resolve().parent / "temp_datasets"
 TEMP_DATASETS.mkdir(exist_ok=True)
+MODEL_PREDICTION_COLUMN = "model_prediction"
+MODEL_SCORE_COLUMN = "model_prediction_score"
 
 api_bp = Blueprint("api", __name__)
 
@@ -215,6 +218,208 @@ def _load_temp_dataset(dataset_id: str) -> pd.DataFrame:
     if not temp_path.exists():
         raise AnalysisError("Dataset session expired. Please re-upload.")
     return pd.read_csv(temp_path)
+
+
+def _load_uploaded_model(file_storage):
+    filename = (file_storage.filename or "").strip()
+    if not filename:
+        raise AnalysisError("No model file was provided.")
+
+    lowered = filename.lower()
+    content = file_storage.read()
+    if lowered.endswith((".pkl", ".pickle")):
+        import pickle
+
+        return pickle.load(BytesIO(content)), "pickle"
+
+    if lowered.endswith(".joblib"):
+        try:
+            import joblib
+        except ImportError as exc:
+            raise AnalysisError("Joblib model uploads require the 'joblib' package to be installed.") from exc
+
+        return joblib.load(BytesIO(content)), "joblib"
+
+    if lowered.endswith((".keras", ".h5", ".hdf5")):
+        try:
+            import tempfile
+            import tensorflow as tf
+        except ImportError as exc:
+            raise AnalysisError("TensorFlow model uploads require the 'tensorflow' package to be installed.") from exc
+
+        suffix = Path(filename).suffix or ".keras"
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_model:
+            temp_model.write(content)
+            temp_path = temp_model.name
+        try:
+            return tf.keras.models.load_model(temp_path), "tensorflow"
+        finally:
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
+
+    raise AnalysisError("Unsupported model type. Upload a .pkl, .joblib, .keras, .h5, or .hdf5 model file.")
+
+
+def _prediction_vector(raw_predictions: Any) -> tuple[np.ndarray, np.ndarray | None]:
+    array = np.asarray(raw_predictions)
+    if array.ndim == 0:
+        array = array.reshape(1)
+
+    scores: np.ndarray | None = None
+    if array.ndim == 1:
+        labels = array
+        if np.issubdtype(array.dtype, np.number):
+            unique_values = set(pd.Series(array).dropna().astype(float).unique().tolist())
+            if not unique_values.issubset({0.0, 1.0}):
+                scores = array.astype(float)
+                labels = (scores >= 0.5).astype(int)
+    else:
+        if array.shape[1] == 1:
+            scores = array[:, 0].astype(float)
+            labels = (scores >= 0.5).astype(int)
+        elif array.shape[1] == 2:
+            scores = array[:, 1].astype(float)
+            labels = np.argmax(array, axis=1)
+        else:
+            scores = np.max(array, axis=1).astype(float)
+            labels = np.argmax(array, axis=1)
+
+    return np.asarray(labels).reshape(-1), scores
+
+
+def _append_model_predictions(
+    df: pd.DataFrame,
+    model_file,
+    *,
+    protected_attribute: str | None,
+    true_label_column: str | None,
+    qualification_column: str | None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    model, model_type = _load_uploaded_model(model_file)
+    excluded = {
+        str(column).strip().lower()
+        for column in [protected_attribute, true_label_column, qualification_column]
+        if column
+    }
+    feature_columns = [column for column in df.columns if str(column).strip().lower() not in excluded]
+    if not feature_columns:
+        raise AnalysisError("No model feature columns remain after excluding protected, label, and qualification columns.")
+
+    feature_frame = df[feature_columns].copy()
+    try:
+        if hasattr(model, "predict_proba"):
+            predictions = model.predict_proba(feature_frame)
+        elif hasattr(model, "predict"):
+            predictions = model.predict(feature_frame)
+        else:
+            raise AnalysisError("The uploaded model does not expose a predict or predict_proba method.")
+    except AnalysisError:
+        raise
+    except Exception as exc:
+        raise AnalysisError(f"Model prediction failed. Check that the test-data feature columns match the trained model. Details: {exc}") from exc
+
+    labels, scores = _prediction_vector(predictions)
+    if len(labels) != len(df):
+        raise AnalysisError("Model prediction count did not match the number of test-data rows.")
+
+    scored_df = df.copy()
+    scored_df[MODEL_PREDICTION_COLUMN] = labels
+    if scores is not None and len(scores) == len(df):
+        scored_df[MODEL_SCORE_COLUMN] = scores
+
+    return scored_df, {
+        "model_type": model_type,
+        "model_file_name": model_file.filename,
+        "feature_columns": [str(column) for column in feature_columns],
+        "prediction_column": MODEL_PREDICTION_COLUMN,
+        "prediction_score_column": MODEL_SCORE_COLUMN if MODEL_SCORE_COLUMN in scored_df.columns else None,
+        "true_label_column": true_label_column,
+    }
+
+
+def _binary_series(series: pd.Series) -> pd.Series:
+    true_values = {"1", "true", "yes", "y", "approved", "selected", "pass", "positive"}
+    false_values = {"0", "false", "no", "n", "rejected", "not selected", "fail", "negative"}
+
+    def normalize(value):
+        if pd.isna(value):
+            return 0
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, bool):
+            return 1 if float(value) > 0 else 0
+        normalized = str(value).strip().lower()
+        if normalized in true_values:
+            return 1
+        if normalized in false_values:
+            return 0
+        return 1
+
+    return series.map(normalize).fillna(0).astype(int)
+
+
+def _model_performance_by_group(
+    df: pd.DataFrame,
+    protected_columns: list[str],
+    true_label_column: str | None,
+    prediction_column: str,
+) -> dict[str, Any] | None:
+    if not true_label_column or true_label_column not in df.columns:
+        return None
+
+    frame = df.dropna(subset=[*protected_columns, true_label_column, prediction_column]).copy()
+    if frame.empty:
+        return None
+
+    frame["_actual_binary"] = _binary_series(frame[true_label_column])
+    frame["_pred_binary"] = _binary_series(frame[prediction_column])
+    frame["_correct"] = (frame["_actual_binary"] == frame["_pred_binary"]).astype(int)
+    frame["_false_positive"] = ((frame["_actual_binary"] == 0) & (frame["_pred_binary"] == 1)).astype(int)
+    frame["_false_negative"] = ((frame["_actual_binary"] == 1) & (frame["_pred_binary"] == 0)).astype(int)
+    frame["_true_positive"] = ((frame["_actual_binary"] == 1) & (frame["_pred_binary"] == 1)).astype(int)
+
+    rows = []
+    for group_key, group in frame.groupby(protected_columns, dropna=False):
+        if not isinstance(group_key, tuple):
+            group_key = (group_key,)
+        label = " + ".join(str(value) for value in group_key)
+        actual_positive = int((group["_actual_binary"] == 1).sum())
+        actual_negative = int((group["_actual_binary"] == 0).sum())
+        false_positive = int(group["_false_positive"].sum())
+        false_negative = int(group["_false_negative"].sum())
+        true_positive = int(group["_true_positive"].sum())
+        rows.append(
+            {
+                "group": label,
+                "sample_size": int(len(group)),
+                "accuracy": round(float(group["_correct"].mean()), 4),
+                "error_rate": round(1.0 - float(group["_correct"].mean()), 4),
+                "true_positive_rate": round(true_positive / actual_positive, 4) if actual_positive else None,
+                "false_positive_rate": round(false_positive / actual_negative, 4) if actual_negative else None,
+                "false_negative_rate": round(false_negative / actual_positive, 4) if actual_positive else None,
+            }
+        )
+
+    def disparity(metric: str) -> float | None:
+        values = [row[metric] for row in rows if row.get(metric) is not None]
+        if not values:
+            return None
+        return round(max(values) - min(values), 4)
+
+    return {
+        "true_label_column": true_label_column,
+        "prediction_column": prediction_column,
+        "groups": rows,
+        "disparities": {
+            "accuracy_gap": disparity("accuracy"),
+            "error_rate_gap": disparity("error_rate"),
+            "true_positive_rate_gap": disparity("true_positive_rate"),
+            "false_positive_rate_gap": disparity("false_positive_rate"),
+            "false_negative_rate_gap": disparity("false_negative_rate"),
+        },
+    }
 
 
 def _json_error(message: str, status: int = 400):
@@ -854,6 +1059,106 @@ def upload():
     response["preprocessor_report"] = preprocessor_report
     protected_columns = result.stats.get("protected_attributes", [resolved_protected])
     excluded_columns = [resolved_outcome]
+    qualification_resolved = result.stats.get("qualification_column")
+    if qualification_resolved:
+        excluded_columns.append(qualification_resolved)
+    proxy_findings = detect_proxy_features(
+        df,
+        protected_columns,
+        excluded_columns=excluded_columns,
+    )
+    dataset_risk = profile_dataset_risk(df, result, proxy_findings)
+    bias_pattern = detect_bias_pattern(result, proxy_findings, dataset_risk)
+    response["proxy_analysis"] = proxy_findings
+    response["dataset_risk"] = dataset_risk
+    response["bias_pattern"] = bias_pattern
+    return jsonify(clean_for_json(response))
+
+
+@api_bp.post("/model-upload")
+def model_upload():
+    dataset_id = request.form.get("dataset_id")
+    protected_attribute = request.form.get("protected_attribute")
+    true_label_column = request.form.get("true_label_column")
+    qualification_column = request.form.get("qualification_column")
+    advanced_mode = str(request.form.get("advanced_mode", "")).lower() == "true"
+    model_file = request.files.get("model_file")
+
+    if model_file is None:
+        return jsonify({"error": "A trained model file is required."}), 400
+    if not protected_attribute:
+        return jsonify({"error": "Choose a protected attribute column before running a model audit."}), 400
+    if not true_label_column:
+        return jsonify({"error": "Choose a true label column before running a model audit."}), 400
+
+    try:
+        if dataset_id:
+            df = _load_temp_dataset(dataset_id)
+            preprocessor_report = {"status": "Loaded model test data from standardized workspace"}
+        else:
+            file = request.files.get("file")
+            if file is None:
+                return jsonify({"error": "A test-data upload or dataset ID is required."}), 400
+            df = load_dataset(file)
+            df, preprocessor_report = standardize_dataset(df)
+
+        df, model_metadata = _append_model_predictions(
+            df,
+            model_file,
+            protected_attribute=protected_attribute,
+            true_label_column=true_label_column,
+            qualification_column=qualification_column,
+        )
+        dataset_id = _save_temp_dataset(df)
+        if not qualification_column:
+            qualification_column = true_label_column
+
+        resolved_protected, resolved_outcome = detect_columns(
+            df,
+            protected_attribute=protected_attribute,
+            outcome_column=MODEL_PREDICTION_COLUMN,
+        )
+        result = analyze_dataset(
+            df,
+            protected_attribute=protected_attribute,
+            outcome_column=MODEL_PREDICTION_COLUMN,
+            qualification_column=qualification_column,
+            advanced_mode=advanced_mode,
+        )
+    except AnalysisError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        import traceback
+
+        print(traceback.format_exc())
+        return jsonify({"error": f"Model audit failed: {str(exc)}"}), 500
+
+    response = result.to_dict()
+    response["mode"] = "model"
+    response["protected_attribute"] = resolved_protected
+    response["protected_attributes"] = result.stats.get("protected_attributes", [resolved_protected])
+    response["derived_protected"] = result.stats.get("derived_protected")
+    response["outcome_column"] = resolved_outcome
+    response["qualification_column"] = result.stats.get("qualification_column")
+    response["row_count"] = int(len(df))
+    response["dataset_id"] = dataset_id
+
+    file_obj = request.files.get("file")
+    response["file_name"] = file_obj.filename if file_obj else f"model_test_data_{dataset_id}.csv"
+    response["model_audit"] = model_metadata
+    response["model_performance_by_group"] = _model_performance_by_group(
+        df,
+        result.stats.get("protected_attributes", [resolved_protected]),
+        true_label_column,
+        MODEL_PREDICTION_COLUMN,
+    )
+    response["warnings"].append(
+        "Model audit evaluates the uploaded model's generated predictions as the decision outcome."
+    )
+    response["preprocessor_report"] = preprocessor_report
+
+    protected_columns = result.stats.get("protected_attributes", [resolved_protected])
+    excluded_columns = [resolved_outcome, true_label_column]
     qualification_resolved = result.stats.get("qualification_column")
     if qualification_resolved:
         excluded_columns.append(qualification_resolved)

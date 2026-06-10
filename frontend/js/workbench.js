@@ -2,6 +2,7 @@
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
   let currentDatasetId = null;
+  let currentModelDatasetId = null;
   let currentAiMarkdown = "";
   let puppyPetCount = 0;
 
@@ -859,7 +860,7 @@
       currentDatasetId = result.dataset_id;
     }
     const tone = severityTone(result.severity);
-    setText("result-mode-chip", result.mode === "dataset" ? "Dataset" : "Simple");
+    setText("result-mode-chip", result.mode === "model" ? "Model" : result.mode === "dataset" ? "Dataset" : "Simple");
     setText("severity-text", result.severity);
     setText("bias-detected-text", result.bias_detected ? "Bias detected below the 0.8 DIR threshold." : "No bias detected under the 0.8 DIR threshold.");
     setText("bias-score-text", formatDecimal(result.bias_score, 1));
@@ -876,7 +877,7 @@
     setText("hidden-bias-text", result.hidden_bias_detected ? "Yes" : "No");
 
     const meta = [];
-    if (result.mode === "dataset") {
+    if (result.mode === "dataset" || result.mode === "model") {
       if (result.file_name) {
         meta.push(`File: ${result.file_name}`);
       }
@@ -892,12 +893,28 @@
         );
       }
       if (result.outcome_column) {
-        meta.push(`Outcome column: ${result.outcome_column}`);
+        meta.push(`${result.mode === "model" ? "Prediction column" : "Outcome column"}: ${result.outcome_column}`);
       }
       if (result.derived_outcome && result.derived_outcome.source_column) {
         meta.push(
           `Derived outcome: ${result.derived_outcome.source_column} >= ${result.derived_outcome.threshold}`,
         );
+      }
+      if (result.model_audit) {
+        meta.push(`Model: ${result.model_audit.model_file_name}`);
+        meta.push(`Loader: ${result.model_audit.model_type}`);
+      }
+      if (result.model_performance_by_group?.disparities) {
+        const gaps = result.model_performance_by_group.disparities;
+        if (gaps.error_rate_gap !== null && gaps.error_rate_gap !== undefined) {
+          meta.push(`Error gap: ${formatDecimal(gaps.error_rate_gap, 4)}`);
+        }
+        if (gaps.true_positive_rate_gap !== null && gaps.true_positive_rate_gap !== undefined) {
+          meta.push(`TPR gap: ${formatDecimal(gaps.true_positive_rate_gap, 4)}`);
+        }
+        if (gaps.false_positive_rate_gap !== null && gaps.false_positive_rate_gap !== undefined) {
+          meta.push(`FPR gap: ${formatDecimal(gaps.false_positive_rate_gap, 4)}`);
+        }
       }
     } else {
       meta.push("Simple input mode using groupA and groupB percentages.");
@@ -932,7 +949,7 @@
     renderProxyAnalysis(result);
     renderDatasetRisk(result);
     renderBiasPattern(result);
-    setExportState(Boolean(currentDatasetId && result.mode === "dataset"), "Exports are ready for this standardized dataset.");
+    setExportState(Boolean(currentDatasetId && (result.mode === "dataset" || result.mode === "model")), "Exports are ready for this standardized dataset.");
     
     const advancedContainer = document.getElementById("advanced-analytics-container");
     const advJsonBtn = document.getElementById("export-advanced-json-btn");
@@ -1501,6 +1518,40 @@
     }
   }
 
+  function populateModelDropdowns(columns, profile = {}) {
+    const protectedSelect = document.getElementById("model-protected-attribute-input");
+    const trueLabelSelect = document.getElementById("model-true-label-column-input");
+    const qualSelect = document.getElementById("model-qualification-column-input");
+    if (!protectedSelect || !trueLabelSelect || !qualSelect) return;
+
+    protectedSelect.innerHTML = '<option value="">Select protected attribute</option>';
+    trueLabelSelect.innerHTML = '<option value="">Select true label</option>';
+    qualSelect.innerHTML = '<option value="">Optional</option>';
+
+    let bestProtected = { name: "", score: -1 };
+    let bestOutcome = { name: "", score: -1 };
+
+    columns.forEach((col) => {
+      const p = profile[col] || {};
+      if (p.group_score > bestProtected.score) {
+        bestProtected = { name: col, score: p.group_score };
+      }
+      if (p.outcome_score > bestOutcome.score) {
+        bestOutcome = { name: col, score: p.outcome_score };
+      }
+      protectedSelect.add(new Option(col, col));
+      trueLabelSelect.add(new Option(col, col));
+      qualSelect.add(new Option(col, col));
+    });
+
+    if (bestProtected.score > 2.0) {
+      protectedSelect.value = bestProtected.name;
+    }
+    if (bestOutcome.score > 3.0) {
+      trueLabelSelect.value = bestOutcome.name;
+    }
+  }
+
   function bindDatasetForm() {
     const form = document.getElementById("dataset-analysis-form");
     const reset = document.getElementById("dataset-reset");
@@ -1599,6 +1650,120 @@
       document.getElementById("protected-attribute-input").innerHTML = '<option value="">Auto-detect</option>';
       document.getElementById("outcome-column-input").innerHTML = '<option value="">Auto-detect</option>';
       document.getElementById("qualification-column-input").innerHTML = '<option value="">Auto-detect (Recommended)</option>';
+    });
+  }
+
+  function bindModelAuditForm() {
+    const form = document.getElementById("model-audit-form");
+    const reset = document.getElementById("model-audit-reset");
+    const testInput = document.getElementById("model-test-file-input");
+    if (!form || !reset || !testInput) return;
+
+    testInput.addEventListener("change", async () => {
+      const file = testInput.files && testInput.files[0];
+      const display = document.getElementById("model-test-file-name-display");
+      currentModelDatasetId = null;
+      if (!file) {
+        if (display) display.textContent = "No test data selected";
+        return;
+      }
+      if (display) display.textContent = `Scanning ${file.name}...`;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const scanResult = await postForm("/scan", formData);
+        if (scanResult.error) {
+          renderError(scanResult.error);
+          return;
+        }
+        currentModelDatasetId = scanResult.dataset_id || null;
+        populateModelDropdowns(scanResult.columns || [], scanResult.profile || {});
+        if (display) display.textContent = file.name;
+      } catch (error) {
+        console.error("Model test data scan error:", error);
+        renderError(error.message || "Failed to scan model test data.");
+        if (display) display.textContent = "Scan failed";
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const testFile = testInput.files && testInput.files[0];
+      const modelFileInput = document.getElementById("model-file-input");
+      const modelFile = modelFileInput?.files && modelFileInput.files[0];
+      const protectedAttribute = document.getElementById("model-protected-attribute-input")?.value || "";
+      const trueLabelColumn = document.getElementById("model-true-label-column-input")?.value || "";
+      const qualificationColumn = document.getElementById("model-qualification-column-input")?.value || "";
+
+      if (!testFile && !currentModelDatasetId) {
+        renderError("Please choose a CSV or XLSX test dataset for the model audit.");
+        return;
+      }
+      if (!modelFile) {
+        renderError("Please choose a .pkl, .joblib, or TensorFlow/Keras model file.");
+        return;
+      }
+      if (!protectedAttribute) {
+        renderError("Please select the protected attribute column for the model audit.");
+        return;
+      }
+      if (!trueLabelColumn) {
+        renderError("Please select the true label column for the model audit.");
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn?.textContent;
+      const formData = new FormData();
+      if (currentModelDatasetId) {
+        formData.append("dataset_id", currentModelDatasetId);
+      } else {
+        formData.append("file", testFile);
+      }
+      formData.append("model_file", modelFile);
+      formData.append("protected_attribute", protectedAttribute);
+      formData.append("true_label_column", trueLabelColumn);
+      if (qualificationColumn) {
+        formData.append("qualification_column", qualificationColumn);
+      }
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Running Model Audit...";
+        }
+        const result = await triggerPuppyDelay(() => postForm("/model-upload", formData));
+        if (result.error) {
+          renderError(result.error);
+          return;
+        }
+        renderResult(result);
+      } catch (error) {
+        console.error("Model audit error:", error);
+        const errorMsg = error.name === "AbortError"
+          ? "Model audit timed out. Please try a smaller test dataset."
+          : `Model audit failed: ${error.message || error}`;
+        renderError(errorMsg);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      }
+    });
+
+    reset.addEventListener("click", () => {
+      form.reset();
+      currentModelDatasetId = null;
+      const display = document.getElementById("model-test-file-name-display");
+      if (display) display.textContent = "No test data selected";
+      const protectedSelect = document.getElementById("model-protected-attribute-input");
+      const trueLabelSelect = document.getElementById("model-true-label-column-input");
+      const qualSelect = document.getElementById("model-qualification-column-input");
+      if (protectedSelect) protectedSelect.innerHTML = '<option value="">Scan test data first</option>';
+      if (trueLabelSelect) trueLabelSelect.innerHTML = '<option value="">Scan test data first</option>';
+      if (qualSelect) qualSelect.innerHTML = '<option value="">Optional</option>';
     });
   }
 
@@ -2069,6 +2234,7 @@
     bindScanOnSelect();
     bindDragAndDrop();
     bindDatasetForm();
+    bindModelAuditForm();
     bindAiAnalyzerForm();
     bindDownloadReport();
     bindDemoLoaders();
