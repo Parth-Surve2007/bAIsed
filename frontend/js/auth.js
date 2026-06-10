@@ -1,9 +1,11 @@
 (() => {
   const EMAIL_KEY = "baised_user_email";
+  const NAME_KEY = "baised_user_name";
   const TOKEN_KEY = "baised_demo_token";
   const AUTH_PROVIDER_KEY = "baised_auth_provider";
   const FORCE_LOGOUT_KEY = "baised_force_logged_out";
   const REDIRECT_FALLBACK = "/workbench";
+  const PROTECTED_PAGES = new Set(["dashboard"]);
   let googleSignInPromise = null;
 
   function getAuth() {
@@ -62,6 +64,31 @@
     document.dispatchEvent(new CustomEvent("baised:auth-changed", { detail }));
   }
 
+  async function syncProfile(user, token) {
+    if (!user || !token) {
+      return null;
+    }
+
+    const response = await fetch("/api/auth/profile", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: user.email || "",
+        display_name: user.displayName || "",
+        photo_url: user.photoURL || "",
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "Unable to sync profile.");
+    }
+    return payload.profile || null;
+  }
+
   async function persistAuthSession(user, provider = "firebase") {
     if (!user) {
       clearStoredSession();
@@ -70,10 +97,17 @@
 
     const token = await user.getIdToken();
     const email = user.email || "";
+    const displayName = user.displayName || email;
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(EMAIL_KEY, email);
+    localStorage.setItem(NAME_KEY, displayName);
     localStorage.setItem(AUTH_PROVIDER_KEY, provider);
     localStorage.removeItem(FORCE_LOGOUT_KEY);
+    try {
+      await syncProfile(user, token);
+    } catch (error) {
+      console.info("Profile sync skipped:", error.message || error);
+    }
     dispatchAuthChanged({ email, provider, signedIn: true });
     return { token, email };
   }
@@ -81,6 +115,7 @@
   function clearStoredSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
+    localStorage.removeItem(NAME_KEY);
     localStorage.removeItem(AUTH_PROVIDER_KEY);
     dispatchAuthChanged({ email: null, provider: null, signedIn: false });
   }
@@ -175,6 +210,9 @@
     auth.onIdTokenChanged(async (user) => {
       if (!user) {
         clearStoredSession();
+        if (PROTECTED_PAGES.has(page)) {
+          window.location.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        }
         return;
       }
 
@@ -340,12 +378,13 @@
     const emailTarget = document.getElementById("dashboard-user-email");
     const greetingTarget = document.getElementById("dashboard-greeting");
     const email = localStorage.getItem(EMAIL_KEY) || "Signed-in user";
+    const name = localStorage.getItem(NAME_KEY) || email;
 
     if (emailTarget) {
       emailTarget.textContent = email;
     }
     if (greetingTarget) {
-      greetingTarget.textContent = `Welcome back, ${email}.`;
+      greetingTarget.textContent = `Welcome back, ${name}.`;
     }
 
     if (!signOutButton) {
@@ -389,5 +428,6 @@
     signOut,
     getIdToken,
     handlePendingAuthRedirect,
+    syncProfile,
   };
 })();
