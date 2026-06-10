@@ -103,10 +103,12 @@
       }, 1000);
     });
 
-    const result = await taskPromise;
-    overlay.classList.add("hidden");
-    overlay.classList.remove("flex");
-    return result;
+    try {
+      return await taskPromise;
+    } finally {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+    }
   }
 
   function persistLastResult(result) {
@@ -1287,9 +1289,10 @@
     }
   }
 
-  async function postForm(url, formData) {
+  async function postForm(url, formData, options = {}) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    const timeoutMs = options.timeoutMs || 60000;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -1549,11 +1552,17 @@
       qualSelect.add(new Option(col, col));
     });
 
-    if (bestProtected.score > 2.0) {
+    if (bestProtected.name) {
       protectedSelect.value = bestProtected.name;
     }
-    if (bestOutcome.score > 3.0) {
+    if (bestOutcome.name) {
       trueLabelSelect.value = bestOutcome.name;
+    }
+    if (protectedSelect.value && trueLabelSelect.value === protectedSelect.value) {
+      const alternateOutcome = columns.find((col) => col !== protectedSelect.value);
+      if (alternateOutcome) {
+        trueLabelSelect.value = alternateOutcome;
+      }
     }
   }
 
@@ -1685,13 +1694,13 @@
     const testInput = document.getElementById("model-test-file-input");
     if (!form || !reset || !testInput) return;
 
-    testInput.addEventListener("change", async () => {
+    async function scanSelectedModelTestData() {
       const file = testInput.files && testInput.files[0];
       const display = document.getElementById("model-test-file-name-display");
       currentModelDatasetId = null;
       if (!file) {
         if (display) display.textContent = "No test data selected";
-        return;
+        return null;
       }
       if (display) display.textContent = `Scanning ${file.name}...`;
 
@@ -1706,21 +1715,22 @@
         currentModelDatasetId = scanResult.dataset_id || null;
         populateModelDropdowns(scanResult.columns || [], scanResult.profile || {});
         if (display) display.textContent = file.name;
+        return scanResult;
       } catch (error) {
         console.error("Model test data scan error:", error);
         renderError(error.message || "Failed to scan model test data.");
         if (display) display.textContent = "Scan failed";
+        return null;
       }
-    });
+    }
+
+    testInput.addEventListener("change", scanSelectedModelTestData);
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const testFile = testInput.files && testInput.files[0];
       const modelFileInput = document.getElementById("model-file-input");
       const modelFile = modelFileInput?.files && modelFileInput.files[0];
-      const protectedAttribute = document.getElementById("model-protected-attribute-input")?.value || "";
-      const trueLabelColumn = document.getElementById("model-true-label-column-input")?.value || "";
-      const qualificationColumn = document.getElementById("model-qualification-column-input")?.value || "";
 
       if (!testFile && !currentModelDatasetId) {
         renderError("Please choose a CSV or XLSX test dataset for the model audit.");
@@ -1730,6 +1740,27 @@
         renderError("Please choose a .pkl, .joblib, or TensorFlow/Keras model file.");
         return;
       }
+
+      const protectedSelect = document.getElementById("model-protected-attribute-input");
+      const trueLabelSelect = document.getElementById("model-true-label-column-input");
+      const needsScan =
+        !currentModelDatasetId ||
+        !protectedSelect ||
+        !trueLabelSelect ||
+        protectedSelect.options.length <= 1 ||
+        trueLabelSelect.options.length <= 1;
+      if (needsScan) {
+        const scanResult = await scanSelectedModelTestData();
+        if (!scanResult) {
+          renderError("Could not scan the test dataset. Please reselect the CSV/XLSX file and try again.");
+          return;
+        }
+      }
+
+      const protectedAttribute = document.getElementById("model-protected-attribute-input")?.value || "";
+      const trueLabelColumn = document.getElementById("model-true-label-column-input")?.value || "";
+      const qualificationColumn = document.getElementById("model-qualification-column-input")?.value || "";
+
       if (!protectedAttribute) {
         renderError("Please select the protected attribute column for the model audit.");
         return;
@@ -1759,7 +1790,7 @@
           submitBtn.disabled = true;
           submitBtn.textContent = "Running Model Audit...";
         }
-        const result = await triggerPuppyDelay(() => postForm("/model-upload", formData));
+        const result = await triggerPuppyDelay(() => postForm("/model-upload", formData, { timeoutMs: 180000 }));
         if (result.error) {
           renderError(result.error);
           return;

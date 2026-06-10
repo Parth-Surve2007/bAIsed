@@ -229,7 +229,23 @@ def _load_uploaded_model(file_storage):
     if lowered.endswith((".pkl", ".pickle")):
         import pickle
 
-        return pickle.load(BytesIO(content)), "pickle"
+        try:
+            return pickle.load(BytesIO(content)), "pickle"
+        except Exception as pickle_error:
+            try:
+                import joblib
+            except ImportError as exc:
+                raise AnalysisError(
+                    "This .pkl model could not be loaded with pickle, and joblib is not installed."
+                ) from exc
+
+            try:
+                return joblib.load(BytesIO(content)), "joblib"
+            except Exception as joblib_error:
+                raise AnalysisError(
+                    f"Unable to load .pkl model with pickle or joblib. Pickle error: {pickle_error}. "
+                    f"Joblib error: {joblib_error}."
+                ) from joblib_error
 
     if lowered.endswith(".joblib"):
         try:
@@ -288,6 +304,98 @@ def _prediction_vector(raw_predictions: Any) -> tuple[np.ndarray, np.ndarray | N
     return np.asarray(labels).reshape(-1), scores
 
 
+def _model_feature_names(model: Any) -> list[str]:
+    names = getattr(model, "feature_names_in_", None)
+    if names is not None:
+        return [str(name) for name in list(names)]
+
+    pipeline_steps = getattr(model, "steps", None)
+    if pipeline_steps:
+        for _step_name, step in reversed(pipeline_steps):
+            names = getattr(step, "feature_names_in_", None)
+            if names is not None:
+                return [str(name) for name in list(names)]
+
+    return []
+
+
+def _prepare_model_features(df: pd.DataFrame, model: Any, excluded_columns: set[str]) -> pd.DataFrame:
+    feature_columns = [
+        column
+        for column in df.columns
+        if str(column).strip().lower() not in excluded_columns
+        and column not in {MODEL_PREDICTION_COLUMN, MODEL_SCORE_COLUMN}
+    ]
+    if not feature_columns:
+        raise AnalysisError("No model feature columns remain after excluding label and qualification columns.")
+
+    raw_features = df[feature_columns].copy()
+    expected_features = _model_feature_names(model)
+    if not expected_features:
+        return raw_features
+
+    raw_column_set = set(map(str, raw_features.columns))
+    if set(expected_features).issubset(raw_column_set):
+        return raw_features.reindex(columns=expected_features)
+
+    encoded_features = pd.get_dummies(raw_features, dummy_na=False)
+    humanized_features = raw_features.rename(columns={column: humanize_column(str(column)) for column in raw_features.columns})
+    humanized_encoded_features = pd.get_dummies(humanized_features, dummy_na=False)
+    encoded_features = pd.concat([encoded_features, humanized_encoded_features], axis=1)
+    encoded_features = encoded_features.loc[:, ~encoded_features.columns.duplicated()]
+    for column in expected_features:
+        if column not in encoded_features.columns:
+            encoded_features[column] = 0
+
+    return encoded_features.reindex(columns=expected_features).apply(pd.to_numeric, errors="coerce").fillna(0)
+
+
+def _numeric_encoded_features(df: pd.DataFrame) -> pd.DataFrame:
+    encoded = pd.get_dummies(df.copy(), dummy_na=False)
+    return encoded.apply(pd.to_numeric, errors="coerce").fillna(0)
+
+
+def _numeric_same_shape_features(df: pd.DataFrame) -> pd.DataFrame:
+    numeric = pd.DataFrame(index=df.index)
+    for column in df.columns:
+        series = df[column]
+        converted = pd.to_numeric(series, errors="coerce")
+        if converted.notna().any():
+            numeric[column] = converted.fillna(0)
+        else:
+            numeric[column] = pd.Categorical(series.fillna("")).codes
+    return numeric
+
+
+def _predict_with_fallbacks(model: Any, feature_frame: pd.DataFrame) -> tuple[Any, pd.DataFrame]:
+    candidates = [feature_frame]
+    same_shape_numeric = _numeric_same_shape_features(feature_frame)
+    if any(dtype == object for dtype in feature_frame.dtypes):
+        candidates.append(same_shape_numeric)
+    encoded = _numeric_encoded_features(feature_frame)
+    if list(encoded.columns) != list(feature_frame.columns) or any(dtype == object for dtype in feature_frame.dtypes):
+        candidates.append(encoded)
+
+    errors: list[str] = []
+    for candidate in candidates:
+        try:
+            if hasattr(model, "predict_proba"):
+                return model.predict_proba(candidate), candidate
+            if hasattr(model, "predict"):
+                return model.predict(candidate), candidate
+            raise AnalysisError("The uploaded model does not expose a predict or predict_proba method.")
+        except AnalysisError:
+            raise
+        except Exception as exc:
+            errors.append(str(exc))
+
+    raise AnalysisError(
+        "Model prediction failed after trying raw and numeric-encoded test data. "
+        "Save the full preprocessing pipeline with the model, or upload test data with the exact numeric feature columns "
+        f"the model was trained on. Details: {' | '.join(errors)}"
+    )
+
+
 def _append_model_predictions(
     df: pd.DataFrame,
     model_file,
@@ -299,25 +407,11 @@ def _append_model_predictions(
     model, model_type = _load_uploaded_model(model_file)
     excluded = {
         str(column).strip().lower()
-        for column in [protected_attribute, true_label_column, qualification_column]
+        for column in [true_label_column, qualification_column]
         if column
     }
-    feature_columns = [column for column in df.columns if str(column).strip().lower() not in excluded]
-    if not feature_columns:
-        raise AnalysisError("No model feature columns remain after excluding protected, label, and qualification columns.")
-
-    feature_frame = df[feature_columns].copy()
-    try:
-        if hasattr(model, "predict_proba"):
-            predictions = model.predict_proba(feature_frame)
-        elif hasattr(model, "predict"):
-            predictions = model.predict(feature_frame)
-        else:
-            raise AnalysisError("The uploaded model does not expose a predict or predict_proba method.")
-    except AnalysisError:
-        raise
-    except Exception as exc:
-        raise AnalysisError(f"Model prediction failed. Check that the test-data feature columns match the trained model. Details: {exc}") from exc
+    feature_frame = _prepare_model_features(df, model, excluded)
+    predictions, feature_frame = _predict_with_fallbacks(model, feature_frame)
 
     labels, scores = _prediction_vector(predictions)
     if len(labels) != len(df):
@@ -331,7 +425,7 @@ def _append_model_predictions(
     return scored_df, {
         "model_type": model_type,
         "model_file_name": model_file.filename,
-        "feature_columns": [str(column) for column in feature_columns],
+        "feature_columns": [str(column) for column in feature_frame.columns],
         "prediction_column": MODEL_PREDICTION_COLUMN,
         "prediction_score_column": MODEL_SCORE_COLUMN if MODEL_SCORE_COLUMN in scored_df.columns else None,
         "true_label_column": true_label_column,
