@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 from flask import Blueprint, jsonify, request, send_file
-from io import BytesIO
 import json
 import math
 import numpy as np
@@ -879,6 +878,145 @@ def get_demo_dataset(demo_type: str):
         download_name=f"demo_{demo_type}_dataset.csv",
         mimetype="text/csv",
     )
+
+
+@api_bp.get("/api/demo-model-audit/<demo_type>")
+def get_demo_model_audit(demo_type: str):
+    try:
+        from .demo_datasets import generate_credit_demo, generate_resume_demo, generate_policing_demo
+    except ImportError:  # pragma: no cover
+        from demo_datasets import generate_credit_demo, generate_resume_demo, generate_policing_demo
+
+    demo_configs = {
+        "credit": {
+            "factory": generate_credit_demo,
+            "protected": "age_category",
+            "label": "loan_approved",
+            "name": "TensorFlow-style lending classifier demo",
+        },
+        "resume": {
+            "factory": generate_resume_demo,
+            "protected": "gender",
+            "label": "interview_callback",
+            "name": "TensorFlow-style hiring classifier demo",
+        },
+        "policing": {
+            "factory": generate_policing_demo,
+            "protected": "race",
+            "label": "arrested",
+            "name": "TensorFlow-style risk classifier demo",
+        },
+    }
+    config = demo_configs.get(demo_type)
+    if not config:
+        return _json_error(f"Unknown demo model type: {demo_type}", 400)
+
+    try:
+        from sklearn.compose import ColumnTransformer
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import OneHotEncoder, StandardScaler
+    except ImportError as exc:
+        return _json_error(f"Demo model audit requires scikit-learn to be installed: {exc}", 500)
+
+    try:
+        df = config["factory"](900)
+        df, preprocessor_report = standardize_dataset(df)
+        protected_attribute = config["protected"]
+        true_label_column = config["label"]
+
+        feature_columns = [
+            column
+            for column in df.columns
+            if column not in {protected_attribute, true_label_column}
+        ]
+        numeric_features = [
+            column for column in feature_columns if pd.api.types.is_numeric_dtype(df[column])
+        ]
+        categorical_features = [
+            column for column in feature_columns if column not in numeric_features
+        ]
+
+        transformers = []
+        if numeric_features:
+            transformers.append(("num", StandardScaler(), numeric_features))
+        if categorical_features:
+            transformers.append(("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features))
+
+        pipeline = Pipeline(
+            steps=[
+                ("features", ColumnTransformer(transformers=transformers, remainder="drop")),
+                ("classifier", LogisticRegression(max_iter=500, random_state=42)),
+            ]
+        )
+        pipeline.fit(df[feature_columns], df[true_label_column])
+        probabilities = pipeline.predict_proba(df[feature_columns])[:, 1]
+
+        scored_df = df.copy()
+        scored_df[MODEL_SCORE_COLUMN] = probabilities
+        scored_df[MODEL_PREDICTION_COLUMN] = (probabilities >= 0.5).astype(int)
+        dataset_id = _save_temp_dataset(scored_df)
+
+        result = analyze_dataset(
+            scored_df,
+            protected_attribute=protected_attribute,
+            outcome_column=MODEL_PREDICTION_COLUMN,
+            qualification_column=true_label_column,
+            advanced_mode=False,
+        )
+        resolved_protected, resolved_outcome = detect_columns(
+            scored_df,
+            protected_attribute=protected_attribute,
+            outcome_column=MODEL_PREDICTION_COLUMN,
+        )
+    except AnalysisError as exc:
+        return _json_error(str(exc), 400)
+    except Exception as exc:
+        import traceback
+
+        print(traceback.format_exc())
+        return _json_error(f"Demo model audit failed: {exc}", 500)
+
+    response = result.to_dict()
+    response["mode"] = "model"
+    response["protected_attribute"] = resolved_protected
+    response["protected_attributes"] = result.stats.get("protected_attributes", [resolved_protected])
+    response["outcome_column"] = resolved_outcome
+    response["qualification_column"] = result.stats.get("qualification_column")
+    response["row_count"] = int(len(scored_df))
+    response["dataset_id"] = dataset_id
+    response["file_name"] = f"demo_{demo_type}_model_test_data.csv"
+    response["model_audit"] = {
+        "model_type": "sklearn_logistic_regression_demo",
+        "model_file_name": config["name"],
+        "feature_columns": [str(column) for column in feature_columns],
+        "prediction_column": MODEL_PREDICTION_COLUMN,
+        "prediction_score_column": MODEL_SCORE_COLUMN,
+        "true_label_column": true_label_column,
+    }
+    response["model_performance_by_group"] = _model_performance_by_group(
+        scored_df,
+        result.stats.get("protected_attributes", [resolved_protected]),
+        true_label_column,
+        MODEL_PREDICTION_COLUMN,
+    )
+    response["warnings"].append(
+        "Demo model audit trains a small local scikit-learn classifier on synthetic test data for presentation use."
+    )
+    response["preprocessor_report"] = preprocessor_report
+
+    protected_columns = result.stats.get("protected_attributes", [resolved_protected])
+    proxy_findings = detect_proxy_features(
+        scored_df,
+        protected_columns,
+        excluded_columns=[resolved_outcome, true_label_column],
+    )
+    dataset_risk = profile_dataset_risk(scored_df, result, proxy_findings)
+    bias_pattern = detect_bias_pattern(result, proxy_findings, dataset_risk)
+    response["proxy_analysis"] = proxy_findings
+    response["dataset_risk"] = dataset_risk
+    response["bias_pattern"] = bias_pattern
+    return jsonify(clean_for_json(response))
 
 
 @api_bp.get("/api/export/colab/<dataset_id>")
