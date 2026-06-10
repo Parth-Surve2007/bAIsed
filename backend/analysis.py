@@ -1411,6 +1411,7 @@ def analyze_dataset(
 
     stats = dict(result.stats)
     stats["protected_attributes"] = protected_columns
+    stats["outcome_column"] = resolved_outcome
     stats["intersectional_analysis"] = intersectional_analysis
     stats["qualification_column"] = qualification_resolved
     stats["column_profile"] = column_profile

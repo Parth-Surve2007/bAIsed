@@ -14,6 +14,12 @@ def detect_bias_pattern(
     dataset_risk: dict[str, Any],
 ) -> dict[str, Any]:
     evidence: list[str] = []
+    factors = dataset_risk.get("factors") if isinstance(dataset_risk, dict) else []
+    factor_names = {
+        str(item.get("factor", ""))
+        for item in factors
+        if isinstance(item, dict)
+    }
     pattern_type = "NO_SIGNIFICANT_BIAS"
     confidence = 0.55
     recommended_action = "Continue monitoring fairness metrics over future audits."
@@ -40,6 +46,12 @@ def detect_bias_pattern(
         confidence = 0.72
         evidence.append("Dataset reliability risks may make the audit unstable.")
         recommended_action = "Increase sample size and rebalance protected groups before relying on the result."
+
+    elif "group_imbalance" in factor_names or "small_subgroup" in factor_names:
+        pattern_type = "GROUP_UNDERREPRESENTATION"
+        confidence = 0.7
+        evidence.append("Protected-group representation is uneven enough to affect fairness estimates.")
+        recommended_action = "Collect or rebalance records for underrepresented protected groups before final model use."
 
     elif result.bias_detected and float(result.DIR or 1) < 0.8:
         pattern_type = "GLOBAL_SELECTION_DISPARITY"

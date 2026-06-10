@@ -413,8 +413,9 @@
     const factors = document.getElementById("dataset-risk-factors");
     if (!chip || !score || !confidence || !factors) return;
 
-    chip.textContent = risk.risk_level || "Unknown";
-    chip.className = `rounded-full px-3 py-1 text-xs font-semibold ${riskTone(risk.risk_level)}`;
+    const hasRisk = risk.risk_score !== undefined || Array.isArray(risk.factors);
+    chip.textContent = hasRisk ? (risk.risk_level || "LOW") : "Not Run";
+    chip.className = `rounded-full px-3 py-1 text-xs font-semibold ${hasRisk ? riskTone(risk.risk_level) : "bg-slate-100 text-slate-600"}`;
     score.textContent = risk.risk_score !== undefined ? `${risk.risk_score}/100` : "--";
     confidence.textContent = risk.confidence ? `Audit confidence: ${risk.confidence}` : "Confidence unavailable.";
     factors.innerHTML = "";
@@ -429,8 +430,8 @@
       const row = document.createElement("div");
       row.className = "rounded-2xl border border-outline-variant bg-surface-container-low p-4";
       row.innerHTML = `
-        <p class="text-sm font-bold text-slate-900">${String(item.factor || "Risk").replaceAll("_", " ")}</p>
-        <p class="mt-1 text-sm leading-6 text-slate-600">${item.detail || ""}</p>
+        <p class="text-sm font-bold text-slate-900">${escapeHtml(String(item.factor || "Risk").replaceAll("_", " "))}</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600">${escapeHtml(item.detail || "")}</p>
       `;
       factors.appendChild(row);
     });
@@ -449,7 +450,16 @@
     chip.textContent = pattern.confidence !== undefined ? `${Math.round(pattern.confidence * 100)}%` : "--";
     evidence.innerHTML = "";
 
-    (pattern.evidence || []).slice(0, 4).forEach((item) => {
+    const items = pattern.evidence || [];
+    if (!items.length) {
+      const li = document.createElement("li");
+      li.className = "rounded-2xl bg-surface-container-low px-4 py-3";
+      li.textContent = "No pattern evidence available yet.";
+      evidence.appendChild(li);
+      return;
+    }
+
+    items.slice(0, 4).forEach((item) => {
       const li = document.createElement("li");
       li.className = "rounded-2xl bg-surface-container-low px-4 py-3";
       li.textContent = item;
