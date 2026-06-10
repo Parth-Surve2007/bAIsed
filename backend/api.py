@@ -227,9 +227,12 @@ def _load_uploaded_model(file_storage):
     lowered = filename.lower()
     content = file_storage.read()
     if lowered.endswith((".pkl", ".pickle")):
-        import pickle
-
-        return pickle.load(BytesIO(content)), "pickle"
+        try:
+            import joblib
+            return joblib.load(BytesIO(content)), "pickle"
+        except ImportError:
+            import pickle
+            return pickle.loads(content), "pickle"
 
     if lowered.endswith(".joblib"):
         try:
@@ -259,6 +262,144 @@ def _load_uploaded_model(file_storage):
                 pass
 
     raise AnalysisError("Unsupported model type. Upload a .pkl, .joblib, .keras, .h5, or .hdf5 model file.")
+
+
+def _canonical_column_key(name: Any) -> str:
+    column = str(name).strip().lower()
+    for char in [" ", ".", "-", "/", "\\", "(", ")", "[", "]", "{", "}"]:
+        column = column.replace(char, "_")
+    while "__" in column:
+        column = column.replace("__", "_")
+    column = "".join(character for character in column if character.isalnum() or character == "_")
+    return column.strip("_") or "column"
+
+
+def _iter_fitted_one_hot_encoders(model: Any):
+    """Yield (encoder, feature_columns) pairs from a fitted sklearn estimator graph."""
+    seen: set[int] = set()
+
+    def walk(estimator: Any, columns: list[str] | None = None) -> None:
+        if estimator is None or id(estimator) in seen:
+            return
+        seen.add(id(estimator))
+
+        estimator_type = type(estimator).__name__
+        if estimator_type == "OneHotEncoder" and columns and hasattr(estimator, "categories_"):
+            yield estimator, list(columns)
+            return
+
+        if estimator_type == "ColumnTransformer" and hasattr(estimator, "transformers_"):
+            for name, transformer, cols in estimator.transformers_:
+                if name == "remainder" or transformer == "drop":
+                    continue
+                resolved_columns = list(cols) if cols is not None else []
+                yield from walk(transformer, resolved_columns)
+            return
+
+        if estimator_type == "Pipeline" and hasattr(estimator, "named_steps"):
+            for step in estimator.named_steps.values():
+                yield from walk(step, columns)
+            return
+
+        for attr_name in ("steps", "estimator", "base_estimator"):
+            child = getattr(estimator, attr_name, None)
+            if child is None:
+                continue
+            if attr_name == "steps":
+                for _, step_estimator in child:
+                    yield from walk(step_estimator, columns)
+            else:
+                yield from walk(child, columns)
+
+    yield from walk(model)
+
+
+def _restore_encoder_categoricals(feature_frame: pd.DataFrame, model: Any) -> None:
+    """Map binarized 0/1 columns back to the string categories a fitted encoder expects."""
+    true_tokens = {"1", "1.0", "true", "yes", "y"}
+    false_tokens = {"0", "0.0", "false", "no", "n"}
+
+    for encoder, columns in _iter_fitted_one_hot_encoders(model):
+        categories_by_column = getattr(encoder, "categories_", None)
+        if not categories_by_column:
+            continue
+
+        for index, column in enumerate(columns):
+            if column not in feature_frame.columns:
+                continue
+
+            categories = categories_by_column[index]
+            if len(categories) != 2:
+                continue
+
+            series = feature_frame[column]
+            if not pd.api.types.is_numeric_dtype(series):
+                continue
+
+            unique_values = set(pd.Series(series).dropna().astype(float).unique().tolist())
+            if not unique_values.issubset({0.0, 1.0}):
+                continue
+
+            category_strings = [str(value) for value in categories]
+            lowered = [value.lower() for value in category_strings]
+            if not (set(lowered) & true_tokens and set(lowered) & false_tokens):
+                continue
+
+            false_value = category_strings[lowered.index(next(token for token in lowered if token in false_tokens))]
+            true_value = category_strings[lowered.index(next(token for token in lowered if token in true_tokens))]
+            feature_frame[column] = series.astype(float).map({0.0: false_value, 1.0: true_value})
+
+
+def _prepare_model_feature_frame(
+    df: pd.DataFrame,
+    model: Any,
+    *,
+    protected_attribute: str | None,
+    true_label_column: str | None,
+    qualification_column: str | None,
+) -> tuple[pd.DataFrame, list[str]]:
+    excluded = {
+        _canonical_column_key(column)
+        for column in [protected_attribute, true_label_column, qualification_column]
+        if column
+    }
+    feature_columns = [
+        column for column in df.columns if _canonical_column_key(column) not in excluded
+    ]
+    if not feature_columns:
+        raise AnalysisError(
+            "No model feature columns remain after excluding protected, label, and qualification columns."
+        )
+
+    feature_frame = df[feature_columns].copy()
+    raw_expected_names = getattr(model, "feature_names_in_", None)
+    expected_names = list(raw_expected_names) if raw_expected_names is not None else []
+
+    if expected_names:
+        rename_map: dict[str, str] = {}
+        canonical_to_actual = {_canonical_column_key(column): column for column in feature_frame.columns}
+        for expected in expected_names:
+            canonical = _canonical_column_key(expected)
+            actual = canonical_to_actual.get(canonical)
+            if actual is not None:
+                rename_map[actual] = str(expected)
+
+        if rename_map:
+            feature_frame.rename(columns=rename_map, inplace=True)
+
+        missing = [column for column in expected_names if column not in feature_frame.columns]
+        if missing:
+            preview = ", ".join(str(column) for column in missing[:5])
+            suffix = "..." if len(missing) > 5 else ""
+            raise AnalysisError(
+                "Test data is missing columns required by the uploaded model: "
+                f"{preview}{suffix}. Ensure feature columns match the model training data."
+            )
+
+        feature_frame = feature_frame[expected_names].copy()
+
+    _restore_encoder_categoricals(feature_frame, model)
+    return feature_frame, feature_columns
 
 
 def _prediction_vector(raw_predictions: Any) -> tuple[np.ndarray, np.ndarray | None]:
@@ -297,16 +438,13 @@ def _append_model_predictions(
     qualification_column: str | None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     model, model_type = _load_uploaded_model(model_file)
-    excluded = {
-        str(column).strip().lower()
-        for column in [protected_attribute, true_label_column, qualification_column]
-        if column
-    }
-    feature_columns = [column for column in df.columns if str(column).strip().lower() not in excluded]
-    if not feature_columns:
-        raise AnalysisError("No model feature columns remain after excluding protected, label, and qualification columns.")
-
-    feature_frame = df[feature_columns].copy()
+    feature_frame, feature_columns = _prepare_model_feature_frame(
+        df,
+        model,
+        protected_attribute=protected_attribute,
+        true_label_column=true_label_column,
+        qualification_column=qualification_column,
+    )
     try:
         if hasattr(model, "predict_proba"):
             predictions = model.predict_proba(feature_frame)
@@ -460,7 +598,13 @@ def safe_dataset_summary(df: pd.DataFrame, max_rows: int = 8) -> str:
     sample = df.head(max_rows).to_dict(orient="records")
     col_samples = {}
     for col in df.columns:
-        col_samples[humanize_column(col)] = df[col].dropna().unique()[:5].tolist()
+        series = df[col].dropna()
+        if series.empty:
+            col_samples[humanize_column(col)] = []
+        elif pd.api.types.is_numeric_dtype(series):
+            col_samples[humanize_column(col)] = series.head(200).unique()[:5].tolist()
+        else:
+            col_samples[humanize_column(col)] = series.astype(str).head(200).unique()[:5].tolist()
     summary = {
         "columns": [humanize_column(col) for col in df.columns],
         "column_samples": col_samples,
@@ -763,6 +907,7 @@ def _search_docs(query: str) -> list[dict[str, str]]:
 
 @api_bp.route("/analyze", methods=["OPTIONS"])
 @api_bp.route("/ai-analyze", methods=["OPTIONS"])
+@api_bp.route("/api/ai-analyze", methods=["OPTIONS"])
 @api_bp.route("/upload", methods=["OPTIONS"])
 @api_bp.route("/simulate", methods=["OPTIONS"])
 @api_bp.route("/api/demo-request", methods=["OPTIONS"])
@@ -1238,7 +1383,7 @@ def model_upload():
             if file is None:
                 return jsonify({"error": "A test-data upload or dataset ID is required."}), 400
             df = load_dataset(file)
-            df, preprocessor_report = standardize_dataset(df)
+            df, preprocessor_report = standardize_dataset(df, preserve_categoricals=True)
 
         df, model_metadata = _append_model_predictions(
             df,
@@ -1327,13 +1472,34 @@ def simulate():
     return jsonify(clean_for_json(response))
 
 
+GEMINI_REQUEST_TIMEOUT_SECONDS = 25
+
+
 @api_bp.post("/ai-analyze")
+@api_bp.post("/api/ai-analyze")
 def ai_analyze():
     import urllib.error
     import urllib.parse
     import urllib.request
     import time
 
+    try:
+        return _run_ai_analyze(
+            urllib_error=urllib.error,
+            urllib_parse=urllib.parse,
+            urllib_request=urllib.request,
+            time_module=time,
+        )
+    except AnalysisError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        import traceback
+
+        print(traceback.format_exc())
+        return jsonify({"error": f"AI analysis failed: {exc}"}), 500
+
+
+def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
     dataset_id = request.form.get("dataset_id")
     file = request.files.get("file")
     if file is None and not dataset_id:
@@ -1360,7 +1526,7 @@ def ai_analyze():
     columns = list(df.columns)
 
     gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip() or "gemini-2.0-flash"
     if not gemini_api_key:
         return _return_fallback_ai_report(
             analysis_data,
@@ -1432,14 +1598,14 @@ def ai_analyze():
 
     ai_text = ""
     selected_model = model_candidates[0]
-    last_http_error: urllib.error.HTTPError | None = None
+    last_http_error = None
     last_reason = ""
     saw_rate_limit = False
 
     for candidate_model in model_candidates:
         endpoint = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{candidate_model}:generateContent?key={urllib.parse.quote(gemini_api_key)}"
+            f"{candidate_model}:generateContent?key={urllib_parse.quote(gemini_api_key)}"
         )
         request_body = {
             "systemInstruction": {"parts": [{"text": system_prompt}]},
@@ -1452,7 +1618,7 @@ def ai_analyze():
         }
 
         for attempt in range(2):
-            req = urllib.request.Request(
+            req = urllib_request.Request(
                 endpoint,
                 method="POST",
                 headers={
@@ -1462,7 +1628,7 @@ def ai_analyze():
             )
 
             try:
-                with urllib.request.urlopen(req) as response:
+                with urllib_request.urlopen(req, timeout=GEMINI_REQUEST_TIMEOUT_SECONDS) as response:
                     resp_data = json.loads(response.read().decode("utf-8"))
                     ai_text = (
                         resp_data.get("candidates", [{}])[0]
@@ -1474,7 +1640,7 @@ def ai_analyze():
                         selected_model = candidate_model
                         break
                     last_reason = "Gemini response was empty."
-            except urllib.error.HTTPError as exc:
+            except urllib_error.HTTPError as exc:
                 last_http_error = exc
                 if exc.code == 401:
                     return jsonify({"error": "Invalid Gemini API key."}), 401
@@ -1484,12 +1650,15 @@ def ai_analyze():
                     except Exception:
                         err_msg = exc.reason
                     return jsonify({"error": f"Gemini API Error: 403 - Forbidden ({err_msg})"}), 403
-                if exc.code == 429:
-                    saw_rate_limit = True
-                    last_reason = "Rate limit exceeded on Gemini API."
-                    if attempt == 0:
-                        time.sleep(1.5)
-                        continue
+                if exc.code in {404, 429}:
+                    if exc.code == 429:
+                        saw_rate_limit = True
+                        last_reason = "Rate limit exceeded on Gemini API."
+                        if attempt == 0:
+                            time_module.sleep(1.5)
+                            continue
+                    else:
+                        last_reason = f"Model {candidate_model} is unavailable."
                 else:
                     last_reason = str(exc.reason)
             except Exception as exc:

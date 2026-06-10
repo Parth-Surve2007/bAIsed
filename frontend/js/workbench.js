@@ -1,4 +1,5 @@
 (function () {
+  const API_BASE = (window.BAISED_API_BASE || "").replace(/\/$/, "");
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
   let currentDatasetId = null;
@@ -103,10 +104,12 @@
       }, 1000);
     });
 
-    const result = await taskPromise;
-    overlay.classList.add("hidden");
-    overlay.classList.remove("flex");
-    return result;
+    try {
+      return await taskPromise;
+    } finally {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+    }
   }
 
   function persistLastResult(result) {
@@ -1266,22 +1269,82 @@
     requestSimulatorPreview();
   }
 
+  function apiUrl(path) {
+    return `${API_BASE}${path}`;
+  }
+
+  async function parseApiResponse(response) {
+    const text = await response.text();
+    const trimmed = text.trim();
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+
+    if (!trimmed) {
+      throw new Error("Server returned an empty response.");
+    }
+
+    const looksLikeHtml =
+      trimmed.startsWith("<!doctype") ||
+      trimmed.startsWith("<!DOCTYPE") ||
+      trimmed.startsWith("<html") ||
+      trimmed.startsWith("<HTML");
+
+    if (looksLikeHtml || (!contentType.includes("json") && trimmed.startsWith("<"))) {
+      throw new Error(
+        "Server returned HTML instead of JSON. Start the Flask backend with `python run.py` and open http://127.0.0.1:5000/workbench."
+      );
+    }
+
+    try {
+      return JSON.parse(trimmed);
+    } catch (parseError) {
+      throw new Error(`Invalid JSON response: ${trimmed.slice(0, 200)}`);
+    }
+  }
+
+  function compactAnalysisPayload(result) {
+    if (!result || typeof result !== "object") {
+      return {};
+    }
+
+    const metrics = result.metrics || {};
+    return {
+      severity: result.severity,
+      DIR: result.DIR ?? metrics.DIR,
+      difference: result.difference,
+      SPD: metrics.SPD,
+      EOD: metrics.EOD,
+      AOD: metrics.AOD,
+      bias_score: result.bias_score,
+      most_advantaged_group: result.most_advantaged_group,
+      least_advantaged_group: result.least_advantaged_group,
+      most_influential_feature: result.most_influential_feature,
+      warnings: (result.warnings || []).slice(0, 5),
+      recommendations: (result.recommendations || []).slice(0, 5),
+      bias_hotspots: (result.bias_hotspots || []).slice(0, 3),
+      feature_impact_ranking: (result.feature_impact_ranking || []).slice(0, 5),
+      proxy_analysis: (result.proxy_analysis || []).slice(0, 5),
+      dataset_risk: result.dataset_risk || {},
+      bias_pattern: result.bias_pattern || {},
+      mode: result.mode,
+    };
+  }
+
   async function postJson(url, payload) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
     try {
-      const response = await fetch(url, {
+      const response = await fetch(apiUrl(url), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
+      const data = await parseApiResponse(response);
       if (!response.ok) {
-        const text = await response.text();
-        console.error(`HTTP ${response.status}:`, text);
-        throw new Error(`HTTP ${response.status}: ${text}`);
+        console.error(`HTTP ${response.status}:`, data);
+        throw new Error(data.error || `HTTP ${response.status}`);
       }
-      return response.json();
+      return data;
     } finally {
       clearTimeout(timeout);
     }
@@ -1289,29 +1352,19 @@
 
   async function postForm(url, formData) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    const timeout = setTimeout(() => controller.abort(), 90000); // AI analysis may call Gemini
     try {
-      const response = await fetch(url, {
+      const response = await fetch(apiUrl(url), {
         method: "POST",
         body: formData,
         signal: controller.signal,
       });
+      const data = await parseApiResponse(response);
       if (!response.ok) {
-        const text = await response.text();
-        console.error(`HTTP ${response.status}:`, text);
-        try {
-          const parsed = JSON.parse(text);
-          if (parsed && parsed.error) {
-            throw new Error(parsed.error);
-          }
-        } catch (parseError) {
-          if (parseError instanceof Error && parseError.message && !parseError.message.startsWith("HTTP ")) {
-            throw parseError;
-          }
-        }
-        throw new Error(`HTTP ${response.status}: ${text}`);
+        console.error(`HTTP ${response.status}:`, data);
+        throw new Error(data.error || `HTTP ${response.status}`);
       }
-      return response.json();
+      return data;
     } finally {
       clearTimeout(timeout);
     }
@@ -1830,7 +1883,7 @@
       } else {
         formData.append("file", file);
       }
-      formData.append("analysis_json", JSON.stringify(currentAnalysisResult));
+      formData.append("analysis_json", JSON.stringify(compactAnalysisPayload(currentAnalysisResult)));
       
       try {
         const result = await triggerPuppyDelay(() => postForm("/ai-analyze", formData));
@@ -1920,7 +1973,7 @@
         return;
       }
 
-      const response = await fetch(`/api/demo-dataset/${demoType}`);
+      const response = await fetch(apiUrl(`/api/demo-dataset/${demoType}`));
       if (!response.ok) {
         throw new Error(`Failed to load demo: ${response.statusText}`);
       }
@@ -2228,7 +2281,7 @@
         const originalContent = btn.innerHTML;
         btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Resetting...';
 
-        const response = await fetch("/reset", { method: "POST" });
+        const response = await fetch(apiUrl("/reset"), { method: "POST" });
         const result = await response.json();
 
         if (result.error) {

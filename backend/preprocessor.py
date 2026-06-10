@@ -2,7 +2,11 @@ import pandas as pd
 import numpy as np
 from typing import Tuple, Dict, List, Any
 
-def standardize_dataset(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+def standardize_dataset(
+    df: pd.DataFrame,
+    *,
+    preserve_categoricals: bool = False,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """
     Analyzes, cleans, and standardizes a dataset for bias analysis.
     Returns the processed dataframe and a metadata report.
@@ -79,24 +83,27 @@ def standardize_dataset(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, Any]]
                 report["clean_steps"].append(f"Filled missing values in '{col}' with 'Unknown'")
 
     # 4. Standardization of Binary Values (Yes/No, True/False, etc.)
-    true_patterns = ['yes', 'true', '1', '1.0', 'approved', 'pass', 'selected', 'y']
-    false_patterns = ['no', 'false', '0', '0.0', 'rejected', 'fail', 'unselected', 'n']
+    # Skip for model-audit uploads so categorical encoders in trained pipelines still receive
+    # the original string categories they were fit on (e.g. "Yes"/"No" instead of 1/0).
+    if not preserve_categoricals:
+        true_patterns = ['yes', 'true', '1', '1.0', 'approved', 'pass', 'selected', 'y']
+        false_patterns = ['no', 'false', '0', '0.0', 'rejected', 'fail', 'unselected', 'n']
 
-    for col in processed_df.columns:
-        unique_vals = processed_df[col].unique()
-        if len(unique_vals) == 2:
-            uv_str = [str(v).lower().strip() for v in unique_vals]
-            if any(v in true_patterns for v in uv_str) or any(v in false_patterns for v in uv_str):
-                mapping = {}
-                for v in unique_vals:
-                    sv = str(v).lower().strip()
-                    if sv in true_patterns: mapping[v] = 1
-                    elif sv in false_patterns: mapping[v] = 0
-                    else: mapping[v] = 0
-                
-                if len(set(mapping.values())) == 2:
-                    processed_df[col] = processed_df[col].map(mapping)
-                    report["clean_steps"].append(f"Mapped binary column '{col}' to 0/1")
+        for col in processed_df.columns:
+            unique_vals = processed_df[col].unique()
+            if len(unique_vals) == 2:
+                uv_str = [str(v).lower().strip() for v in unique_vals]
+                if any(v in true_patterns for v in uv_str) or any(v in false_patterns for v in uv_str):
+                    mapping = {}
+                    for v in unique_vals:
+                        sv = str(v).lower().strip()
+                        if sv in true_patterns: mapping[v] = 1
+                        elif sv in false_patterns: mapping[v] = 0
+                        else: mapping[v] = 0
+
+                    if len(set(mapping.values())) == 2:
+                        processed_df[col] = processed_df[col].map(mapping)
+                        report["clean_steps"].append(f"Mapped binary column '{col}' to 0/1")
 
     report["final_rows"] = len(processed_df)
     report["final_cols"] = len(processed_df.columns)
