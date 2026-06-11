@@ -80,12 +80,14 @@
     const overlay = document.getElementById("puppy-overlay");
     const timer = document.getElementById("puppy-timer");
     const counter = document.getElementById("pet-count");
+    const slowNotice = document.getElementById("puppy-slow-notice");
     
     if (!overlay) return await taskFn();
 
     // Reset state
     puppyPetCount = 0;
     if (counter) counter.textContent = "0";
+    if (slowNotice) slowNotice.classList.add("hidden");
     overlay.classList.remove("hidden");
     overlay.classList.add("flex");
     
@@ -93,7 +95,10 @@
     if (timer) timer.textContent = `${secondsLeft}s`;
 
     // Start task immediately in background
-    const taskPromise = taskFn();
+    let taskFinished = false;
+    const taskPromise = taskFn().finally(() => {
+      taskFinished = true;
+    });
     
     // Force wait for at least 5 seconds
     await new Promise((resolve) => {
@@ -103,6 +108,9 @@
         
         if (secondsLeft <= 0) {
           clearInterval(countdown);
+          if (!taskFinished && slowNotice) {
+            slowNotice.classList.remove("hidden");
+          }
           resolve();
         }
       }, 1000);
@@ -113,6 +121,7 @@
     } finally {
       overlay.classList.add("hidden");
       overlay.classList.remove("flex");
+      if (slowNotice) slowNotice.classList.add("hidden");
     }
   }
 
