@@ -1240,6 +1240,44 @@
     ].filter(line => line !== null).join("\n");
   }
 
+  function normalizeAiProseMarkdown(text) {
+    const source = String(text || "").replace(/\r\n/g, "\n").trim();
+    if (!source) return "";
+
+    const lines = source.split("\n");
+    const blocks = [];
+    let paragraph = [];
+
+    const flushParagraph = () => {
+      if (!paragraph.length) return;
+      blocks.push(paragraph.join(" "));
+      paragraph = [];
+    };
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) {
+        flushParagraph();
+        continue;
+      }
+
+      const isHeading = /^#{1,6}\s+/.test(line);
+      const isList = /^([-*+]|>\s|(\d+\.))\s+/.test(line) || /^>\s?/.test(line);
+      const isFence = /^```/.test(line);
+
+      if (isHeading || isList || isFence) {
+        flushParagraph();
+        blocks.push(rawLine.replace(/\s+$/g, ""));
+        continue;
+      }
+
+      paragraph.push(line);
+    }
+
+    flushParagraph();
+    return blocks.join("\n\n");
+  }
+
   function bindSimulator() {
     const buttons = Array.from(document.querySelectorAll("[data-scenario]"));
     if (!buttons.length) return;
@@ -1944,7 +1982,7 @@
             document.getElementById("ai-model-name").textContent = result._source || "Gemini";
             document.getElementById("ai-row-count").textContent = result._row_count || "0";
           } else {
-            currentAiMarkdown = result.ai_response || "";
+            currentAiMarkdown = normalizeAiProseMarkdown(result.ai_response || "");
             document.getElementById("ai-model-name").textContent = result.model || "Unknown Model";
             document.getElementById("ai-row-count").textContent = result.row_count || "0";
           }
@@ -2104,7 +2142,7 @@
     if (!currentAnalysisResult) return;
     
     const reportWindow = window.open("", "_blank");
-    const aiMarkdownPayload = JSON.stringify(currentAiMarkdown || "");
+    const aiMarkdownPayload = JSON.stringify(normalizeAiProseMarkdown(currentAiMarkdown || ""));
     const rankings = (currentAnalysisResult.stats && currentAnalysisResult.stats.group_rankings) || [];
     
     const html = `

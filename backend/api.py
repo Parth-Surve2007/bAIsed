@@ -741,6 +741,47 @@ def _severity_tokens(value: str) -> tuple[str, str]:
     return "LOW", "green"
 
 
+def _parse_gemini_error(exc: Any) -> str:
+    try:
+        raw = exc.read().decode("utf-8")
+    except Exception:
+        raw = ""
+
+    if not raw:
+        return str(getattr(exc, "reason", "") or "").strip()
+
+    try:
+        payload = json.loads(raw)
+    except Exception:
+        return raw[:600]
+
+    error = payload.get("error") if isinstance(payload, dict) else None
+    if not isinstance(error, dict):
+        return raw[:600]
+
+    parts = []
+    status = str(error.get("status", "")).strip()
+    message = str(error.get("message", "")).strip()
+    if status:
+        parts.append(status)
+    if message:
+        parts.append(message)
+
+    detail_messages = []
+    for detail in error.get("details", []) if isinstance(error.get("details"), list) else []:
+        if not isinstance(detail, dict):
+            continue
+        reason = str(detail.get("reason", "")).strip()
+        domain = str(detail.get("domain", "")).strip()
+        if reason:
+            detail_messages.append(f"{reason} ({domain})" if domain else reason)
+
+    if detail_messages:
+        parts.append("; ".join(detail_messages[:3]))
+
+    return " - ".join(parts)[:600]
+
+
 def _build_fallback_ai_report(analysis_data: dict[str, Any], row_count: int) -> dict[str, Any]:
     metrics = analysis_data.get("metrics", {}) if isinstance(analysis_data.get("metrics"), dict) else {}
     severity_label, severity_color = _severity_tokens(str(analysis_data.get("severity", "LOW")))
@@ -1622,7 +1663,7 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
     columns = list(df.columns)
 
     gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip() or "gemini-2.0-flash"
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
     if not gemini_api_key:
         return _return_fallback_ai_report(
             analysis_data,
@@ -1636,58 +1677,32 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
 
     system_prompt = (
         "You are an expert AI fairness auditor. Analyze bias in AI/ML systems. "
-        "You MUST respond with ONLY valid JSON. No markdown fences. No preamble. "
-        "No explanation outside the JSON. Your tone is authoritative, precise, and actionable."
+        "Write an original, long-form report in Markdown with clear section headings and "
+        "substantial, well-developed paragraphs. Do not use JSON. Do not sound templated. "
+        "Use natural, varied language and explain the data in a specific, human way."
     )
     user_prompt = (
-        "Analyze the following bias audit results and produce a structured report.\n\n"
+        "Analyze the following bias audit results and produce a detailed narrative report.\n\n"
         "=== DATASET CONTEXT ===\n"
         f"{dataset_summary}\n\n"
         "=== ML FAIRNESS ANALYSIS ===\n"
         f"{ml_summary}\n\n"
-        "Return ONLY this exact JSON schema (no extra fields, no markdown):\n"
-        "{\n"
-        '  "severity_label": "HIGH | MEDIUM | LOW",\n'
-        '  "severity_color": "red | amber | green",\n'
-        '  "headline": "A detailed 2-3 sentence overview describing the core bias finding and its immediate implications.",\n'
-        '  "metrics_summary": "A comprehensive paragraph explaining DIR, SPD, and Bias Score in detail. Bold key terms with **.",\n'
-        '  "root_cause": {\n'
-        '    "primary_driver": "Human-readable feature name (NOT raw column name)",\n'
-        '    "explanation": "A verbose, multi-sentence explanation of WHY this feature causes disparity and the underlying mechanisms."\n'
-        "  },\n"
-        '  "group_comparison": {\n'
-        '    "most_advantaged": "group name",\n'
-        '    "least_advantaged": "group name",\n'
-        '    "disparity_ratio": "e.g. 2.3x",\n'
-        '    "plain_english": "A detailed paragraph explaining the real-world impact of this disparity for the least advantaged group."\n'
-        "  },\n"
-        '  "recommended_actions": [\n'
-        '    {"priority": "IMMEDIATE", "action": "A highly detailed, verbose action plan consisting of multiple sentences"},\n'
-        '    {"priority": "SHORT_TERM", "action": "A highly detailed, verbose action plan consisting of multiple sentences"},\n'
-        '    {"priority": "LONG_TERM", "action": "A highly detailed, verbose action plan consisting of multiple sentences"}\n'
-        "  ],\n"
-        '  "compliance_flags": ["A detailed multi-sentence explanation of compliance concerns"],\n'
-        '  "confidence": "HIGH | MEDIUM | LOW",\n'
-        '  "confidence_reason": "A detailed paragraph explaining the rationale behind the confidence level",\n'
-        '  "executive_summary": "A detailed 3-4 paragraph executive overview of the audit, methodology, findings, and broader context.",\n'
-        '  "technical_audit": "A highly detailed, verbose technical breakdown of metrics and their statistical significance.",\n'
-        '  "pattern_detected": "PROXY_BIAS | INTERSECTIONAL_HIDDEN_BIAS | SMALL_SAMPLE_UNRELIABLE | None",\n'
-        '  "proxy_risks": [{"feature": "...", "risk": "HIGH", "explanation": "..."}],\n'
-        '  "compliance_risks": ["Specific risk point"],\n'
-        '  "mitigation_plan": [\n'
-        '    {"priority": "IMMEDIATE", "action": "Detailed step"}\n'
-        "  ],\n"
-        '  "confidence_notes": "Additional sample size caveats"\n'
-        "}"
+        "Important writing rules:\n"
+        "- Do not echo the wording of the dataset summary or fairness summary.\n"
+        "- Do not reuse phrases like 'comprehensive statistical audit', 'strongly recommended', or 'historical disparities'.\n"
+        "- Write as a fresh expert interpretation with specific reasoning, not a generic summary.\n"
+        "- Use these sections, in this order, and expand each one into 2-4 full paragraphs where it makes sense: Executive Summary, Technical Audit, Bias Pattern, Root Cause, Group Comparison, Proxy Risks, Mitigation Plan, Compliance Risks, Confidence.\n"
+        "- Each paragraph should usually be 3-5 sentences long so the report reads like a serious analyst memo, not a short note.\n"
+        "- If a section only has a few facts, add context, implications, and next steps so the prose stays substantial.\n"
+        "- Use Markdown headings and normal paragraphs only. Avoid JSON, bullet lists unless a section genuinely benefits from them, and avoid repeating the same sentence structure.\n"
     )
 
-    # Try configured model first, then fall back to broadly available models.
+    # Try configured model first, then fall back to nearby Flash variants.
     model_candidates = []
     for model in [
         gemini_model,
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b",
-        "gemini-2.0-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
     ]:
         if model and model not in model_candidates:
             model_candidates.append(model)
@@ -1696,6 +1711,7 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
     selected_model = model_candidates[0]
     last_http_error = None
     last_reason = ""
+    last_provider_error = ""
     saw_rate_limit = False
     fatal_gemini_error = ""
 
@@ -1708,9 +1724,8 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
             "systemInstruction": {"parts": [{"text": system_prompt}]},
             "contents": [{"parts": [{"text": user_prompt}]}],
             "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 1024,
-                "responseMimeType": "application/json",
+                "temperature": 0.7,
+                "maxOutputTokens": 3072,
             },
         }
 
@@ -1739,27 +1754,25 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
                     last_reason = "Gemini response was empty."
             except urllib_error.HTTPError as exc:
                 last_http_error = exc
+                provider_error = _parse_gemini_error(exc)
+                last_provider_error = provider_error or str(exc.reason)
                 if exc.code == 401:
-                    fatal_gemini_error = "Gemini API key was rejected."
+                    fatal_gemini_error = f"Gemini API key was rejected: {last_provider_error}"
                     break
                 elif exc.code == 403:
-                    try:
-                        err_msg = exc.read().decode("utf-8")
-                    except Exception:
-                        err_msg = exc.reason
-                    fatal_gemini_error = f"Gemini API access was forbidden: {err_msg}"
+                    fatal_gemini_error = f"Gemini API access was forbidden: {last_provider_error}"
                     break
                 elif exc.code in {404, 429}:
                     if exc.code == 429:
                         saw_rate_limit = True
-                        last_reason = "Rate limit exceeded on Gemini API."
+                        last_reason = f"Rate limit exceeded on Gemini API: {last_provider_error}"
                         if attempt == 0:
                             time_module.sleep(1.5)
                             continue
                     else:
-                        last_reason = f"Model {candidate_model} is unavailable."
+                        last_reason = f"Model {candidate_model} is unavailable: {last_provider_error}"
                 else:
-                    last_reason = str(exc.reason)
+                    last_reason = last_provider_error or str(exc.reason)
             except Exception as exc:
                 last_reason = str(exc)
 
@@ -1774,10 +1787,13 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
         if fatal_gemini_error:
             warning = f"{fatal_gemini_error} Showing a deterministic report from your fairness metrics."
         elif saw_rate_limit:
-            warning = "Gemini API is currently rate-limited. Showing a deterministic report from your fairness metrics."
+            warning = (
+                f"Gemini API returned a quota/rate-limit response: {last_provider_error or last_reason}. "
+                "Showing a deterministic report from your fairness metrics."
+            )
         elif last_http_error is not None:
             warning = (
-                f"Gemini API error ({last_http_error.code} - {last_http_error.reason}). "
+                f"Gemini API error ({last_http_error.code} - {last_provider_error or last_http_error.reason}). "
                 f"Tried models: {', '.join(model_candidates)}. "
                 "Showing a deterministic report from your fairness metrics."
             )
@@ -1788,16 +1804,18 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
             )
         return _return_fallback_ai_report(analysis_data, row_count, columns, warning)
 
-    try:
-        ai_report = json.loads(ai_text)
-    except Exception:
-        ai_report = {}
-
-    normalized_report = _normalize_ai_report(ai_report, analysis_data, row_count)
-    normalized_report["_source"] = selected_model
-    normalized_report["_row_count"] = row_count
-    normalized_report["_columns"] = [humanize_column(col) for col in columns]
-    return jsonify(clean_for_json(normalized_report))
+    return jsonify(
+        clean_for_json(
+            {
+                "ai_response": ai_text,
+                "model": selected_model,
+                "row_count": row_count,
+                "_source": selected_model,
+                "_row_count": row_count,
+                "_columns": [humanize_column(col) for col in columns],
+            }
+        )
+    )
 
 
 @api_bp.post("/reset")
