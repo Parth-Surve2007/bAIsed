@@ -1,0 +1,29 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/frontend/pages/landing.html" },
+    { "source": "/solutions", "destination": "/frontend/pages/solutions.html" },
+    { "source": "/methodology", "destination": "/frontend/pages/methodology.html" },
+    { "source": "/about", "destination": "/frontend/pages/about.html" },
+    { "source": "/case-study", "destination": "/frontend/pages/case_study.html" },
+    { "source": "/pricing", "destination": "/frontend/pages/pricing.html" },
+    { "source": "/login", "destination": "/frontend/pages/login.html" },
+    { "source": "/signup", "destination": "/frontend/pages/signup.html" },
+    { "source": "/workbench", "destination": "/frontend/pages/workbench.html" },
+    { "source": "/dashboard", "destination": "/frontend/pages/dashboard.html" },
+    { "source": "/privacy-policy", "destination": "/frontend/pages/privacy_policy.html" },
+    { "source": "/terms-of-service", "destination": "/frontend/pages/terms_of_service.html" },
+    { "source": "/contact", "destination": "/frontend/pages/contact.html" },
+    
+    { "source": "/analyze", "destination": "https://YOUR-HF-SPACE.hf.space/analyze" },
+    { "source": "/scan", "destination": "https://YOUR-HF-SPACE.hf.space/scan" },
+    { "source": "/upload", "destination": "https://YOUR-HF-SPACE.hf.space/upload" },
+    { "source": "/model-upload", "destination": "https://YOUR-HF-SPACE.hf.space/model-upload" },
+    { "source": "/simulate", "destination": "https://YOUR-HF-SPACE.hf.space/simulate" },
+    { "source": "/ai-analyze", "destination": "https://YOUR-HF-SPACE.hf.space/ai-analyze" },
+    { "source": "/reset", "destination": "https://YOUR-HF-SPACE.hf.space/reset" },
+    { "source": "/api/(.*)", "destination": "https://YOUR-HF-SPACE.hf.space/api/$1" },
+
+    { "source": "/(.*)", "destination": "/frontend/$1" }
+  ]
+}
