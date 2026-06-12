@@ -1,3 +1,11 @@
+---
+title: bAIsed
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
 <p align="center">
   <img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed logo" width="100" height="70" />
 </p>
