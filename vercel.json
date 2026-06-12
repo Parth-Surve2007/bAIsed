@@ -15,14 +15,14 @@
     { "source": "/terms-of-service", "destination": "/frontend/pages/terms_of_service.html" },
     { "source": "/contact", "destination": "/frontend/pages/contact.html" },
     
-    { "source": "/analyze", "destination": "https://YOUR-HF-SPACE.hf.space/analyze" },
-    { "source": "/scan", "destination": "https://YOUR-HF-SPACE.hf.space/scan" },
-    { "source": "/upload", "destination": "https://YOUR-HF-SPACE.hf.space/upload" },
-    { "source": "/model-upload", "destination": "https://YOUR-HF-SPACE.hf.space/model-upload" },
-    { "source": "/simulate", "destination": "https://YOUR-HF-SPACE.hf.space/simulate" },
-    { "source": "/ai-analyze", "destination": "https://YOUR-HF-SPACE.hf.space/ai-analyze" },
-    { "source": "/reset", "destination": "https://YOUR-HF-SPACE.hf.space/reset" },
-    { "source": "/api/(.*)", "destination": "https://YOUR-HF-SPACE.hf.space/api/$1" },
+    { "source": "/analyze", "destination": "https://parthsurve007-baised.hf.space/analyze" },
+    { "source": "/scan", "destination": "https://parthsurve007-baised.hf.space/scan" },
+    { "source": "/upload", "destination": "https://parthsurve007-baised.hf.space/upload" },
+    { "source": "/model-upload", "destination": "https://parthsurve007-baised.hf.space/model-upload" },
+    { "source": "/simulate", "destination": "https://parthsurve007-baised.hf.space/simulate" },
+    { "source": "/ai-analyze", "destination": "https://parthsurve007-baised.hf.space/ai-analyze" },
+    { "source": "/reset", "destination": "https://parthsurve007-baised.hf.space/reset" },
+    { "source": "/api/(.*)", "destination": "https://parthsurve007-baised.hf.space/api/$1" },
 
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
