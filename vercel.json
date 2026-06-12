@@ -24,6 +24,7 @@
     { "source": "/reset", "destination": "https://parthsurve007-baised.hf.space/reset" },
     { "source": "/api/(.*)", "destination": "https://parthsurve007-baised.hf.space/api/$1" },
 
-    { "source": "/((?!frontend/).*)", "destination": "/frontend/$1" }
+    { "source": "/css/(.*)", "destination": "/frontend/css/$1" },
+    { "source": "/js/(.*)", "destination": "/frontend/js/$1" }
   ]
 }
