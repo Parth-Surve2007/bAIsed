@@ -421,27 +421,19 @@ If they ask why this is valuable, say that most fairness projects stop at raw me
 
 ## Deployment
 
-This project can run anywhere that supports a Python Flask application. A typical production start command is:
+The application is deployed using a decoupled frontend/backend architecture:
+
+### Frontend (Vercel)
+The frontend is deployed to Vercel. The `vercel.json` configuration provides clean URLs for the static HTML pages and seamlessly rewrites API endpoints (like `/upload`, `/analyze`, `/api/*`) to the backend service.
+
+### Backend (Hugging Face Spaces)
+The Flask API backend is hosted on Hugging Face Spaces using a Docker environment. The `Dockerfile` provisions the Python 3.11 environment, installs dependencies, and runs the application using `gunicorn` on port `7860`, as required by Hugging Face Spaces.
 
 ```bash
-gunicorn backend.app:app
+gunicorn backend.app:app -b 0.0.0.0:7860 --timeout 120
 ```
 
-For Render, use:
-
-```bash
-pip install -r backend/requirements.txt
-```
-
-as the build command, and:
-
-```bash
-gunicorn backend.app:app
-```
-
-as the start command.
-
-Before deploying, configure the required environment variables, keep credentials out of source control, and ensure Firebase and Gemini credentials are available only on the server.
+Before deploying, configure the required environment variables (e.g., `GEMINI_API_KEY`), keep credentials out of source control, and ensure they are added securely as Space secrets. The application also includes a graceful fallback mechanism for the AI Report feature if the Gemini API is unavailable.
 
 ---
 
@@ -482,7 +474,7 @@ You can say this almost verbatim:
 - **Upload parsing errors:** Validate that the file is a readable `.csv` or `.xlsx`.
 - **Unexpected fairness output:** Check that the selected outcome is binary or can be converted into a binary decision signal.
 - **Weak audit confidence:** Review subgroup size, missing data, and outcome imbalance warnings.
-- **Render import errors:** Use `gunicorn backend.app:app` as the start command and confirm dependencies are installed.
+- **Hugging Face deployment errors:** Ensure that `gunicorn` and the port `7860` are specified in the `Dockerfile`, and confirm dependencies are properly installed.
 
 ---
 
