@@ -13,8 +13,8 @@ except ImportError:  # pragma: no cover - direct script fallback
     from auth import auth_bp
 
 
-# Load backend/.env so API keys are available during app startup.
-load_dotenv(Path(__file__).resolve().parent / ".env")
+# Load the single canonical .env at the project root.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 def create_app() -> Flask:

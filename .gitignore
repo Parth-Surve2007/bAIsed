@@ -14,6 +14,17 @@ serviceAccountKey.json
 backend/temp_datasets/*
 !backend/temp_datasets/.gitkeep
 
+# Model artifacts and large data files
+*.pkl
+*.h5
+*.hdf5
+*.joblib
+*.csv
+
+# Debug / one-off scripts
+check_env.py
+scratch/
+
 # IDEs
 .vscode/
 .idea/

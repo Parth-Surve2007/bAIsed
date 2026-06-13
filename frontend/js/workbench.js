@@ -9,6 +9,8 @@
   let currentDatasetId = null;
   let currentModelDatasetId = null;
   let currentAiMarkdown = "";
+  let currentMetrics = null;
+  let currentDatasetMeta = null;
   let puppyPetCount = 0;
 
   function movePuppy() {
@@ -1070,6 +1072,24 @@
     }
 
     requestSimulatorPreview();
+
+    // Populate explainer chat context
+    currentMetrics = {
+      dir: result.DIR,
+      spd: result.difference,
+      eod: result.metrics ? (result.metrics.EOD ?? 0) : 0,
+      aod: result.metrics ? (result.metrics.AOD ?? 0) : 0,
+      bias_score: result.bias_score,
+      patterns: (result.bias_pattern && result.bias_pattern.pattern_type) ? [result.bias_pattern.pattern_type] : [],
+      proxies: Array.isArray(result.proxy_analysis) ? result.proxy_analysis.map(p => p.feature) : []
+    };
+    currentDatasetMeta = {
+      name: result.file_name || "Unknown",
+      protected_attr: result.protected_attribute || "Unknown",
+      outcome: result.outcome_column || "Unknown"
+    };
+
+    showExplainerPanel();
   }
 
   function renderError(message) {
@@ -1988,7 +2008,7 @@
             if (result._warning) {
               currentAiMarkdown = `> **Note:** ${result._warning}\n\n${currentAiMarkdown}`;
             }
-            document.getElementById("ai-model-name").textContent = result._source || "Gemini";
+            document.getElementById("ai-model-name").textContent = result._source || "AI Engine";
             document.getElementById("ai-row-count").textContent = result._row_count || "0";
           } else {
             currentAiMarkdown = normalizeAiProseMarkdown(result.ai_response || "");
@@ -2397,6 +2417,110 @@
       btn.addEventListener("click", generateReportWindow);
     }
   }
+
+  // ── Explainer Chat State ──────────────────────────────────────────────────────
+  let explainerHistory = [];
+
+  function showExplainerPanel() {
+    const el = document.getElementById('explainer-panel');
+    if (el) {
+      el.classList.remove('hidden');
+      el.style.display = 'block';
+    }
+  }
+
+  function appendMessage(role, text) {
+    const thread = document.getElementById('chat-thread');
+    if (!thread) return null;
+    const msg = document.createElement('div');
+    if (role === 'user') {
+      msg.className = "max-w-[85%] self-end rounded-xl bg-violet-600 p-3 text-sm leading-relaxed text-white shadow-sm whitespace-pre-wrap";
+    } else {
+      msg.className = "max-w-[85%] self-start rounded-xl border border-slate-100 bg-white p-3 text-sm leading-relaxed text-slate-700 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 whitespace-pre-wrap";
+    }
+    msg.textContent = text;
+    thread.appendChild(msg);
+    thread.scrollTop = thread.scrollHeight;
+    return msg;
+  }
+
+
+  async function sendExplainerMessage() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const userText = input.value.trim();
+    if (!userText) return;
+    input.value = '';
+
+    // Add user message to UI and history
+    appendMessage('user', userText);
+    explainerHistory.push({ role: 'user', content: userText });
+
+    // Placeholder for streaming response
+    const aiMsg = appendMessage('assistant', '');
+    if (!aiMsg) return;
+    let fullReply = '';
+
+    try {
+      const res = await fetch(apiUrl('/api/explain'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: explainerHistory,
+          metrics: currentMetrics,
+          dataset_meta: currentDatasetMeta,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Explain endpoint returned error ${res.status}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value).split('\n');
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const payload = line.replace('data:', '').trim();
+          if (payload === '[DONE]') break;
+          try {
+            const data = JSON.parse(payload);
+            if (data.error) {
+              fullReply = `Error: ${data.error}`;
+              aiMsg.textContent = fullReply;
+              aiMsg.className = "max-w-[85%] self-start rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-700 shadow-sm whitespace-pre-wrap";
+              break;
+            }
+            if (data.chunk) {
+              fullReply += data.chunk;
+              aiMsg.textContent = fullReply;
+            }
+          } catch (e) {
+            console.error("Error parsing stream chunk:", e);
+          }
+          const thread = document.getElementById('chat-thread');
+          if (thread) thread.scrollTop = 9999;
+        }
+      }
+
+      // Commit completed reply to history if not an error
+      if (!fullReply.startsWith('Error:')) {
+        explainerHistory.push({ role: 'assistant', content: fullReply });
+      }
+
+    } catch (err) {
+      aiMsg.textContent = 'Error reaching the explainer. Please check your EXPLAINER_CHAT_API_KEY.';
+      aiMsg.className = "max-w-[85%] self-start rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-700 shadow-sm whitespace-pre-wrap";
+      console.error(err);
+    }
+  }
+
+  window.sendExplainerMessage = sendExplainerMessage;
+  window.showExplainerPanel = showExplainerPanel;
 
   document.addEventListener("DOMContentLoaded", () => {
     bindSimpleForm();

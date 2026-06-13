@@ -22,6 +22,10 @@ try:
     from .proxy_detector import detect_proxy_features
     from .risk_profiler import profile_dataset_risk
     from .simulator import simulate_fairness_scenario
+    from .config import PROCESS1_API_KEY, PROCESS2_API_KEY
+    from . import config
+    from .llm.process1 import generate_report as p1_generate_report
+    from .llm.process2 import stream_reply as p2_stream_reply
 except ImportError:  # pragma: no cover - direct script fallback
     from analysis import AnalysisError, analyze_dataset, analyze_simple_input, detect_columns, load_dataset
     from exporters import build_colab_notebook, build_what_if_export
@@ -30,6 +34,10 @@ except ImportError:  # pragma: no cover - direct script fallback
     from proxy_detector import detect_proxy_features
     from risk_profiler import profile_dataset_risk
     from simulator import simulate_fairness_scenario
+    from config import PROCESS1_API_KEY, PROCESS2_API_KEY
+    import config
+    from llm.process1 import generate_report as p1_generate_report
+    from llm.process2 import stream_reply as p2_stream_reply
 
 
 class NaNSafeEncoder(JSONEncoder):
@@ -1637,6 +1645,9 @@ def ai_analyze():
 
 
 def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
+    if not config.ENABLE_AUDIT_REPORT:
+        return jsonify({"error": "Audit report feature is disabled."}), 403
+
     dataset_id = request.form.get("dataset_id")
     file = request.files.get("file")
     if file is None and not dataset_id:
@@ -1662,155 +1673,47 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
     row_count = int(len(df))
     columns = list(df.columns)
 
-    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
-    if not gemini_api_key:
+    from backend.config import PROCESS1_API_KEY
+    if not PROCESS1_API_KEY:
         return _return_fallback_ai_report(
             analysis_data,
             row_count,
             columns,
-            "GEMINI_API_KEY is not configured. Showing a deterministic report from your fairness metrics.",
+            "PROCESS1_API_KEY is not configured. Showing a deterministic report from your fairness metrics.",
         )
 
-    dataset_summary = safe_dataset_summary(df, max_rows=8)
-    ml_summary = _compact_ml_summary(analysis_data)
+    metrics = {
+        "dir": analysis_data.get("DIR"),
+        "spd": analysis_data.get("difference"),
+        "eod": analysis_data.get("metrics", {}).get("EOD"),
+        "aod": analysis_data.get("metrics", {}).get("AOD"),
+        "bias_score": analysis_data.get("bias_score"),
+        "patterns": [analysis_data.get("bias_pattern", {}).get("pattern_type")] if analysis_data.get("bias_pattern", {}).get("pattern_type") else [],
+        "proxies": [p.get("feature") for p in analysis_data.get("proxy_analysis", [])] if analysis_data.get("proxy_analysis") else []
+    }
+    dataset_meta = {
+        "name": file.filename if file else f"dataset_{dataset_id}.csv",
+        "protected_attr": analysis_data.get("protected_attribute", "Unknown"),
+        "outcome": analysis_data.get("outcome_column", "Unknown")
+    }
 
-    system_prompt = (
-        "You are an expert AI fairness auditor. Analyze bias in AI/ML systems. "
-        "Write an original, long-form report in Markdown with clear section headings and "
-        "substantial, well-developed paragraphs. Do not use JSON. Do not sound templated. "
-        "Use natural, varied language and explain the data in a specific, human way."
-    )
-    user_prompt = (
-        "Analyze the following bias audit results and produce a detailed narrative report.\n\n"
-        "=== DATASET CONTEXT ===\n"
-        f"{dataset_summary}\n\n"
-        "=== ML FAIRNESS ANALYSIS ===\n"
-        f"{ml_summary}\n\n"
-        "Important writing rules:\n"
-        "- Do not echo the wording of the dataset summary or fairness summary.\n"
-        "- Do not reuse phrases like 'comprehensive statistical audit', 'strongly recommended', or 'historical disparities'.\n"
-        "- Write as a fresh expert interpretation with specific reasoning, not a generic summary.\n"
-        "- Use these sections, in this order, and expand each one into 2-4 full paragraphs where it makes sense: Executive Summary, Technical Audit, Bias Pattern, Root Cause, Group Comparison, Proxy Risks, Mitigation Plan, Compliance Risks, Confidence.\n"
-        "- Each paragraph should usually be 3-5 sentences long so the report reads like a serious analyst memo, not a short note.\n"
-        "- If a section only has a few facts, add context, implications, and next steps so the prose stays substantial.\n"
-        "- Use Markdown headings and normal paragraphs only. Avoid JSON, bullet lists unless a section genuinely benefits from them, and avoid repeating the same sentence structure.\n"
-    )
-
-    # Try configured model first, then fall back to nearby Flash variants.
-    model_candidates = []
-    for model in [
-        gemini_model,
-        "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
-    ]:
-        if model and model not in model_candidates:
-            model_candidates.append(model)
-
-    ai_text = ""
-    selected_model = model_candidates[0]
-    last_http_error = None
-    last_reason = ""
-    last_provider_error = ""
-    saw_rate_limit = False
-    fatal_gemini_error = ""
-
-    for candidate_model in model_candidates:
-        endpoint = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{candidate_model}:generateContent?key={urllib_parse.quote(gemini_api_key)}"
+    try:
+        ai_text = p1_generate_report(metrics, dataset_meta)
+    except Exception as exc:
+        return _return_fallback_ai_report(
+            analysis_data,
+            row_count,
+            columns,
+            f"AI report generation failed: {str(exc)}. Showing a deterministic report from your fairness metrics."
         )
-        request_body = {
-            "systemInstruction": {"parts": [{"text": system_prompt}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 3072,
-            },
-        }
-
-        for attempt in range(2):
-            req = urllib_request.Request(
-                endpoint,
-                method="POST",
-                headers={
-                    "Content-Type": "application/json",
-                },
-                data=json.dumps(request_body).encode("utf-8"),
-            )
-
-            try:
-                with urllib_request.urlopen(req, timeout=GEMINI_REQUEST_TIMEOUT_SECONDS) as response:
-                    resp_data = json.loads(response.read().decode("utf-8"))
-                    ai_text = (
-                        resp_data.get("candidates", [{}])[0]
-                        .get("content", {})
-                        .get("parts", [{}])[0]
-                        .get("text", "")
-                    )
-                    if ai_text:
-                        selected_model = candidate_model
-                        break
-                    last_reason = "Gemini response was empty."
-            except urllib_error.HTTPError as exc:
-                last_http_error = exc
-                provider_error = _parse_gemini_error(exc)
-                last_provider_error = provider_error or str(exc.reason)
-                if exc.code == 401:
-                    fatal_gemini_error = f"Gemini API key was rejected: {last_provider_error}"
-                    break
-                elif exc.code == 403:
-                    fatal_gemini_error = f"Gemini API access was forbidden: {last_provider_error}"
-                    break
-                elif exc.code in {404, 429}:
-                    if exc.code == 429:
-                        saw_rate_limit = True
-                        last_reason = f"Rate limit exceeded on Gemini API: {last_provider_error}"
-                        if attempt == 0:
-                            time_module.sleep(1.5)
-                            continue
-                    else:
-                        last_reason = f"Model {candidate_model} is unavailable: {last_provider_error}"
-                else:
-                    last_reason = last_provider_error or str(exc.reason)
-            except Exception as exc:
-                last_reason = str(exc)
-
-            break
-
-        if ai_text:
-            break
-        if fatal_gemini_error:
-            break
-
-    if not ai_text:
-        if fatal_gemini_error:
-            warning = f"{fatal_gemini_error} Showing a deterministic report from your fairness metrics."
-        elif saw_rate_limit:
-            warning = (
-                f"Gemini API returned a quota/rate-limit response: {last_provider_error or last_reason}. "
-                "Showing a deterministic report from your fairness metrics."
-            )
-        elif last_http_error is not None:
-            warning = (
-                f"Gemini API error ({last_http_error.code} - {last_provider_error or last_http_error.reason}). "
-                f"Tried models: {', '.join(model_candidates)}. "
-                "Showing a deterministic report from your fairness metrics."
-            )
-        else:
-            warning = (
-                f"Gemini request failed: {last_reason or 'unknown error'}. "
-                "Showing a deterministic report from your fairness metrics."
-            )
-        return _return_fallback_ai_report(analysis_data, row_count, columns, warning)
 
     return jsonify(
         clean_for_json(
             {
                 "ai_response": ai_text,
-                "model": selected_model,
+                "model": "ai-report",
                 "row_count": row_count,
-                "_source": selected_model,
+                "_source": "ai-report",
                 "_row_count": row_count,
                 "_columns": [humanize_column(col) for col in columns],
             }
@@ -1842,3 +1745,74 @@ def reset():
         )
     except Exception as exc:
         return jsonify({"error": f"Reset failed: {str(exc)}"}), 500
+
+
+@api_bp.route("/api/report", methods=["POST"])
+def generate_report():
+    if not config.ENABLE_AUDIT_REPORT:
+        return jsonify({"error": "Audit report feature is disabled."}), 403
+    data = request.json
+    try:
+        report = p1_generate_report(data["metrics"], data["dataset_meta"])
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+    return jsonify({"report": report})
+
+
+from flask import Response, stream_with_context
+
+@api_bp.route("/api/explain", methods=["POST"])
+def explain():
+    if not config.ENABLE_EXPLAINER_CHAT:
+        return jsonify({"error": "Explainer chat feature is disabled."}), 403
+
+    data = request.json
+    messages = data["messages"]       # full conversation history [{role, content}, ...]
+    metrics = data["metrics"]         # current audit metrics dict
+    dataset_meta = data["dataset_meta"]
+
+    from backend.config import PROCESS2_API_KEY
+    if not PROCESS2_API_KEY:
+        def generate_missing():
+            yield f"data: {json.dumps({'error': 'PROCESS2_API_KEY is not configured in your .env file.'})}\n\n"
+            yield "data: [DONE]\n\n"
+        return Response(
+            stream_with_context(generate_missing()),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            }
+        )
+
+    try:
+        explainer_gen = p2_stream_reply
+    except Exception as exc:
+        def generate_init_error():
+            yield f"data: {json.dumps({'error': f'Failed to initialize explainer: {str(exc)}'})}\n\n"
+            yield "data: [DONE]\n\n"
+        return Response(
+            stream_with_context(generate_init_error()),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    def generate():
+        try:
+            for chunk in p2_stream_reply(messages, metrics, dataset_meta):
+                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as exc:
+            yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+            yield "data: [DONE]\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
+
