@@ -21,6 +21,7 @@
   let recentSessions = [];
   let sessionSaveTimer = null;
   let sessionSaveInFlight = null;
+  let sessionSaveAbortController = null;
   let restoringSession = false;
   let puppyPetCount = 0;
 
@@ -152,6 +153,25 @@
   function setSessionStatus(message) {
     setText("session-status-text", message);
     setText("mobile-session-status-text", message);
+  }
+
+  function clearPendingSessionSave() {
+    window.clearTimeout(sessionSaveTimer);
+    sessionSaveTimer = null;
+    if (sessionSaveAbortController) {
+      sessionSaveAbortController.abort();
+      sessionSaveAbortController = null;
+    }
+    sessionSaveInFlight = null;
+  }
+
+  function detachPrivateWorkspaceFromCloud() {
+    clearPendingSessionSave();
+    currentSessionId = null;
+    currentSessionTitleOverride = null;
+    currentDatasetId = null;
+    currentModelDatasetId = null;
+    localStorage.removeItem(LAST_RESULT_KEY);
   }
 
   function hasSignedInUser() {
@@ -372,6 +392,12 @@
   }
 
   async function loadRecentSessions() {
+    if (privacyModeEnabled) {
+      recentSessions = [];
+      setSessionStatus("Privacy Chat: Firebase sync is off.");
+      renderRecentSessions();
+      return;
+    }
     if (!hasSignedInUser()) {
       recentSessions = [];
       setSessionStatus("Sign in to save recent chats.");
@@ -382,7 +408,7 @@
       const response = await authFetch("/api/auth/sessions");
       const payload = await parseErrorResponse(response, "Unable to load recent chats.");
       recentSessions = payload.sessions || [];
-      setSessionStatus(privacyModeEnabled ? "Privacy Mode: autosave is off." : "Recent chats sync to your account.");
+      setSessionStatus(privacyModeEnabled ? "Privacy Chat: Firebase sync is off." : "Recent chats sync to your account.");
       renderRecentSessions();
     } catch (error) {
       setSessionStatus(error.message || "Unable to load recent chats.");
@@ -421,18 +447,22 @@
     const expectedSessionId = options.expectedSessionId;
     const expectedSessionProvided = Object.prototype.hasOwnProperty.call(options, "expectedSessionId");
     try {
+      const abortController = new AbortController();
+      sessionSaveAbortController = abortController;
       const saveRequest = authFetch(
         currentSessionId ? `/api/auth/sessions/${encodeURIComponent(currentSessionId)}` : "/api/auth/sessions",
         {
           method: currentSessionId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
+          signal: abortController.signal,
         },
       );
       sessionSaveInFlight = saveRequest;
       const response = await saveRequest;
       if (sessionSaveInFlight === saveRequest) {
         sessionSaveInFlight = null;
+        sessionSaveAbortController = null;
       }
       const data = await parseErrorResponse(response, "Unable to save recent chat.");
       if (expectedSessionProvided && expectedSessionId !== currentSessionId) {
@@ -447,6 +477,10 @@
       return data.session;
     } catch (error) {
       sessionSaveInFlight = null;
+      sessionSaveAbortController = null;
+      if (error.name === "AbortError") {
+        return null;
+      }
       setSessionStatus(error.message || "Unable to save recent chat.");
       return null;
     }
@@ -454,6 +488,7 @@
 
   function queueSessionSave() {
     if (privacyModeEnabled) {
+      clearPendingSessionSave();
       sessionContainsPrivateWork = true;
       updatePrivateSaveButton();
       return;
@@ -480,9 +515,7 @@
   }
 
   function updatePrivateSaveButton() {
-    document.querySelectorAll("[data-save-private-session], #save-private-session-btn").forEach((btn) => {
-      btn.classList.toggle("hidden", !sessionContainsPrivateWork);
-    });
+    document.body.classList.toggle("privacy-chat-active", privacyModeEnabled);
   }
 
   function formatDecimal(value, digits) {
@@ -1690,18 +1723,15 @@
     const chatInput = document.getElementById("chat-input");
     const chatSubmit = document.getElementById("chat-submit-btn");
 
-    document.querySelectorAll("[data-privacy-mode-toggle], #privacy-mode-toggle").forEach((toggle) => {
-      toggle.checked = privacyModeEnabled;
-    });
     if (chip) {
-      chip.textContent = privacyModeEnabled ? "Privacy Mode" : "AI Powered";
+      chip.textContent = privacyModeEnabled ? "Privacy Chat" : "AI Powered";
       chip.className = privacyModeEnabled
         ? "rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800"
         : "rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container";
     }
     if (help) {
       help.textContent = privacyModeEnabled
-        ? "Privacy Mode is on. The report will be generated deterministically from local fairness metrics; chat and external AI calls are disabled."
+        ? "Privacy Chat is on. This chat stays private: deterministic reports only, no external AI calls, no autosave, and no Firebase sync."
         : "The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.";
     }
     if (submitText) {
@@ -1709,7 +1739,7 @@
     }
     if (chatInput) {
       chatInput.disabled = privacyModeEnabled;
-      chatInput.placeholder = privacyModeEnabled ? "Privacy Mode disables AI chat" : "e.g., Why is my DIR 0.7 a problem?";
+      chatInput.placeholder = privacyModeEnabled ? "Privacy Chat disables AI chat" : "e.g., Why is my DIR 0.7 a problem?";
       chatInput.classList.toggle("opacity-60", privacyModeEnabled);
       chatInput.classList.toggle("cursor-not-allowed", privacyModeEnabled);
     }
@@ -1719,30 +1749,22 @@
       chatSubmit.classList.toggle("cursor-not-allowed", privacyModeEnabled);
     }
     if (privacyModeEnabled) {
-      localStorage.removeItem(LAST_RESULT_KEY);
-      currentDatasetId = null;
-      currentModelDatasetId = null;
-      setSessionStatus("Privacy Mode: autosave is off.");
+      detachPrivateWorkspaceFromCloud();
+      sessionContainsPrivateWork = Boolean(currentAnalysisResult || currentAiMarkdown || explainerHistory.length);
+      recentSessions = [];
+      renderRecentSessions();
+      setSessionStatus("Privacy Chat: Firebase sync is off.");
     } else if (hasSignedInUser()) {
       setSessionStatus("Recent chats sync to your account.");
+      loadRecentSessions();
     }
     updatePrivateSaveButton();
   }
 
-  function bindPrivacyModeToggle() {
-    const toggles = document.querySelectorAll("[data-privacy-mode-toggle], #privacy-mode-toggle");
-    if (!toggles.length) return;
-    toggles.forEach((toggle) => {
-      toggle.addEventListener("change", () => {
-        setPrivacyMode(toggle.checked);
-        if (privacyModeEnabled) {
-          sessionContainsPrivateWork = Boolean(currentAnalysisResult || currentAiMarkdown || explainerHistory.length);
-          updatePrivateSaveButton();
-          appendMessage("assistant", "Privacy Mode is on. AI chat is disabled; use Generate Deterministic Report for an offline-style metrics report.");
-        }
-      });
+  function bindPrivacyChatButtons() {
+    document.querySelectorAll("[data-privacy-chat-button], #privacy-chat-btn").forEach((button) => {
+      button.addEventListener("click", () => startNewChat({ privateChat: true }));
     });
-    setPrivacyMode(Array.from(toggles).some((toggle) => toggle.checked));
   }
 
   function resetExplainerChatUi() {
@@ -1823,7 +1845,7 @@
   async function loadSession(sessionId) {
     if (!sessionId || privacyModeEnabled) {
       if (privacyModeEnabled) {
-        setSessionStatus("Turn off Privacy Mode before loading saved chats.");
+        setSessionStatus("Turn off Privacy Chat before loading saved chats.");
       }
       return;
     }
@@ -1858,7 +1880,8 @@
     if (modelQual) modelQual.innerHTML = '<option value="">Optional</option>';
   }
 
-  async function startNewChat() {
+  async function startNewChat(options = {}) {
+    const privateChat = Boolean(options.privateChat);
     if (sessionContainsPrivateWork && !confirm("This private work has not been saved. Start a new chat and discard it?")) {
       return;
     }
@@ -1881,10 +1904,10 @@
     clearAiAnalyzerPanels();
     setAuditFlipMode("dataset");
     renderNeutralResult("dataset");
-    setPrivacyMode(privacyModeEnabled);
+    setPrivacyMode(privateChat);
     renderRecentSessions();
-    setSessionStatus(privacyModeEnabled ? "Privacy Mode: new private chat." : "New chat ready.");
-    if (!privacyModeEnabled && hasSignedInUser()) {
+    setSessionStatus(privateChat ? "Privacy Chat ready. Firebase sync and AI chat are off." : "New chat ready.");
+    if (!privateChat && hasSignedInUser()) {
       const draft = await saveCurrentSession({ allowEmpty: true, title: "New chat" });
       if (draft) {
         setSessionStatus("New chat created.");
@@ -1892,22 +1915,9 @@
     }
   }
 
-  async function savePrivateWork() {
-    if (!sessionContainsPrivateWork && !privacyModeEnabled) return;
-    const ok = confirm(
-      "Save this private work to Recent Chats? This saves audit metrics, explanations, deterministic reports, chat text, and metadata to your account. Raw uploaded files are not saved.",
-    );
-    if (!ok) return;
-    setPrivacyMode(false);
-    await saveCurrentSession({ force: true, privacyModeSaved: true });
-  }
-
   function bindSessionControls() {
     document.querySelectorAll("[data-new-chat-button], #new-chat-btn").forEach((btn) => {
-      btn.addEventListener("click", startNewChat);
-    });
-    document.querySelectorAll("[data-save-private-session], #save-private-session-btn").forEach((btn) => {
-      btn.addEventListener("click", savePrivateWork);
+      btn.addEventListener("click", () => startNewChat({ privateChat: false }));
     });
     document.addEventListener("baised:auth-changed", loadRecentSessions);
     window.setTimeout(loadRecentSessions, 500);
@@ -2380,7 +2390,7 @@
            throw new Error("No columns detected in the file.");
         }
 
-        currentDatasetId = scanResult.dataset_id || null;
+        currentDatasetId = privacyModeEnabled ? null : (scanResult.dataset_id || null);
         
         // Populate dropdowns with intelligence
         populateDropdowns(scanResult.columns, scanResult.profile);
@@ -2704,7 +2714,7 @@
           renderError(scanResult.error);
           return;
         }
-        currentModelDatasetId = scanResult.dataset_id || null;
+        currentModelDatasetId = privacyModeEnabled ? null : (scanResult.dataset_id || null);
         populateModelDropdowns(scanResult.columns || [], scanResult.profile || {});
         if (display) display.textContent = file.name;
         return scanResult;
@@ -2853,15 +2863,14 @@
       }
       
       const formData = new FormData();
-      if (currentDatasetId) {
+      if (privacyModeEnabled) {
+        formData.append("privacy_mode", "true");
+      } else if (currentDatasetId) {
         formData.append("dataset_id", currentDatasetId);
       } else if (file) {
         formData.append("file", file);
       }
       formData.append("analysis_json", JSON.stringify(compactAnalysisPayload(currentAnalysisResult)));
-      if (privacyModeEnabled) {
-        formData.append("privacy_mode", "true");
-      }
       
       try {
         const result = await triggerPuppyDelay(() => postForm("/ai-analyze", formData));
@@ -3318,7 +3327,7 @@
     const input = document.getElementById('chat-input');
     if (!input) return;
     if (privacyModeEnabled) {
-      appendMessage('assistant', 'Privacy Mode is on, so AI chat is disabled. Generate a deterministic report instead.');
+      appendMessage('assistant', 'Privacy Chat is on, so AI chat is disabled. Generate a deterministic report instead.');
       return;
     }
     const userText = input.value.trim();
@@ -3432,7 +3441,7 @@
     bindDatasetForm();
     bindModelAuditForm();
     bindAiAnalyzerForm();
-    bindPrivacyModeToggle();
+    bindPrivacyChatButtons();
     bindSessionControls();
     bindRecentSessionMenus();
     bindSidebarToggle();
