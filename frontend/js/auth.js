@@ -6,7 +6,12 @@
   const FORCE_LOGOUT_KEY = "baised_force_logged_out";
   const REDIRECT_FALLBACK = "/workbench";
   const PROTECTED_PAGES = new Set(["dashboard"]);
+  const API_BASE = (window.BAISED_API_BASE || "").replace(/\/$/, "");
   let googleSignInPromise = null;
+
+  function apiUrl(path) {
+    return `${API_BASE}${path}`;
+  }
 
   function getAuth() {
     const auth = window.baisedFirebase && window.baisedFirebase.auth;
@@ -78,7 +83,7 @@
       return null;
     }
 
-    const response = await fetch("/api/auth/profile", {
+    const response = await fetch(apiUrl("/api/auth/profile"), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

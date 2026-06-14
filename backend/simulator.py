@@ -48,6 +48,12 @@ def _selection_rates_from_payload(payload: dict[str, Any]) -> tuple[float, float
 
 def simulate_fairness_scenario(payload: dict[str, Any]) -> dict[str, Any]:
     scenario_type = payload.get("scenario_type", "diversity_weight")
+    diversity_weight = _safe_float(payload.get("diversity_weight"), 0.75)
+    if diversity_weight > 1:
+        diversity_weight = diversity_weight / 100.0
+    diversity_weight = max(0.0, min(1.0, diversity_weight))
+    constraint = _normalize_constraint(payload.get("fairness_constraint"))
+    settings = CONSTRAINT_SETTINGS[constraint]
     
     result = payload.get("analysis_result")
     analysis_result = result if isinstance(result, dict) else {}
@@ -63,46 +69,36 @@ def simulate_fairness_scenario(payload: dict[str, Any]) -> dict[str, Any]:
     simulated_max_rate = max_rate
     estimated_accuracy = 94.8
     action_text = ""
+    current_gap = max(0.0, max_rate - min_rate)
+    intensity = diversity_weight * settings["uplift_multiplier"]
+    advantaged_drag = settings["advantaged_drag"] * diversity_weight
 
     if scenario_type == "threshold":
-        # Simulate dropping the threshold for everyone
-        simulated_min_rate = min(1.0, min_rate * 1.15)
-        simulated_max_rate = min(1.0, max_rate * 1.05)
-        estimated_accuracy -= 1.2
-        action_text = "Lowered global decision threshold, increasing selection rates for all groups."
+        simulated_min_rate = min(1.0, min_rate + current_gap * 0.35 * intensity)
+        simulated_max_rate = min(1.0, max_rate + current_gap * 0.10 * intensity)
+        estimated_accuracy -= 1.2 * max(0.15, diversity_weight)
+        action_text = f"Lowered decision thresholds with {diversity_weight:.2f} diversity intensity."
         
     elif scenario_type == "proxy":
-        # Simulate removing proxy feature
-        simulated_min_rate = min(1.0, min_rate + (max_rate - min_rate) * 0.4)
-        simulated_max_rate = max(0.0, max_rate - (max_rate - min_rate) * 0.1)
-        estimated_accuracy -= 2.5
-        action_text = "Removed top proxy feature, closing the gap significantly with slight accuracy drop."
+        simulated_min_rate = min(1.0, min_rate + current_gap * 0.40 * intensity)
+        simulated_max_rate = max(0.0, max_rate - current_gap * 0.10 * intensity - advantaged_drag)
+        estimated_accuracy -= 2.5 * max(0.15, diversity_weight)
+        action_text = f"Reduced proxy-feature influence with {diversity_weight:.2f} diversity intensity."
         
     elif scenario_type == "rebalance":
-        # Simulate rebalancing data
-        simulated_min_rate = min(1.0, min_rate + (max_rate - min_rate) * 0.6)
+        simulated_min_rate = min(1.0, min_rate + current_gap * 0.60 * intensity)
         simulated_max_rate = max_rate
-        estimated_accuracy += 0.5
-        action_text = "Synthetically rebalanced training data, boosting disadvantaged group without harming advantaged group."
+        estimated_accuracy += 0.5 * diversity_weight
+        action_text = f"Synthetically rebalanced training data with {diversity_weight:.2f} diversity intensity."
         
     elif scenario_type == "boost":
-        # Simulate targeted boost
-        simulated_min_rate = min(1.0, min_rate + (max_rate - min_rate) * 0.8)
-        simulated_max_rate = max_rate
-        estimated_accuracy -= 1.8
-        action_text = "Applied targeted algorithmic boost to disadvantaged group to achieve near parity."
+        simulated_min_rate = min(1.0, min_rate + current_gap * 0.80 * intensity)
+        simulated_max_rate = max(0.0, max_rate - advantaged_drag)
+        estimated_accuracy -= 1.8 * max(0.15, diversity_weight)
+        action_text = f"Applied targeted group boost with {diversity_weight:.2f} diversity intensity."
         
     else: # Fallback to original diversity weight logic
-        diversity_weight = _safe_float(payload.get("diversity_weight"), 0.75)
-        if diversity_weight > 1:
-            diversity_weight = diversity_weight / 100.0
-        diversity_weight = max(0.0, min(1.0, diversity_weight))
-
-        constraint = _normalize_constraint(payload.get("fairness_constraint"))
-        settings = CONSTRAINT_SETTINGS[constraint]
-        
         target_gap = max(0.0, max_rate * 0.2)
-        current_gap = max(0.0, max_rate - min_rate)
         improvement_window = max(0.0, current_gap - target_gap)
 
         uplift = improvement_window * diversity_weight * settings["uplift_multiplier"]

@@ -165,7 +165,13 @@
       ...(options.headers || {}),
       Authorization: `Bearer ${token}`,
     };
-    return fetch(path, { ...options, headers });
+    return fetch(apiUrl(path), { ...options, headers });
+  }
+
+  async function parseErrorResponse(response, fallback) {
+    const payload = await response.json().catch(() => ({}));
+    if (response.ok) return payload;
+    throw new Error(payload.error || payload.message || fallback);
   }
 
   function jsonClone(value) {
@@ -288,8 +294,7 @@
       const response = await authFetch(`/api/auth/sessions/${encodeURIComponent(sessionId)}`, {
         method: "DELETE",
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "Unable to delete chat.");
+      await parseErrorResponse(response, "Unable to delete chat.");
       if (sessionId === currentSessionId) {
         currentSessionId = null;
         currentAnalysisResult = null;
@@ -324,8 +329,7 @@
     }
     try {
       const response = await authFetch("/api/auth/sessions");
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "Unable to load recent chats.");
+      const payload = await parseErrorResponse(response, "Unable to load recent chats.");
       recentSessions = payload.sessions || [];
       setSessionStatus(privacyModeEnabled ? "Privacy Mode: autosave is off." : "Recent chats sync to your account.");
       renderRecentSessions();
@@ -371,8 +375,7 @@
       if (sessionSaveInFlight === saveRequest) {
         sessionSaveInFlight = null;
       }
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Unable to save recent chat.");
+      const data = await parseErrorResponse(response, "Unable to save recent chat.");
       if (expectedSessionProvided && expectedSessionId !== currentSessionId) {
         await loadRecentSessions();
         return data.session || null;
@@ -1683,8 +1686,7 @@
         await flushSessionSave();
       }
       const response = await authFetch(`/api/auth/sessions/${encodeURIComponent(sessionId)}`);
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "Unable to load saved chat.");
+      const payload = await parseErrorResponse(response, "Unable to load saved chat.");
       restoreSessionState(payload.session);
     } catch (error) {
       setSessionStatus(error.message || "Unable to load saved chat.");
