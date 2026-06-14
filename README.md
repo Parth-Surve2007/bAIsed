@@ -1,11 +1,3 @@
----
-title: bAIsed
-emoji: 🚀
-colorFrom: blue
-colorTo: green
-sdk: docker
-pinned: false
----
 <p align="center">
   <img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed logo" width="100" height="70" />
 </p>
@@ -21,41 +13,6 @@ pinned: false
 <p align="center">
   A full-stack AI fairness workbench for dataset bias auditing, disparity diagnostics, scenario simulation, and actionable remediation guidance.
 </p>
-
----
-
-## Mentor Pitch
-
-**bAIsed** is a browser-based fairness debugger for machine-learning datasets and models. It helps a user upload data, detect which groups are being treated unfairly, understand why the disparity is happening, test what-if fixes, and generate a human-readable audit report.
-
-The project matters because fairness work is usually scattered across notebooks, scripts, metrics libraries, and manual reporting. bAIsed pulls that into one guided workflow: analyze, explain, simulate, export, and report.
-
-### One-Line Pitch
-
-> bAIsed is an end-to-end AI fairness workbench that turns raw datasets into explainable bias diagnostics, remediation ideas, and shareable audit reports.
-
-### What It Solves
-
-- Makes fairness analysis easier to run for non-experts.
-- Reduces the time needed to inspect bias, proxy features, and subgroup risk.
-- Gives both technical metrics and plain-English explanations.
-- Helps users move from "I found a bias signal" to "here is what to do next."
-
-### What Makes It Different
-
-- It is not just a metric calculator. It is an interactive workflow.
-- It combines deterministic fairness analysis with AI-assisted narrative reporting.
-- It includes dataset profiling, proxy detection, simulation, and export tooling in one interface.
-- It supports both simple group-rate audits and model-level fairness audits.
-
-### Suggested Demo Flow
-
-1. Open the workbench.
-2. Load a demo dataset or upload your own CSV/XLSX.
-3. Run the audit and point out DIR, SPD, bias score, hotspots, and proxy risks.
-4. Show the simulator and explain how the result changes under a hypothetical fix.
-5. Generate the AI report and show how it turns metrics into a readable review.
-6. Export the result to Colab or What-If Tool for deeper follow-up.
 
 ---
 
@@ -81,30 +38,6 @@ The project is designed for researchers, students, and builders who need a pract
 - Simulate what-if remediation scenarios and estimate trade-offs.
 - Generate Gemini-powered audit reports with findings and recommendations.
 - Export analysis assets for Google Colab, TensorBoard What-If Tool, and advanced JSON workflows.
-
----
-
-## How The System Works
-
-The app has two layers:
-
-### Frontend
-
-The frontend is a browser workbench built with HTML, CSS, and JavaScript. It handles file upload, form interactions, result rendering, charting, AI report display, and export actions.
-
-### Backend
-
-The backend is a Flask application that exposes analysis endpoints. It reads datasets, computes fairness metrics, detects patterns, profiles risk, runs simulations, and formats results for the UI.
-
-### End-to-End Flow
-
-1. The user uploads a dataset or selects a demo.
-2. The frontend sends the file or dataset ID to the Flask API.
-3. The backend standardizes the data and identifies likely protected and outcome columns.
-4. The analysis pipeline computes fairness metrics and risk signals.
-5. The frontend renders the metrics, charts, and explanations.
-6. If requested, Gemini turns the findings into a long-form narrative report.
-7. The user can export the analysis for follow-up in external tools.
 
 ---
 
@@ -161,8 +94,6 @@ Implemented metrics include:
 - **AOD - Average Odds Difference:** combined disparity signal.
 - **Bias Score:** normalized 0-100 severity score derived from the metric set.
 
-In practice, this is the core of the audit. The system compares outcomes across groups, identifies where selection rates diverge, and turns those differences into a severity signal plus a human-readable explanation.
-
 ### Model Fairness Analysis
 
 The workbench also supports a trained-model audit path:
@@ -174,8 +105,6 @@ The workbench also supports a trained-model audit path:
 
 When true labels are available, the response includes group-level accuracy, error rate, true-positive-rate, false-positive-rate, and false-negative-rate gaps. Model upload support requires compatible server dependencies for the model artifact, such as scikit-learn/joblib or TensorFlow.
 
-This is useful when a user wants to audit a deployed or near-deployed model instead of only a static dataset. The app checks whether the model itself is amplifying disparity through its predictions.
-
 ### Advanced Fairness Analysis
 
 `backend/fairness_advanced.py` adds:
@@ -184,8 +113,6 @@ This is useful when a user wants to audit a deployed or near-deployed model inst
 - Mitigation suggestions.
 - Intersectional analysis across multiple protected attributes.
 - Additional advanced metric packaging for export.
-
-This layer helps answer not only "is there bias?" but also "how stable is the signal?" and "does the disparity show up when groups overlap?"
 
 ### Proxy Bias Detection
 
@@ -196,8 +123,6 @@ This layer helps answer not only "is there bias?" but also "how stable is the si
 - Eta-squared for numeric-to-categorical association.
 - Risk levels for high, medium, and low proxy signals.
 
-This matters because fairness issues are often indirect. The protected attribute may not be used explicitly, but another feature can quietly encode the same signal.
-
 ### Dataset Risk Profiling
 
 `backend/risk_profiler.py` scores audit reliability using:
@@ -207,8 +132,6 @@ This matters because fairness issues are often indirect. The protected attribute
 - Group imbalance.
 - Outcome imbalance.
 - Proxy-risk indicators.
-
-This helps prevent overconfidence. A fairness result from a tiny, imbalanced, or sparse dataset should be treated differently from one backed by stronger data.
 
 ### Bias Pattern Detection
 
@@ -222,8 +145,6 @@ This helps prevent overconfidence. A fairness result from a tiny, imbalanced, or
 - `GLOBAL_SELECTION_DISPARITY`
 - `NO_SIGNIFICANT_BIAS`
 
-This gives the user a category-level interpretation. Instead of only showing numbers, the app suggests the kind of bias problem the data most resembles.
-
 ### Export Tools
 
 `backend/exporters.py` supports:
@@ -231,8 +152,6 @@ This gives the user a category-level interpretation. Instead of only showing num
 - Google Colab notebook export.
 - TensorBoard What-If Tool bundle export.
 - Advanced JSON export for downstream analysis.
-
-The export layer matters because it lets a mentor, teammate, or reviewer continue the analysis outside the app without starting from scratch.
 
 ---
 
@@ -356,7 +275,7 @@ Create `backend/.env` or export the variables in your shell:
 
 ```env
 GEMINI_API_KEY=your_google_ai_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-1.5-flash
 
 FLASK_ENV=development
 FLASK_SECRET_KEY=change-me
@@ -404,36 +323,31 @@ Open:
 4. Select the protected attribute and true label columns.
 5. Run the audit to evaluate the model's generated predictions and group-level error disparities.
 
-### How To Explain It To A Mentor
-
-If your mentor asks what the project actually does, explain it in this order:
-
-1. It ingests data or a trained model and tests for fairness issues.
-2. It computes selection-rate disparity metrics such as DIR and SPD.
-3. It finds the likely protected groups, proxy features, and risky patterns.
-4. It checks how trustworthy the result is by profiling the dataset itself.
-5. It simulates what would happen if the decision rule changed.
-6. It produces a human-readable report so the findings are easy to communicate.
-
-If they ask why this is valuable, say that most fairness projects stop at raw metrics. bAIsed tries to bridge the gap between metric output and actual decision-making.
-
 ---
 
 ## Deployment
 
-The application is deployed using a decoupled frontend/backend architecture:
-
-### Frontend (Vercel)
-The frontend is deployed to Vercel. The `vercel.json` configuration provides clean URLs for the static HTML pages and seamlessly rewrites API endpoints (like `/upload`, `/analyze`, `/api/*`) to the backend service.
-
-### Backend (Hugging Face Spaces)
-The Flask API backend is hosted on Hugging Face Spaces using a Docker environment. The `Dockerfile` provisions the Python 3.11 environment, installs dependencies, and runs the application using `gunicorn` on port `7860`, as required by Hugging Face Spaces.
+This project can run anywhere that supports a Python Flask application. A typical production start command is:
 
 ```bash
-gunicorn backend.app:app -b 0.0.0.0:7860 --timeout 120
+gunicorn backend.app:app
 ```
 
-Before deploying, configure the required environment variables (e.g., `GEMINI_API_KEY`), keep credentials out of source control, and ensure they are added securely as Space secrets. The application also includes a graceful fallback mechanism for the AI Report feature if the Gemini API is unavailable.
+For Render, use:
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+as the build command, and:
+
+```bash
+gunicorn backend.app:app
+```
+
+as the start command.
+
+Before deploying, configure the required environment variables, keep credentials out of source control, and ensure Firebase and Gemini credentials are available only on the server.
 
 ---
 
@@ -447,25 +361,6 @@ Before deploying, configure the required environment variables (e.g., `GEMINI_AP
 - Authentication is scaffolded and should be hardened before production use.
 - Do not commit `.env`, service account files, or generated temporary datasets.
 
-### Module Cheat Sheet
-
-- `backend/app.py`: creates the Flask app and serves the frontend pages.
-- `backend/api.py`: hosts the API routes, request handling, uploads, analysis orchestration, exports, and AI reporting.
-- `backend/analysis.py`: computes the core fairness metrics and dataset analysis.
-- `backend/proxy_detector.py`: looks for proxy variables that may encode protected attributes.
-- `backend/risk_profiler.py`: judges how trustworthy the audit is based on dataset quality.
-- `backend/pattern_detector.py`: labels the likely bias pattern.
-- `backend/fairness_advanced.py`: adds advanced metrics and intersectional analysis.
-- `backend/simulator.py`: runs what-if remediation scenarios.
-- `backend/exporters.py`: builds notebook and tool exports.
-- `frontend/js/workbench.js`: handles the interactive workbench, uploads, charts, AI report rendering, and exports.
-
-### Short Pitch Script
-
-You can say this almost verbatim:
-
-> bAIsed is a fairness workbench that lets me upload a dataset or model, compute bias metrics, detect proxy features, evaluate dataset risk, simulate possible fixes, and generate a narrative AI report. The goal is to make fairness analysis easier to understand and easier to act on, not just to display raw numbers.
-
 ---
 
 ## Troubleshooting
@@ -474,7 +369,7 @@ You can say this almost verbatim:
 - **Upload parsing errors:** Validate that the file is a readable `.csv` or `.xlsx`.
 - **Unexpected fairness output:** Check that the selected outcome is binary or can be converted into a binary decision signal.
 - **Weak audit confidence:** Review subgroup size, missing data, and outcome imbalance warnings.
-- **Hugging Face deployment errors:** Ensure that `gunicorn` and the port `7860` are specified in the `Dockerfile`, and confirm dependencies are properly installed.
+- **Render import errors:** Use `gunicorn backend.app:app` as the start command and confirm dependencies are installed.
 
 ---
 
