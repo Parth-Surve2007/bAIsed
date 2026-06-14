@@ -10,6 +10,7 @@
   let modelAnalysisResult = null;
   let currentDatasetId = null;
   let currentModelDatasetId = null;
+  let datasetScanRequestId = 0;
   let currentAiMarkdown = "";
   let currentMetrics = null;
   let currentDatasetMeta = null;
@@ -355,8 +356,7 @@
       payload.title = options.title;
     }
     payload.privacy_mode_saved = Boolean(options.privacyModeSaved);
-    const hasDatasetMeta = Boolean(payload.dataset_meta?.name || payload.dataset_meta?.protected_attr || payload.dataset_meta?.outcome);
-    if (!options.allowEmpty && !payload.workspace_state.active_result && !payload.ai_chat.length && !payload.ai_report_markdown && !hasDatasetMeta) {
+    if (!options.allowEmpty && !payload.workspace_state.active_result && !payload.ai_chat.length && !payload.ai_report_markdown) {
       return null;
     }
     const expectedSessionId = options.expectedSessionId;
@@ -2252,6 +2252,14 @@
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
+      const scanRequestId = ++datasetScanRequestId;
+      currentDatasetId = null;
+      currentAnalysisResult = null;
+      datasetAnalysisResult = null;
+      currentMetrics = null;
+      currentDatasetMeta = null;
+      window.lastUploadedDatasetFile = null;
+      renderNeutralResult("dataset");
 
       const formData = new FormData();
       formData.append("file", file);
@@ -2278,6 +2286,9 @@
         try {
           scanResult = await postForm("/scan", formData);
         } finally {
+          if (scanRequestId !== datasetScanRequestId) {
+            return;
+          }
           selects.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -2291,6 +2302,9 @@
         }
 
         console.log("Scan result received:", scanResult);
+        if (scanRequestId !== datasetScanRequestId) {
+          return;
+        }
         
         if (!scanResult || scanResult.error) {
           console.error("Scan API error:", scanResult?.error);
@@ -2302,9 +2316,7 @@
            throw new Error("No columns detected in the file.");
         }
 
-        if (scanResult.dataset_id) {
-            currentDatasetId = scanResult.dataset_id;
-        }
+        currentDatasetId = scanResult.dataset_id || null;
         
         // Populate dropdowns with intelligence
         populateDropdowns(scanResult.columns, scanResult.profile);
@@ -2325,9 +2337,11 @@
         };
         
         window.lastUploadedDatasetFile = file;
-        queueSessionSave();
 
       } catch (err) {
+        if (scanRequestId !== datasetScanRequestId) {
+          return;
+        }
         console.error("Scan error:", err);
         renderError(describeRequestError(err) || "Failed to scan dataset schema.");
       }
@@ -2573,6 +2587,7 @@
 
     reset.addEventListener("click", () => {
       form.reset();
+      datasetScanRequestId++;
       
       // Reset file display
       const fileNameDisplay = document.getElementById('file-name-display');
