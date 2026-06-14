@@ -1164,6 +1164,9 @@
   }
 
   function renderResult(result) {
+    const isKnownResult = result.mode === "model"
+      ? result === modelAnalysisResult
+      : result === datasetAnalysisResult;
     currentAnalysisResult = result;
     if (result.mode === "model") {
       modelAnalysisResult = result;
@@ -1392,8 +1395,12 @@
       protected_attr: result.protected_attribute || "Unknown",
       outcome: result.outcome_column || "Unknown"
     };
-    explainerHistory = [];
-    resetExplainerChatUi();
+    if (!isKnownResult && !restoringSession) {
+      currentAiMarkdown = "";
+      clearAiAnalyzerPanels();
+      explainerHistory = [];
+      resetExplainerChatUi();
+    }
 
     showExplainerPanel();
     if (!privacyModeEnabled && !sessionContainsPrivateWork && !restoringSession) {
