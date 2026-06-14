@@ -679,9 +679,9 @@
 
   function riskTone(level) {
     const normalized = String(level || "").toUpperCase();
-    if (normalized === "HIGH") return "bg-red-100 text-red-700";
-    if (normalized === "MEDIUM") return "bg-amber-100 text-amber-700";
-    return "bg-emerald-100 text-emerald-700";
+    if (normalized === "HIGH") return "wb-badge-danger";
+    if (normalized === "MEDIUM" || normalized === "MODERATE" || normalized === "AMBER") return "wb-badge-warning";
+    return "wb-badge-safe";
   }
 
   function renderProxyAnalysis(result) {
@@ -692,6 +692,18 @@
     const proxies = result.proxy_analysis || [];
     chip.textContent = `${proxies.length} Found`;
     container.innerHTML = "";
+
+    chip.className = "wb-badge";
+    if (proxies.length === 0) {
+      chip.classList.add("wb-badge-safe");
+    } else {
+      const hasHighRisk = proxies.some(p => String(p.risk).toUpperCase() === "HIGH");
+      if (hasHighRisk) {
+        chip.classList.add("wb-badge-danger");
+      } else {
+        chip.classList.add("wb-badge-warning");
+      }
+    }
 
     if (!proxies.length) {
       container.innerHTML = `<p class="text-sm leading-6 text-slate-500">No strong proxy feature signals were detected.</p>`;
@@ -707,7 +719,7 @@
             <p class="text-sm font-bold text-slate-900">${item.feature}</p>
             <p class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">Proxy for ${item.proxy_for}</p>
           </div>
-          <span class="rounded-full px-2.5 py-1 text-xs font-semibold ${riskTone(item.risk)}">${item.risk}</span>
+          <span class="wb-badge ${riskTone(item.risk)}">${item.risk}</span>
         </div>
         <p class="mt-3 text-sm leading-6 text-slate-600">Association score ${formatDecimal(item.association_score || 0, 4)}</p>
       `;
@@ -725,7 +737,14 @@
 
     const hasRisk = risk.risk_score !== undefined || Array.isArray(risk.factors);
     chip.textContent = hasRisk ? (risk.risk_level || "LOW") : "Not Run";
-    chip.className = `rounded-full px-3 py-1 text-xs font-semibold ${hasRisk ? riskTone(risk.risk_level) : "bg-slate-100 text-slate-600"}`;
+    
+    chip.className = "wb-badge";
+    if (hasRisk) {
+      chip.classList.add(riskTone(risk.risk_level));
+    } else {
+      chip.classList.add("wb-badge-neutral");
+    }
+
     score.textContent = risk.risk_score !== undefined ? `${risk.risk_score}/100` : "--";
     confidence.textContent = risk.confidence ? `Audit confidence: ${risk.confidence}` : "Confidence unavailable.";
     factors.innerHTML = "";
@@ -757,7 +776,23 @@
 
     type.textContent = pattern.pattern_type ? String(pattern.pattern_type).replaceAll("_", " ") : "No pattern yet";
     action.textContent = pattern.recommended_action || "Run a dataset audit to classify the bias pattern.";
-    chip.textContent = pattern.confidence !== undefined ? `${Math.round(pattern.confidence * 100)}%` : "--";
+    
+    chip.className = "wb-badge";
+    if (pattern.confidence === undefined || !pattern.pattern_type) {
+      chip.textContent = "--";
+      chip.classList.add("wb-badge-neutral");
+    } else {
+      const confPercent = Math.round(pattern.confidence * 100);
+      chip.textContent = `${confPercent}%`;
+      if (confPercent >= 70) {
+        chip.classList.add("wb-badge-danger");
+      } else if (confPercent >= 40) {
+        chip.classList.add("wb-badge-warning");
+      } else {
+        chip.classList.add("wb-badge-neutral");
+      }
+    }
+
     evidence.innerHTML = "";
 
     const items = pattern.evidence || [];
@@ -1198,50 +1233,91 @@
     setText("influential-feature-text", result.most_influential_feature || "-");
     setText("hidden-bias-text", result.hidden_bias_detected ? "Yes" : "No");
 
-    const meta = [];
-    if (result.mode === "dataset" || result.mode === "model") {
-      if (result.file_name) {
-        meta.push(`File: ${result.file_name}`);
-      }
-      if (result.row_count !== undefined) {
-        meta.push(`Rows: ${result.row_count}`);
-      }
-      if (result.protected_attribute) {
-        meta.push(`Protected attribute: ${result.protected_attribute}`);
-      }
-      if (result.derived_protected && result.derived_protected.source_column) {
-        meta.push(
-          `Derived groups: ${result.derived_protected.source_column} via ${result.derived_protected.strategy}`,
-        );
-      }
-      if (result.outcome_column) {
-        meta.push(`${result.mode === "model" ? "Prediction column" : "Outcome column"}: ${result.outcome_column}`);
-      }
-      if (result.derived_outcome && result.derived_outcome.source_column) {
-        meta.push(
-          `Derived outcome: ${result.derived_outcome.source_column} >= ${result.derived_outcome.threshold}`,
-        );
-      }
-      if (result.model_audit) {
-        meta.push(`Model: ${result.model_audit.model_file_name}`);
-        meta.push(`Loader: ${result.model_audit.model_type}`);
-      }
-      if (result.model_performance_by_group?.disparities) {
-        const gaps = result.model_performance_by_group.disparities;
-        if (gaps.error_rate_gap !== null && gaps.error_rate_gap !== undefined) {
-          meta.push(`Error gap: ${formatDecimal(gaps.error_rate_gap, 4)}`);
+    const metaTextElement = document.getElementById("dataset-meta-text");
+    if (metaTextElement) {
+      if (result.mode === "dataset" || result.mode === "model") {
+        const rowsVal = result.row_count !== undefined ? `${result.row_count.toLocaleString()} rows` : "";
+        const protVal = result.protected_attribute ? `Protected attribute: ${result.protected_attribute}` : "";
+        const outVal = result.outcome_column ? `${result.mode === "model" ? "Prediction" : "Outcome"}: ${result.outcome_column}` : "";
+        
+        // Human-readable summary
+        const summaryParts = [];
+        summaryParts.push(result.mode === "model" ? "Model audit" : "Uploaded dataset");
+        if (rowsVal) summaryParts.push(rowsVal);
+        if (protVal) summaryParts.push(protVal);
+        if (outVal) summaryParts.push(outVal);
+        
+        const summaryLine = summaryParts.join(" · ");
+        
+        // Technical metadata
+        const techParts = [];
+        if (result.file_name) {
+          techParts.push(`<p><strong>Filename:</strong> ${escapeHtml(result.file_name)}</p>`);
         }
-        if (gaps.true_positive_rate_gap !== null && gaps.true_positive_rate_gap !== undefined) {
-          meta.push(`TPR gap: ${formatDecimal(gaps.true_positive_rate_gap, 4)}`);
+        if (result.model_audit) {
+          techParts.push(`<p><strong>Model:</strong> ${escapeHtml(result.model_audit.model_file_name)}</p>`);
+          techParts.push(`<p><strong>Loader:</strong> ${escapeHtml(result.model_audit.model_type)}</p>`);
         }
-        if (gaps.false_positive_rate_gap !== null && gaps.false_positive_rate_gap !== undefined) {
-          meta.push(`FPR gap: ${formatDecimal(gaps.false_positive_rate_gap, 4)}`);
+        if (result.derived_protected && result.derived_protected.source_column) {
+          techParts.push(`<p><strong>Derived groups:</strong> ${escapeHtml(result.derived_protected.source_column)} via ${escapeHtml(result.derived_protected.strategy)}</p>`);
         }
+        if (result.derived_outcome && result.derived_outcome.source_column) {
+          techParts.push(`<p><strong>Derived outcome:</strong> ${escapeHtml(result.derived_outcome.source_column)} &gt;= ${escapeHtml(result.derived_outcome.threshold)}</p>`);
+        }
+        if (result.model_performance_by_group?.disparities) {
+          const gaps = result.model_performance_by_group.disparities;
+          if (gaps.error_rate_gap !== null && gaps.error_rate_gap !== undefined) {
+            techParts.push(`<p><strong>Error gap:</strong> ${formatDecimal(gaps.error_rate_gap, 4)}</p>`);
+          }
+          if (gaps.true_positive_rate_gap !== null && gaps.true_positive_rate_gap !== undefined) {
+            techParts.push(`<p><strong>TPR gap:</strong> ${formatDecimal(gaps.true_positive_rate_gap, 4)}</p>`);
+          }
+          if (gaps.false_positive_rate_gap !== null && gaps.false_positive_rate_gap !== undefined) {
+            techParts.push(`<p><strong>FPR gap:</strong> ${formatDecimal(gaps.false_positive_rate_gap, 4)}</p>`);
+          }
+        }
+
+        const techHtml = techParts.length > 0 ? `
+          <div class="mt-2">
+            <button type="button" id="file-details-toggle-btn" class="text-xs text-teal-600 hover:text-teal-700 font-semibold underline cursor-pointer focus:outline-none flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">info</span>
+              <span id="file-details-toggle-text">Show file info</span>
+            </button>
+            <div id="file-details-container" class="hidden mt-2 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-100 dark:border-zinc-800 p-3 text-xs text-slate-500 dark:text-zinc-400 space-y-1">
+              ${techParts.join("")}
+            </div>
+          </div>
+        ` : "";
+        
+        metaTextElement.innerHTML = `
+          <div>
+            <p class="text-sm leading-6 text-slate-600 dark:text-zinc-300 font-medium">${escapeHtml(summaryLine)}</p>
+            ${techHtml}
+          </div>
+        `;
+        
+        // Add toggle event listener
+        const toggleBtn = document.getElementById("file-details-toggle-btn");
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", () => {
+            const container = document.getElementById("file-details-container");
+            const toggleText = document.getElementById("file-details-toggle-text");
+            if (container && toggleText) {
+              const isHidden = container.classList.contains("hidden");
+              if (isHidden) {
+                container.classList.remove("hidden");
+                toggleText.textContent = "Hide file info";
+              } else {
+                container.classList.add("hidden");
+                toggleText.textContent = "Show file info";
+              }
+            }
+          });
+        }
+      } else {
+        metaTextElement.innerHTML = `<p class="text-sm leading-6 text-slate-600 dark:text-zinc-300">Simple input mode using groupA and groupB percentages.</p>`;
       }
-    } else {
-      meta.push("Simple input mode using groupA and groupB percentages.");
     }
-    setText("dataset-meta-text", meta.join(" | "));
 
     const biasScoreBar = document.getElementById("bias-score-bar");
     if (biasScoreBar) {
@@ -1771,6 +1847,28 @@
     });
     document.addEventListener("baised:auth-changed", loadRecentSessions);
     window.setTimeout(loadRecentSessions, 500);
+  }
+
+  function bindSidebarToggle() {
+    const toggleBtn = document.getElementById("sidebar-toggle");
+    if (!toggleBtn) return;
+
+    // Restore state from localStorage on load
+    const collapsed = localStorage.getItem("baised:sidebar_collapsed") === "true";
+    if (collapsed) {
+      document.body.classList.add("sidebar-collapsed");
+      const icon = document.getElementById("sidebar-toggle-icon");
+      if (icon) icon.textContent = "chevron_right";
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      const isCollapsed = document.body.classList.toggle("sidebar-collapsed");
+      localStorage.setItem("baised:sidebar_collapsed", isCollapsed);
+      const icon = document.getElementById("sidebar-toggle-icon");
+      if (icon) {
+        icon.textContent = isCollapsed ? "chevron_right" : "chevron_left";
+      }
+    });
   }
 
   async function requestSimulatorPreview() {
@@ -3257,6 +3355,7 @@
     bindAiAnalyzerForm();
     bindPrivacyModeToggle();
     bindSessionControls();
+    bindSidebarToggle();
     bindDownloadReport();
     bindDemoLoaders();
     bindExportButtons();
