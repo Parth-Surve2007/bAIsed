@@ -1672,6 +1672,14 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
 
     row_count = int(len(df))
     columns = list(df.columns)
+    privacy_mode = str(request.form.get("privacy_mode", "")).lower() == "true"
+    if privacy_mode:
+        return _return_fallback_ai_report(
+            analysis_data,
+            row_count,
+            columns,
+            "Privacy Mode is enabled. No external AI model was called; this report was generated deterministically from fairness metrics.",
+        )
 
     from backend.config import PROCESS1_API_KEY
     if not PROCESS1_API_KEY:

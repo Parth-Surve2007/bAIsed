@@ -590,7 +590,17 @@
               <h2 class="text-2xl font-bold text-black">AI Analyzer</h2>
               <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the configured AI models.</p>
             </div>
-            <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container">AI Powered</div>
+            <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container" id="ai-mode-chip">AI Powered</div>
+          </div>
+
+          <div class="mb-5 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 dark:border-teal-900/60 dark:bg-teal-950/20">
+            <label class="flex cursor-pointer items-start justify-between gap-4">
+              <div>
+                <span class="text-sm font-bold text-teal-950 dark:text-teal-100">Privacy Mode</span>
+                <span class="mt-1 block text-sm leading-6 text-teal-800 dark:text-teal-200">Disable external AI report and chat calls. Reports use deterministic metrics only.</span>
+              </div>
+              <input id="privacy-mode-toggle" type="checkbox" class="mt-1 h-5 w-5 rounded border-teal-300 text-teal-700 focus:ring-teal-600">
+            </label>
           </div>
 
           <!-- ── Conversational AI Explainer Panel ── -->
@@ -620,7 +630,7 @@
               <input id="chat-input" type="text" placeholder="e.g., Why is my DIR 0.7 a problem?"
                 class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm outline-none transition focus:border-violet-500 focus:ring-1 focus:ring-violet-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder-zinc-500"
                 onkeydown="if(event.key==='Enter') sendExplainerMessage()" />
-              <button onclick="sendExplainerMessage()"
+              <button id="chat-submit-btn" onclick="sendExplainerMessage()"
                 class="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 active:scale-95">
                 Ask
               </button>
@@ -629,7 +639,7 @@
 
 
           <form class="space-y-5" id="ai-analyzer-form">
-            <p class="text-sm text-slate-700">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
+            <p class="text-sm text-slate-700" id="ai-analyzer-help-text">The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.</p>
             <div class="flex flex-wrap gap-3">
               <button class="flex items-center gap-2 rounded-xl bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed" id="ai-submit-btn" type="submit">
                 <svg class="h-4 w-4 hidden" id="ai-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>

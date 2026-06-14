@@ -13,6 +13,7 @@
   let currentAiMarkdown = "";
   let currentMetrics = null;
   let currentDatasetMeta = null;
+  let privacyModeEnabled = false;
   let puppyPetCount = 0;
 
   function movePuppy() {
@@ -1245,6 +1246,56 @@
     setText("ai-row-count", "0");
   }
 
+  function setPrivacyMode(enabled) {
+    privacyModeEnabled = Boolean(enabled);
+    const toggle = document.getElementById("privacy-mode-toggle");
+    const chip = document.getElementById("ai-mode-chip");
+    const help = document.getElementById("ai-analyzer-help-text");
+    const submitBtn = document.getElementById("ai-submit-btn");
+    const submitText = submitBtn ? submitBtn.querySelector("span") : null;
+    const chatInput = document.getElementById("chat-input");
+    const chatSubmit = document.getElementById("chat-submit-btn");
+
+    if (toggle) toggle.checked = privacyModeEnabled;
+    if (chip) {
+      chip.textContent = privacyModeEnabled ? "Privacy Mode" : "AI Powered";
+      chip.className = privacyModeEnabled
+        ? "rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800"
+        : "rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container";
+    }
+    if (help) {
+      help.textContent = privacyModeEnabled
+        ? "Privacy Mode is on. The report will be generated deterministically from local fairness metrics; chat and external AI calls are disabled."
+        : "The AI will generate a detailed comprehensive report by combining insights from your dataset sample and the ML statistical fairness outputs.";
+    }
+    if (submitText) {
+      submitText.textContent = privacyModeEnabled ? "Generate Deterministic Report" : "Generate Detailed AI Report";
+    }
+    if (chatInput) {
+      chatInput.disabled = privacyModeEnabled;
+      chatInput.placeholder = privacyModeEnabled ? "Privacy Mode disables AI chat" : "e.g., Why is my DIR 0.7 a problem?";
+      chatInput.classList.toggle("opacity-60", privacyModeEnabled);
+      chatInput.classList.toggle("cursor-not-allowed", privacyModeEnabled);
+    }
+    if (chatSubmit) {
+      chatSubmit.disabled = privacyModeEnabled;
+      chatSubmit.classList.toggle("opacity-50", privacyModeEnabled);
+      chatSubmit.classList.toggle("cursor-not-allowed", privacyModeEnabled);
+    }
+  }
+
+  function bindPrivacyModeToggle() {
+    const toggle = document.getElementById("privacy-mode-toggle");
+    if (!toggle) return;
+    toggle.addEventListener("change", () => {
+      setPrivacyMode(toggle.checked);
+      if (privacyModeEnabled) {
+        appendMessage("assistant", "Privacy Mode is on. AI chat is disabled; use Generate Deterministic Report for an offline-style metrics report.");
+      }
+    });
+    setPrivacyMode(toggle.checked);
+  }
+
   function resetExplainerChatUi() {
     const thread = document.getElementById("chat-thread");
     if (!thread) return;
@@ -2142,6 +2193,9 @@
         formData.append("file", file);
       }
       formData.append("analysis_json", JSON.stringify(compactAnalysisPayload(currentAnalysisResult)));
+      if (privacyModeEnabled) {
+        formData.append("privacy_mode", "true");
+      }
       
       try {
         const result = await triggerPuppyDelay(() => postForm("/ai-analyze", formData));
@@ -2171,7 +2225,7 @@
         errorPanel.classList.remove("hidden");
       } finally {
         if (submitBtn) submitBtn.disabled = false;
-        if (submitText) submitText.textContent = "Generate Detailed AI Report";
+        if (submitText) submitText.textContent = privacyModeEnabled ? "Generate Deterministic Report" : "Generate Detailed AI Report";
         if (spinner) {
           spinner.classList.add("hidden");
           spinner.classList.remove("animate-spin");
@@ -2596,6 +2650,10 @@
   async function sendExplainerMessage() {
     const input = document.getElementById('chat-input');
     if (!input) return;
+    if (privacyModeEnabled) {
+      appendMessage('assistant', 'Privacy Mode is on, so AI chat is disabled. Generate a deterministic report instead.');
+      return;
+    }
     const userText = input.value.trim();
     if (!userText) return;
     if (!currentMetrics || !currentDatasetMeta) {
@@ -2706,6 +2764,7 @@
     bindDatasetForm();
     bindModelAuditForm();
     bindAiAnalyzerForm();
+    bindPrivacyModeToggle();
     bindDownloadReport();
     bindDemoLoaders();
     bindExportButtons();
