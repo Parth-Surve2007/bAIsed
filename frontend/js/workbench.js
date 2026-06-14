@@ -1084,6 +1084,14 @@
       eod: result.metrics ? (result.metrics.EOD ?? 0) : 0,
       aod: result.metrics ? (result.metrics.AOD ?? 0) : 0,
       bias_score: result.bias_score,
+      severity: result.severity,
+      most_advantaged_group: result.most_advantaged_group,
+      least_advantaged_group: result.least_advantaged_group,
+      recommendations: (result.recommendations || []).slice(0, 5),
+      warnings: (result.warnings || []).slice(0, 5),
+      hotspots: (result.bias_hotspots || []).slice(0, 3),
+      feature_impact: (result.feature_impact_ranking || []).slice(0, 5),
+      repair_suggestions: (result.repair_suggestions || []).slice(0, 5),
       patterns: (result.bias_pattern && result.bias_pattern.pattern_type) ? [result.bias_pattern.pattern_type] : [],
       proxies: Array.isArray(result.proxy_analysis) ? result.proxy_analysis.map(p => p.feature) : []
     };
