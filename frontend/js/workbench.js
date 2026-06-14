@@ -7,6 +7,7 @@
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
   let datasetAnalysisResult = null;
+  let modelAnalysisResult = null;
   let currentDatasetId = null;
   let currentModelDatasetId = null;
   let currentAiMarkdown = "";
@@ -875,7 +876,9 @@
 
   function renderResult(result) {
     currentAnalysisResult = result;
-    if (result.mode !== "model") {
+    if (result.mode === "model") {
+      modelAnalysisResult = result;
+    } else {
       datasetAnalysisResult = result;
     }
     if (result.dataset_id) {
@@ -1842,7 +1845,11 @@
       return;
     }
 
-    renderNeutralResult("model");
+    if (modelAnalysisResult) {
+      renderResult(modelAnalysisResult);
+    } else {
+      renderNeutralResult("model");
+    }
   }
 
   function bindAuditFlipControls() {
@@ -2084,6 +2091,7 @@
     reset.addEventListener("click", () => {
       form.reset();
       currentModelDatasetId = null;
+      modelAnalysisResult = null;
       const display = document.getElementById("model-test-file-name-display");
       if (display) display.textContent = "No test data selected";
       const protectedSelect = document.getElementById("model-protected-attribute-input");
