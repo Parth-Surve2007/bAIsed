@@ -17,6 +17,7 @@
   let privacyModeEnabled = false;
   let sessionContainsPrivateWork = false;
   let currentSessionId = null;
+  let currentSessionTitleOverride = null;
   let recentSessions = [];
   let sessionSaveTimer = null;
   let sessionSaveInFlight = null;
@@ -188,6 +189,9 @@
   }
 
   function deriveSessionTitle() {
+    if (currentSessionTitleOverride) {
+      return currentSessionTitleOverride;
+    }
     const result = currentAnalysisResult || datasetAnalysisResult || modelAnalysisResult;
     if (!result && currentDatasetMeta?.name) {
       return `Dataset audit: ${currentDatasetMeta.name}`.slice(0, 120);
@@ -258,33 +262,78 @@
       return;
     }
     recentSessions.forEach((session) => {
-      const btn = document.createElement("button");
+      const item = document.createElement("div");
       const active = session.id === currentSessionId;
-      btn.type = "button";
-      btn.className = `w-full rounded-xl border px-3 py-3 text-left transition ${
+      item.className = `relative w-full rounded-xl border text-left transition ${
         active ? "border-teal-300 bg-teal-50 text-teal-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
       }`;
-      btn.innerHTML = `
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
+      item.innerHTML = `
+        <div class="flex items-start justify-between gap-2 px-3 py-3">
+          <button class="recent-session-load min-w-0 flex-1 text-left" type="button">
             <div class="truncate text-sm font-bold">${escapeHtml(session.title || "Untitled audit")}</div>
             <div class="mt-1 flex items-center justify-between gap-2 text-[11px] text-slate-500">
               <span>${escapeHtml(session.audit_mode || "audit")}</span>
               <span>${session.summary?.severity ? escapeHtml(session.summary.severity) : ""}</span>
             </div>
+          </button>
+          <button class="session-menu-btn inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" type="button" aria-label="Chat actions" title="Chat actions">
+            <span class="material-symbols-outlined text-base">more_vert</span>
+          </button>
+          <div class="session-menu hidden absolute right-2 top-10 z-20 min-w-28 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg">
+            <button class="rename-session-btn block w-full px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50" type="button">Rename</button>
+            <button class="delete-session-btn block w-full px-3 py-2 text-left text-red-600 transition hover:bg-red-50" type="button">Delete</button>
           </div>
-          <span class="delete-session-btn inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" data-session-id="${escapeHtml(session.id)}" title="Delete chat">
-            <span class="material-symbols-outlined text-base">delete</span>
-          </span>
         </div>
       `;
-      btn.addEventListener("click", () => loadSession(session.id));
-      btn.querySelector(".delete-session-btn")?.addEventListener("click", (event) => {
+      item.querySelector(".recent-session-load")?.addEventListener("click", () => loadSession(session.id));
+      item.querySelector(".session-menu-btn")?.addEventListener("click", (event) => {
         event.stopPropagation();
+        const menu = item.querySelector(".session-menu");
+        document.querySelectorAll(".session-menu").forEach((otherMenu) => {
+          if (otherMenu !== menu) otherMenu.classList.add("hidden");
+        });
+        menu?.classList.toggle("hidden");
+      });
+      item.querySelector(".rename-session-btn")?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        item.querySelector(".session-menu")?.classList.add("hidden");
+        renameSession(session);
+      });
+      item.querySelector(".delete-session-btn")?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        item.querySelector(".session-menu")?.classList.add("hidden");
         deleteSession(session.id, session.title || "this chat");
       });
-      list.appendChild(btn);
+      list.appendChild(item);
     });
+  }
+
+  async function renameSession(session) {
+    if (!session?.id || !hasSignedInUser()) return;
+    const currentTitle = session.title || "Untitled audit";
+    const nextTitle = prompt("Rename chat", currentTitle);
+    if (nextTitle === null) return;
+    const title = nextTitle.trim();
+    if (!title || title === currentTitle) return;
+    try {
+      const response = await authFetch(`/api/auth/sessions/${encodeURIComponent(session.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          privacy_mode_saved: Boolean(session.privacy_mode_saved),
+        }),
+      });
+      const payload = await parseErrorResponse(response, "Unable to rename chat.");
+      if (session.id === currentSessionId) {
+        currentSessionId = payload.session?.id || currentSessionId;
+        currentSessionTitleOverride = title;
+      }
+      await loadRecentSessions();
+      setSessionStatus("Chat renamed.");
+    } catch (error) {
+      setSessionStatus(error.message || "Unable to rename chat.");
+    }
   }
 
   async function deleteSession(sessionId, title) {
@@ -298,6 +347,7 @@
       await parseErrorResponse(response, "Unable to delete chat.");
       if (sessionId === currentSessionId) {
         currentSessionId = null;
+        currentSessionTitleOverride = null;
         currentAnalysisResult = null;
         datasetAnalysisResult = null;
         modelAnalysisResult = null;
@@ -337,6 +387,15 @@
     } catch (error) {
       setSessionStatus(error.message || "Unable to load recent chats.");
     }
+  }
+
+  function bindRecentSessionMenus() {
+    document.addEventListener("click", (event) => {
+      if (event.target.closest(".session-menu, .session-menu-btn")) return;
+      document.querySelectorAll(".session-menu").forEach((menu) => {
+        menu.classList.add("hidden");
+      });
+    });
   }
 
   async function saveCurrentSession(options = {}) {
@@ -1714,6 +1773,7 @@
       modelAnalysisResult = state.model_result || null;
       currentDatasetMeta = session?.dataset_meta || null;
       currentSessionId = session?.id || null;
+      currentSessionTitleOverride = null;
       currentDatasetId = null;
       currentModelDatasetId = null;
       currentAiMarkdown = state.current_ai_markdown || session?.ai_report_markdown || "";
@@ -1721,6 +1781,9 @@
       clearAiAnalyzerPanels();
 
       const active = session?.audit_result || state.active_result || datasetAnalysisResult || modelAnalysisResult;
+      if (active || currentAiMarkdown || explainerHistory.length) {
+        currentSessionTitleOverride = session?.title || null;
+      }
       if (active?.mode === "model") {
         modelAnalysisResult = active;
       } else if (active) {
@@ -1801,6 +1864,7 @@
     }
     await flushSessionSave();
     currentSessionId = null;
+    currentSessionTitleOverride = null;
     currentAnalysisResult = null;
     datasetAnalysisResult = null;
     modelAnalysisResult = null;
@@ -3370,6 +3434,7 @@
     bindAiAnalyzerForm();
     bindPrivacyModeToggle();
     bindSessionControls();
+    bindRecentSessionMenus();
     bindSidebarToggle();
     bindDownloadReport();
     bindDemoLoaders();
