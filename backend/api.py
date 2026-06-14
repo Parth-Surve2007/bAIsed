@@ -1766,10 +1766,21 @@ def explain():
     if not config.ENABLE_EXPLAINER_CHAT:
         return jsonify({"error": "Explainer chat feature is disabled."}), 403
 
-    data = request.json
-    messages = data["messages"]       # full conversation history [{role, content}, ...]
-    metrics = data["metrics"]         # current audit metrics dict
-    dataset_meta = data["dataset_meta"]
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
+    messages = data.get("messages") or []       # full conversation history [{role, content}, ...]
+    metrics = data.get("metrics") or {}         # current audit metrics dict
+    dataset_meta = data.get("dataset_meta") or {}
+    if not isinstance(messages, list) or not messages:
+        return jsonify({"error": "At least one chat message is required."}), 400
+    if not isinstance(messages[-1], dict) or not str(messages[-1].get("content", "")).strip():
+        return jsonify({"error": "The latest chat message is empty."}), 400
+    if not isinstance(metrics, dict) or metrics.get("dir") is None:
+        return jsonify({"error": "Run a dataset or model audit before using the explainer chat."}), 400
+    if not isinstance(dataset_meta, dict):
+        dataset_meta = {}
 
     from backend.config import PROCESS2_API_KEY
     if not PROCESS2_API_KEY:
@@ -1783,18 +1794,6 @@ def explain():
                 "Cache-Control": "no-cache",
                 "X-Accel-Buffering": "no",
             }
-        )
-
-    try:
-        explainer_gen = p2_stream_reply
-    except Exception as exc:
-        def generate_init_error():
-            yield f"data: {json.dumps({'error': f'Failed to initialize explainer: {str(exc)}'})}\n\n"
-            yield "data: [DONE]\n\n"
-        return Response(
-            stream_with_context(generate_init_error()),
-            mimetype="text/event-stream",
-            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
 
     def generate():

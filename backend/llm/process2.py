@@ -36,7 +36,7 @@ def _get_client():
     if not PROCESS2_MODEL:
         raise ValueError(
             "PROCESS2_MODEL is not configured. "
-            "Set it in your .env file (recommended: gemma-4-26b-a4b-it)."
+            "Set it in your .env file (recommended: gemini-2.5-flash)."
         )
     return genai.Client(api_key=PROCESS2_API_KEY)
 

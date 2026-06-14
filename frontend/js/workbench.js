@@ -6,6 +6,7 @@
   const API_BASE = (explicitApiBase || (isStaticPreview ? "http://127.0.0.1:5000" : "")).replace(/\/$/, "");
   const LAST_RESULT_KEY = "baised:last_fairness_result";
   let currentAnalysisResult = null;
+  let datasetAnalysisResult = null;
   let currentDatasetId = null;
   let currentModelDatasetId = null;
   let currentAiMarkdown = "";
@@ -874,6 +875,9 @@
 
   function renderResult(result) {
     currentAnalysisResult = result;
+    if (result.mode !== "model") {
+      datasetAnalysisResult = result;
+    }
     if (result.dataset_id) {
       currentDatasetId = result.dataset_id;
     }
@@ -1088,6 +1092,8 @@
       protected_attr: result.protected_attribute || "Unknown",
       outcome: result.outcome_column || "Unknown"
     };
+    explainerHistory = [];
+    resetExplainerChatUi();
 
     showExplainerPanel();
   }
@@ -1127,6 +1133,115 @@
     setText("repair-count-chip", "0 Suggestions");
     setText("feature-count-chip", "0 Features");
     setText("warning-count-chip", "0 Warnings");
+  }
+
+  function renderNeutralResult(mode = "dataset") {
+    currentAnalysisResult = null;
+    currentMetrics = null;
+    currentDatasetMeta = null;
+    currentAiMarkdown = "";
+    explainerHistory = [];
+    resetExplainerChatUi();
+    clearAiAnalyzerPanels();
+
+    const label = mode === "model" ? "Model" : "Waiting";
+    setText("result-mode-chip", label);
+    setText("severity-text", "No Analysis");
+    setText("bias-detected-text", "Run an audit to populate this summary.");
+    renderExplanation({
+      headline: mode === "model" ? "Model audit has not been run yet." : "No audit has been run yet.",
+      bullets: [
+        "Disparate impact ratio: 0.0000",
+        "Statistical parity difference: 0.0000",
+        "Equal opportunity difference: 0.0000",
+        "Average odds difference: 0.0000",
+      ],
+      recommendation: mode === "model"
+        ? "Choose test data and a model file, then run the model audit."
+        : "Upload a dataset and run the dataset audit.",
+    });
+    setText("dataset-meta-text", mode === "model" ? "Model audit results will appear after running the model audit." : "Upload a dataset to begin.");
+    setText("bias-score-text", "0.0");
+    setText("dir-text", "0.0000");
+    setText("difference-text", "0.0000");
+    setText("parity-text", "0.0%");
+    setText("eod-text", "0.0000");
+    setText("aod-text", "0.0000");
+    setText("advantaged-group-text", "-");
+    setText("disadvantaged-group-text", "-");
+    setText("selection-gap-percent-text", "0.0%");
+    setText("influential-feature-text", "-");
+    setText("hidden-bias-text", "No");
+    renderRecommendations([]);
+
+    renderEmptyState("group-bars", "Run an audit to compare group selection rates.");
+    renderEmptyState("hotspots-list", "Hotspot analysis appears after an audit.");
+    renderEmptyState("simulations-list", "Simulation output appears after an audit.");
+    renderEmptyState("repairs-list", "Repair suggestions appear after an audit.");
+    renderEmptyState("feature-impact-list", "Feature impact ranking appears after an audit.");
+    renderEmptyState("warnings-list", "Reliability warnings appear after an audit.");
+    renderProxyAnalysis({ proxy_analysis: [] });
+    renderDatasetRisk({});
+    renderBiasPattern({});
+    setExportState(false, mode === "model" ? "Run a model audit before exporting." : "Run a dataset audit before exporting.");
+    setText("hotspot-count-chip", "0 Hotspots");
+    setText("simulation-count-chip", "0 Scenarios");
+    setText("repair-count-chip", "0 Suggestions");
+    setText("feature-count-chip", "0 Features");
+    setText("warning-count-chip", "0 Warnings");
+
+    const advancedContainer = document.getElementById("advanced-analytics-container");
+    const advJsonBtn = document.getElementById("export-advanced-json-btn");
+    if (advancedContainer) advancedContainer.style.display = "none";
+    if (advJsonBtn) advJsonBtn.style.display = "none";
+
+    const resetMeter = (id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.width = "0%";
+        el.style.backgroundColor = "#10b981";
+      }
+    };
+    resetMeter("bias-score-bar");
+    resetMeter("dir-bar");
+    resetMeter("difference-bar");
+    resetMeter("parity-bar");
+    resetMeter("eod-bar");
+    resetMeter("aod-bar");
+
+    const severityText = document.getElementById("severity-text");
+    if (severityText) {
+      severityText.className = "mt-3 text-3xl font-black text-white";
+      severityText.style.color = "";
+    }
+
+    const chip = document.getElementById("result-mode-chip");
+    if (chip) {
+      chip.className = "rounded-full bg-slate-200 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600";
+    }
+
+    requestSimulatorPreview();
+  }
+
+  function clearAiAnalyzerPanels() {
+    const resultPanel = document.getElementById("ai-result-panel");
+    const errorPanel = document.getElementById("ai-error-panel");
+    const responseText = document.getElementById("ai-response-text");
+    if (resultPanel) resultPanel.classList.add("hidden");
+    if (errorPanel) errorPanel.classList.add("hidden");
+    if (responseText) responseText.innerHTML = "";
+    setText("ai-model-name", "-");
+    setText("ai-row-count", "0");
+  }
+
+  function resetExplainerChatUi() {
+    const thread = document.getElementById("chat-thread");
+    if (!thread) return;
+    thread.innerHTML = "";
+    const intro = document.createElement("div");
+    intro.className = "max-w-[85%] self-start rounded-xl border border-slate-100 bg-white p-3 text-sm leading-relaxed text-slate-700 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300";
+    intro.textContent = "Hi! I'm your AI fairness assistant. Ask me anything about the metrics computed above, their interpretation, or how to remediate the detected bias.";
+    thread.appendChild(intro);
   }
 
   async function requestSimulatorPreview() {
@@ -1708,14 +1823,28 @@
     }, 580);
   }
 
+  function switchAuditMode(mode) {
+    setAuditFlipMode(mode);
+    if (mode === "dataset") {
+      if (datasetAnalysisResult) {
+        renderResult(datasetAnalysisResult);
+      } else {
+        renderNeutralResult("dataset");
+      }
+      return;
+    }
+
+    renderNeutralResult("model");
+  }
+
   function bindAuditFlipControls() {
     const showModelBtn = document.getElementById("show-model-audit");
     const showDatasetBtn = document.getElementById("show-dataset-audit");
     if (showModelBtn) {
-      showModelBtn.addEventListener("click", () => setAuditFlipMode("model"));
+      showModelBtn.addEventListener("click", () => switchAuditMode("model"));
     }
     if (showDatasetBtn) {
-      showDatasetBtn.addEventListener("click", () => setAuditFlipMode("dataset"));
+      showDatasetBtn.addEventListener("click", () => switchAuditMode("dataset"));
     }
   }
 
@@ -1811,7 +1940,9 @@
       // Reset internal state
       currentDatasetId = null;
       currentAnalysisResult = null;
+      datasetAnalysisResult = null;
       window.lastUploadedDatasetFile = null;
+      renderNeutralResult("dataset");
 
       // Also reset selects
       document.getElementById("protected-attribute-input").innerHTML = '<option value="">Auto-detect</option>';
@@ -1953,6 +2084,7 @@
       if (protectedSelect) protectedSelect.innerHTML = '<option value="">Scan test data first</option>';
       if (trueLabelSelect) trueLabelSelect.innerHTML = '<option value="">Scan test data first</option>';
       if (qualSelect) qualSelect.innerHTML = '<option value="">Optional</option>';
+      renderNeutralResult("model");
     });
   }
 
@@ -2450,6 +2582,10 @@
     if (!input) return;
     const userText = input.value.trim();
     if (!userText) return;
+    if (!currentMetrics || !currentDatasetMeta) {
+      appendMessage('assistant', 'Run a dataset or model audit first so I have metrics to explain.');
+      return;
+    }
     input.value = '';
 
     // Add user message to UI and history
@@ -2476,23 +2612,40 @@
         throw new Error(`Explain endpoint returned error ${res.status}`);
       }
 
+      if (!res.body) {
+        throw new Error("Explain endpoint did not return a readable stream.");
+      }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      let bufferedText = '';
+      let streamFinished = false;
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        const lines = decoder.decode(value).split('\n');
-        for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
-          const payload = line.replace('data:', '').trim();
-          if (payload === '[DONE]') break;
+        bufferedText += decoder.decode(value || new Uint8Array(), { stream: !done });
+        const events = bufferedText.split('\n\n');
+        bufferedText = events.pop() || '';
+
+        for (const eventText of events) {
+          const payload = eventText
+            .split('\n')
+            .filter((line) => line.startsWith('data:'))
+            .map((line) => line.slice(5).trim())
+            .join('\n')
+            .trim();
+          if (!payload) continue;
+          if (payload === '[DONE]') {
+            streamFinished = true;
+            break;
+          }
           try {
             const data = JSON.parse(payload);
             if (data.error) {
               fullReply = `Error: ${data.error}`;
               aiMsg.textContent = fullReply;
               aiMsg.className = "max-w-[85%] self-start rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-700 shadow-sm whitespace-pre-wrap";
+              streamFinished = true;
               break;
             }
             if (data.chunk) {
@@ -2505,6 +2658,13 @@
           const thread = document.getElementById('chat-thread');
           if (thread) thread.scrollTop = 9999;
         }
+        if (done || streamFinished) break;
+      }
+
+      if (!fullReply) {
+        fullReply = 'The explainer returned an empty response. Please check the Process 2 model configuration and try again.';
+        aiMsg.textContent = fullReply;
+        aiMsg.className = "max-w-[85%] self-start rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-relaxed text-amber-800 shadow-sm whitespace-pre-wrap";
       }
 
       // Commit completed reply to history if not an error
@@ -2513,7 +2673,7 @@
       }
 
     } catch (err) {
-      aiMsg.textContent = 'Error reaching the explainer. Please check your EXPLAINER_CHAT_API_KEY.';
+      aiMsg.textContent = `Error reaching the explainer: ${describeRequestError(err)}`;
       aiMsg.className = "max-w-[85%] self-start rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-700 shadow-sm whitespace-pre-wrap";
       console.error(err);
     }
