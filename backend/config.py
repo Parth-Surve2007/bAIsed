@@ -4,8 +4,13 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-_ROOT_ENV = Path(__file__).resolve().parent.parent / ".env"
-load_dotenv(_ROOT_ENV, override=True)
+_BACKEND_DIR = Path(__file__).resolve().parent
+_ROOT_DIR = _BACKEND_DIR.parent
+
+# Support both deployment-style project-root .env files and the documented
+# local backend/.env file. Load backend/.env last so local values take priority.
+load_dotenv(_ROOT_DIR / ".env", override=True)
+load_dotenv(_BACKEND_DIR / ".env", override=True)
 
 logger = logging.getLogger(__name__)
 

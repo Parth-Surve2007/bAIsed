@@ -5,9 +5,13 @@ from pathlib import Path
 from flask import Flask, send_from_directory
 from dotenv import load_dotenv
 
-# Load the single canonical .env at the project root before importing modules
-# that read environment variables during import.
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+_BACKEND_DIR = Path(__file__).resolve().parent
+_ROOT_DIR = _BACKEND_DIR.parent
+
+# Load env files before importing modules that read variables during import.
+# backend/.env is the documented local path; root .env remains supported.
+load_dotenv(_ROOT_DIR / ".env", override=True)
+load_dotenv(_BACKEND_DIR / ".env", override=True)
 
 try:
     from .api import api_bp
