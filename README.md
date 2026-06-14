@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Screenshot%202026-06-09%20163702.png" alt="bAIsed logo" width="100" height="70" />
+  <img src="bAIsed Logo" alt="bAIsed logo" width="100" height="70" />
 </p>
 
 <p align="center">
