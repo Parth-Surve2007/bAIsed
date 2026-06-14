@@ -1,3 +1,12 @@
+---
+title: bAIsed
+emoji: ⚖️
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 <p align="center">
 <HEAD>
   <img src="bAIsed Logo.png" alt="bAIsed logo" width="100" height="70" />
