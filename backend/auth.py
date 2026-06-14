@@ -80,7 +80,9 @@ def verify_token(f):
         try:
             decoded = auth_client.verify_id_token(token)
         except Exception as exc:  # pragma: no cover - depends on external credentials
-            return jsonify({"error": f"Invalid token: {exc}"}), 401
+            import logging
+            logging.getLogger("backend.auth").warning(f"Auth token verification failed: {exc}")
+            return jsonify({"error": "Session issue — please refresh the page"}), 401
 
         g.firebase_user = decoded
         return f(*args, **kwargs)
