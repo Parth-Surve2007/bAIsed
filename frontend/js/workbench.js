@@ -227,6 +227,7 @@
     const activeResult = cleanResultForSession(currentAnalysisResult);
     const datasetResult = cleanResultForSession(datasetAnalysisResult);
     const modelResult = cleanResultForSession(modelAnalysisResult);
+    const protectedSelectValue = document.getElementById("protected-attribute-input")?.value || "";
     return {
       title: deriveSessionTitle(),
       audit_mode: activeResult?.mode || "dataset",
@@ -249,7 +250,7 @@
       ai_report_source: document.getElementById("ai-model-name")?.textContent || "",
       dataset_meta: {
         name: currentDatasetMeta?.name || activeResult?.file_name || "",
-        protected_attr: currentDatasetMeta?.protected_attr || activeResult?.protected_attribute || "",
+        protected_attr: protectedSelectValue || currentDatasetMeta?.protected_attr || activeResult?.protected_attribute || "",
         outcome: currentDatasetMeta?.outcome || activeResult?.outcome_column || "",
         row_count: activeResult?.row_count,
       },
@@ -983,6 +984,33 @@
     });
   }
 
+  function clearProtectedAttributeDropdown() {
+    const protectedSelect = document.getElementById("protected-attribute-input");
+    if (protectedSelect) {
+      protectedSelect.innerHTML = '<option value="">Auto-detect</option>';
+    }
+  }
+
+  function restoreProtectedAttributeDropdown(result, datasetMeta = currentDatasetMeta) {
+    const protectedSelect = document.getElementById("protected-attribute-input");
+    if (!protectedSelect) return;
+
+    const profile = result?.stats?.column_profile || {};
+    const columns = Object.keys(profile);
+    if (!columns.length) {
+      clearProtectedAttributeDropdown();
+      return;
+    }
+
+    protectedSelect.innerHTML = '<option value="">Auto-detect</option>';
+    columns.forEach((column) => {
+      protectedSelect.add(new Option(column, column));
+    });
+
+    const protectedValue = result?.protected_attribute || datasetMeta?.protected_attr || "";
+    protectedSelect.value = columns.includes(protectedValue) ? protectedValue : "";
+  }
+
   function renderGroupBars(result) {
     const container = document.getElementById("group-bars");
     const groupCountChip = document.getElementById("group-count-chip");
@@ -1429,6 +1457,7 @@
     }
 
     renderRecommendations(result.recommendations || []);
+    restoreProtectedAttributeDropdown(result);
     renderFieldAnalysis(result);
     renderGroupBars(result);
     renderHotspots(result);
@@ -1616,6 +1645,9 @@
   }
 
   function renderNeutralResult(mode = "dataset") {
+    if (mode === "dataset") {
+      clearProtectedAttributeDropdown();
+    }
     currentAnalysisResult = null;
     currentMetrics = null;
     currentDatasetMeta = null;
@@ -1813,6 +1845,7 @@
       }
       if (active) {
         renderResult(active);
+        restoreProtectedAttributeDropdown(active, currentDatasetMeta);
       } else {
         renderNeutralResult("dataset");
         if (currentDatasetMeta?.name) {
