@@ -1,7 +1,6 @@
 <p align="center">
-<<<<<<< HEAD
+<HEAD>
   <img src="bAIsed Logo" alt="bAIsed logo" width="100" height="70" />
->>>>>>> f10a68204d8764532ad81f1e7ab6f3be5e2faa69
 </p>
 
 <p align="center">
