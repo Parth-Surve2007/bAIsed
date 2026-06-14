@@ -5,16 +5,16 @@ from pathlib import Path
 from flask import Flask, send_from_directory
 from dotenv import load_dotenv
 
+# Load the single canonical .env at the project root before importing modules
+# that read environment variables during import.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 try:
     from .api import api_bp
     from .auth import auth_bp
 except ImportError:  # pragma: no cover - direct script fallback
     from api import api_bp
     from auth import auth_bp
-
-
-# Load the single canonical .env at the project root.
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 def create_app() -> Flask:
@@ -29,7 +29,7 @@ def create_app() -> Flask:
     def add_cors_headers(response):
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
         return response
 
     @app.get("/")

@@ -14,6 +14,12 @@
   let currentMetrics = null;
   let currentDatasetMeta = null;
   let privacyModeEnabled = false;
+  let sessionContainsPrivateWork = false;
+  let currentSessionId = null;
+  let recentSessions = [];
+  let sessionSaveTimer = null;
+  let sessionSaveInFlight = null;
+  let restoringSession = false;
   let puppyPetCount = 0;
 
   function movePuppy() {
@@ -131,11 +137,290 @@
   }
 
   function persistLastResult(result) {
+    if (privacyModeEnabled) {
+      return;
+    }
     try {
       localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(result || {}));
     } catch (error) {
       // Ignore storage failures (private mode / quota).
     }
+  }
+
+  function setSessionStatus(message) {
+    setText("session-status-text", message);
+    setText("mobile-session-status-text", message);
+  }
+
+  function hasSignedInUser() {
+    return Boolean(window.baisedFirebase?.auth?.currentUser && window.baisedAuth?.getIdToken);
+  }
+
+  async function authFetch(path, options = {}) {
+    if (!window.baisedAuth || typeof window.baisedAuth.getIdToken !== "function") {
+      throw new Error("Sign in to save recent chats.");
+    }
+    const token = await window.baisedAuth.getIdToken();
+    const headers = {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    };
+    return fetch(path, { ...options, headers });
+  }
+
+  function jsonClone(value) {
+    return value === undefined ? null : JSON.parse(JSON.stringify(value));
+  }
+
+  function cleanResultForSession(result) {
+    const cloned = jsonClone(result || null);
+    if (!cloned || typeof cloned !== "object") return null;
+    delete cloned.dataset_id;
+    delete cloned.model_dataset_id;
+    return cloned;
+  }
+
+  function deriveSessionTitle() {
+    const result = currentAnalysisResult || datasetAnalysisResult || modelAnalysisResult;
+    if (!result && currentDatasetMeta?.name) {
+      return `Dataset audit: ${currentDatasetMeta.name}`.slice(0, 120);
+    }
+    if (!result) return "Untitled audit";
+    const mode = result.mode === "model" ? "Model audit" : result.mode === "dataset" ? "Dataset audit" : "Bias check";
+    const protectedAttr = result.protected_attribute || currentDatasetMeta?.protected_attr || "fairness";
+    const severity = result.severity ? `${result.severity} ` : "";
+    return `${mode}: ${severity}${protectedAttr}`.slice(0, 120);
+  }
+
+  function serializeWorkbenchState() {
+    const activeResult = cleanResultForSession(currentAnalysisResult);
+    const datasetResult = cleanResultForSession(datasetAnalysisResult);
+    const modelResult = cleanResultForSession(modelAnalysisResult);
+    return {
+      title: deriveSessionTitle(),
+      audit_mode: activeResult?.mode || "dataset",
+      summary: activeResult
+        ? {
+            mode: activeResult.mode,
+            severity: activeResult.severity,
+            DIR: activeResult.DIR,
+            difference: activeResult.difference,
+            bias_score: activeResult.bias_score,
+            protected_attribute: activeResult.protected_attribute,
+            outcome_column: activeResult.outcome_column,
+            row_count: activeResult.row_count,
+          }
+        : {},
+      explanation: activeResult?.explanation || null,
+      audit_result: activeResult,
+      ai_chat: jsonClone(explainerHistory || []),
+      ai_report_markdown: currentAiMarkdown || "",
+      ai_report_source: document.getElementById("ai-model-name")?.textContent || "",
+      dataset_meta: {
+        name: currentDatasetMeta?.name || activeResult?.file_name || "",
+        protected_attr: currentDatasetMeta?.protected_attr || activeResult?.protected_attribute || "",
+        outcome: currentDatasetMeta?.outcome || activeResult?.outcome_column || "",
+        row_count: activeResult?.row_count,
+      },
+      model_meta: activeResult?.model_audit
+        ? {
+            model_file_name: activeResult.model_audit.model_file_name,
+            model_type: activeResult.model_audit.model_type,
+          }
+        : {},
+      workspace_state: {
+        active_result: activeResult,
+        dataset_result: datasetResult,
+        model_result: modelResult,
+        current_ai_markdown: currentAiMarkdown || "",
+        explainer_history: jsonClone(explainerHistory || []),
+      },
+    };
+  }
+
+  function renderRecentSessions() {
+    const list = document.getElementById("recent-sessions-list");
+    if (!list) return;
+    list.innerHTML = "";
+    if (!hasSignedInUser()) {
+      list.innerHTML = '<div class="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-sm text-slate-500">Sign in to sync recent chats.</div>';
+      return;
+    }
+    if (!recentSessions.length) {
+      list.innerHTML = '<div class="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-sm text-slate-500">No saved chats yet.</div>';
+      return;
+    }
+    recentSessions.forEach((session) => {
+      const btn = document.createElement("button");
+      const active = session.id === currentSessionId;
+      btn.type = "button";
+      btn.className = `w-full rounded-xl border px-3 py-3 text-left transition ${
+        active ? "border-teal-300 bg-teal-50 text-teal-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+      }`;
+      btn.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="truncate text-sm font-bold">${escapeHtml(session.title || "Untitled audit")}</div>
+            <div class="mt-1 flex items-center justify-between gap-2 text-[11px] text-slate-500">
+              <span>${escapeHtml(session.audit_mode || "audit")}</span>
+              <span>${session.summary?.severity ? escapeHtml(session.summary.severity) : ""}</span>
+            </div>
+          </div>
+          <span class="delete-session-btn inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600" data-session-id="${escapeHtml(session.id)}" title="Delete chat">
+            <span class="material-symbols-outlined text-base">delete</span>
+          </span>
+        </div>
+      `;
+      btn.addEventListener("click", () => loadSession(session.id));
+      btn.querySelector(".delete-session-btn")?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        deleteSession(session.id, session.title || "this chat");
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  async function deleteSession(sessionId, title) {
+    if (!sessionId || !hasSignedInUser()) return;
+    const ok = confirm(`Delete "${title}" from Recent Chats? This cannot be undone.`);
+    if (!ok) return;
+    try {
+      const response = await authFetch(`/api/auth/sessions/${encodeURIComponent(sessionId)}`, {
+        method: "DELETE",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Unable to delete chat.");
+      if (sessionId === currentSessionId) {
+        currentSessionId = null;
+        currentAnalysisResult = null;
+        datasetAnalysisResult = null;
+        modelAnalysisResult = null;
+        currentDatasetId = null;
+        currentModelDatasetId = null;
+        currentMetrics = null;
+        currentDatasetMeta = null;
+        currentAiMarkdown = "";
+        explainerHistory = [];
+        window.lastUploadedDatasetFile = null;
+        clearWorkbenchForms();
+        clearAiAnalyzerPanels();
+        setAuditFlipMode("dataset");
+        renderNeutralResult("dataset");
+        restoreExplainerChat([]);
+      }
+      await loadRecentSessions();
+      setSessionStatus("Chat deleted.");
+    } catch (error) {
+      setSessionStatus(error.message || "Unable to delete chat.");
+    }
+  }
+
+  async function loadRecentSessions() {
+    if (!hasSignedInUser()) {
+      recentSessions = [];
+      setSessionStatus("Sign in to save recent chats.");
+      renderRecentSessions();
+      return;
+    }
+    try {
+      const response = await authFetch("/api/auth/sessions");
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Unable to load recent chats.");
+      recentSessions = payload.sessions || [];
+      setSessionStatus(privacyModeEnabled ? "Privacy Mode: autosave is off." : "Recent chats sync to your account.");
+      renderRecentSessions();
+    } catch (error) {
+      setSessionStatus(error.message || "Unable to load recent chats.");
+    }
+  }
+
+  async function saveCurrentSession(options = {}) {
+    if (restoringSession) return null;
+    if (privacyModeEnabled && !options.force) return null;
+    if (sessionContainsPrivateWork && !options.force) return null;
+    if (Object.prototype.hasOwnProperty.call(options, "expectedSessionId") && options.expectedSessionId !== currentSessionId) {
+      return null;
+    }
+    if (!hasSignedInUser()) {
+      setSessionStatus("Sign in to save recent chats.");
+      renderRecentSessions();
+      return null;
+    }
+    const payload = serializeWorkbenchState();
+    if (options.title) {
+      payload.title = options.title;
+    }
+    payload.privacy_mode_saved = Boolean(options.privacyModeSaved);
+    const hasDatasetMeta = Boolean(payload.dataset_meta?.name || payload.dataset_meta?.protected_attr || payload.dataset_meta?.outcome);
+    if (!options.allowEmpty && !payload.workspace_state.active_result && !payload.ai_chat.length && !payload.ai_report_markdown && !hasDatasetMeta) {
+      return null;
+    }
+    const expectedSessionId = options.expectedSessionId;
+    const expectedSessionProvided = Object.prototype.hasOwnProperty.call(options, "expectedSessionId");
+    try {
+      const saveRequest = authFetch(
+        currentSessionId ? `/api/auth/sessions/${encodeURIComponent(currentSessionId)}` : "/api/auth/sessions",
+        {
+          method: currentSessionId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      sessionSaveInFlight = saveRequest;
+      const response = await saveRequest;
+      if (sessionSaveInFlight === saveRequest) {
+        sessionSaveInFlight = null;
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Unable to save recent chat.");
+      if (expectedSessionProvided && expectedSessionId !== currentSessionId) {
+        await loadRecentSessions();
+        return data.session || null;
+      }
+      currentSessionId = data.session?.id || currentSessionId;
+      sessionContainsPrivateWork = false;
+      sessionSaveTimer = null;
+      setSessionStatus("Saved to Recent Chats.");
+      await loadRecentSessions();
+      return data.session;
+    } catch (error) {
+      sessionSaveInFlight = null;
+      setSessionStatus(error.message || "Unable to save recent chat.");
+      return null;
+    }
+  }
+
+  function queueSessionSave() {
+    if (privacyModeEnabled) {
+      sessionContainsPrivateWork = true;
+      updatePrivateSaveButton();
+      return;
+    }
+    if (sessionContainsPrivateWork || restoringSession) return;
+    window.clearTimeout(sessionSaveTimer);
+    const expectedSessionId = currentSessionId;
+    sessionSaveTimer = window.setTimeout(() => {
+      sessionSaveTimer = null;
+      saveCurrentSession({ expectedSessionId });
+    }, 700);
+  }
+
+  async function flushSessionSave() {
+    if (sessionSaveInFlight) {
+      await sessionSaveInFlight.catch(() => null);
+    }
+    if (!sessionSaveTimer || privacyModeEnabled || sessionContainsPrivateWork || restoringSession) {
+      return null;
+    }
+    window.clearTimeout(sessionSaveTimer);
+    sessionSaveTimer = null;
+    return saveCurrentSession();
+  }
+
+  function updatePrivateSaveButton() {
+    document.querySelectorAll("[data-save-private-session], #save-private-session-btn").forEach((btn) => {
+      btn.classList.toggle("hidden", !sessionContainsPrivateWork);
+    });
   }
 
   function formatDecimal(value, digits) {
@@ -1108,6 +1393,11 @@
     resetExplainerChatUi();
 
     showExplainerPanel();
+    if (!privacyModeEnabled && !sessionContainsPrivateWork && !restoringSession) {
+      saveCurrentSession({ expectedSessionId: currentSessionId });
+    } else {
+      queueSessionSave();
+    }
   }
 
   function renderError(message) {
@@ -1248,7 +1538,6 @@
 
   function setPrivacyMode(enabled) {
     privacyModeEnabled = Boolean(enabled);
-    const toggle = document.getElementById("privacy-mode-toggle");
     const chip = document.getElementById("ai-mode-chip");
     const help = document.getElementById("ai-analyzer-help-text");
     const submitBtn = document.getElementById("ai-submit-btn");
@@ -1256,7 +1545,9 @@
     const chatInput = document.getElementById("chat-input");
     const chatSubmit = document.getElementById("chat-submit-btn");
 
-    if (toggle) toggle.checked = privacyModeEnabled;
+    document.querySelectorAll("[data-privacy-mode-toggle], #privacy-mode-toggle").forEach((toggle) => {
+      toggle.checked = privacyModeEnabled;
+    });
     if (chip) {
       chip.textContent = privacyModeEnabled ? "Privacy Mode" : "AI Powered";
       chip.className = privacyModeEnabled
@@ -1282,18 +1573,31 @@
       chatSubmit.classList.toggle("opacity-50", privacyModeEnabled);
       chatSubmit.classList.toggle("cursor-not-allowed", privacyModeEnabled);
     }
+    if (privacyModeEnabled) {
+      localStorage.removeItem(LAST_RESULT_KEY);
+      currentDatasetId = null;
+      currentModelDatasetId = null;
+      setSessionStatus("Privacy Mode: autosave is off.");
+    } else if (hasSignedInUser()) {
+      setSessionStatus("Recent chats sync to your account.");
+    }
+    updatePrivateSaveButton();
   }
 
   function bindPrivacyModeToggle() {
-    const toggle = document.getElementById("privacy-mode-toggle");
-    if (!toggle) return;
-    toggle.addEventListener("change", () => {
-      setPrivacyMode(toggle.checked);
-      if (privacyModeEnabled) {
-        appendMessage("assistant", "Privacy Mode is on. AI chat is disabled; use Generate Deterministic Report for an offline-style metrics report.");
-      }
+    const toggles = document.querySelectorAll("[data-privacy-mode-toggle], #privacy-mode-toggle");
+    if (!toggles.length) return;
+    toggles.forEach((toggle) => {
+      toggle.addEventListener("change", () => {
+        setPrivacyMode(toggle.checked);
+        if (privacyModeEnabled) {
+          sessionContainsPrivateWork = Boolean(currentAnalysisResult || currentAiMarkdown || explainerHistory.length);
+          updatePrivateSaveButton();
+          appendMessage("assistant", "Privacy Mode is on. AI chat is disabled; use Generate Deterministic Report for an offline-style metrics report.");
+        }
+      });
     });
-    setPrivacyMode(toggle.checked);
+    setPrivacyMode(Array.from(toggles).some((toggle) => toggle.checked));
   }
 
   function resetExplainerChatUi() {
@@ -1304,6 +1608,160 @@
     intro.className = "max-w-[85%] self-start rounded-xl border border-slate-100 bg-white p-3 text-sm leading-relaxed text-slate-700 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300";
     intro.textContent = "Hi! I'm your AI fairness assistant. Ask me anything about the metrics computed above, their interpretation, or how to remediate the detected bias.";
     thread.appendChild(intro);
+  }
+
+  function restoreExplainerChat(history) {
+    const thread = document.getElementById("chat-thread");
+    if (!thread) return;
+    resetExplainerChatUi();
+    (history || []).forEach((message) => {
+      if (!message || !message.content) return;
+      appendMessage(message.role === "user" ? "user" : "assistant", message.content);
+    });
+  }
+
+  function restoreSessionState(session) {
+    const state = session?.workspace_state || {};
+    restoringSession = true;
+    try {
+      datasetAnalysisResult = state.dataset_result || null;
+      modelAnalysisResult = state.model_result || null;
+      currentDatasetMeta = session?.dataset_meta || null;
+      currentSessionId = session?.id || null;
+      currentDatasetId = null;
+      currentModelDatasetId = null;
+      currentAiMarkdown = state.current_ai_markdown || session?.ai_report_markdown || "";
+      explainerHistory = state.explainer_history || session?.ai_chat || [];
+      clearAiAnalyzerPanels();
+
+      const active = session?.audit_result || state.active_result || datasetAnalysisResult || modelAnalysisResult;
+      if (active?.mode === "model") {
+        modelAnalysisResult = active;
+      } else if (active) {
+        datasetAnalysisResult = active;
+      }
+      if (active) {
+        renderResult(active);
+      } else {
+        renderNeutralResult("dataset");
+        if (currentDatasetMeta?.name) {
+          setText("file-name-display", currentDatasetMeta.name);
+        }
+      }
+
+      explainerHistory = state.explainer_history || session?.ai_chat || [];
+      restoreExplainerChat(explainerHistory);
+
+      if (currentAiMarkdown) {
+        const resultPanel = document.getElementById("ai-result-panel");
+        const responseText = document.getElementById("ai-response-text");
+        if (responseText) responseText.innerHTML = marked.parse(currentAiMarkdown);
+        if (resultPanel) resultPanel.classList.remove("hidden");
+        setText("ai-model-name", session.ai_report_source || "Saved Report");
+        setText("ai-row-count", session.dataset_meta?.row_count || session.summary?.row_count || "0");
+      }
+
+      setPrivacyMode(false);
+      sessionContainsPrivateWork = false;
+      updatePrivateSaveButton();
+      renderRecentSessions();
+      setSessionStatus("Loaded saved chat.");
+    } finally {
+      restoringSession = false;
+    }
+  }
+
+  async function loadSession(sessionId) {
+    if (!sessionId || privacyModeEnabled) {
+      if (privacyModeEnabled) {
+        setSessionStatus("Turn off Privacy Mode before loading saved chats.");
+      }
+      return;
+    }
+    try {
+      if (sessionId !== currentSessionId) {
+        await flushSessionSave();
+      }
+      const response = await authFetch(`/api/auth/sessions/${encodeURIComponent(sessionId)}`);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Unable to load saved chat.");
+      restoreSessionState(payload.session);
+    } catch (error) {
+      setSessionStatus(error.message || "Unable to load saved chat.");
+    }
+  }
+
+  function clearWorkbenchForms() {
+    document.getElementById("dataset-analysis-form")?.reset();
+    document.getElementById("model-audit-form")?.reset();
+    setText("file-name-display", "No file selected");
+    setText("model-test-file-name-display", "No test data selected");
+    const protectedSelect = document.getElementById("protected-attribute-input");
+    const outcomeSelect = document.getElementById("outcome-column-input");
+    const qualSelect = document.getElementById("qualification-column-input");
+    const modelProtected = document.getElementById("model-protected-attribute-input");
+    const modelLabel = document.getElementById("model-true-label-column-input");
+    const modelQual = document.getElementById("model-qualification-column-input");
+    if (protectedSelect) protectedSelect.innerHTML = '<option value="">Auto-detect</option>';
+    if (outcomeSelect) outcomeSelect.innerHTML = '<option value="">Auto-detect</option>';
+    if (qualSelect) qualSelect.innerHTML = '<option value="">Auto-detect (Recommended)</option>';
+    if (modelProtected) modelProtected.innerHTML = '<option value="">Scan test data first</option>';
+    if (modelLabel) modelLabel.innerHTML = '<option value="">Scan test data first</option>';
+    if (modelQual) modelQual.innerHTML = '<option value="">Optional</option>';
+  }
+
+  async function startNewChat() {
+    if (sessionContainsPrivateWork && !confirm("This private work has not been saved. Start a new chat and discard it?")) {
+      return;
+    }
+    await flushSessionSave();
+    currentSessionId = null;
+    currentAnalysisResult = null;
+    datasetAnalysisResult = null;
+    modelAnalysisResult = null;
+    currentDatasetId = null;
+    currentModelDatasetId = null;
+    currentMetrics = null;
+    currentDatasetMeta = null;
+    currentAiMarkdown = "";
+    explainerHistory = [];
+    sessionContainsPrivateWork = false;
+    window.lastUploadedDatasetFile = null;
+    localStorage.removeItem(LAST_RESULT_KEY);
+    clearWorkbenchForms();
+    clearAiAnalyzerPanels();
+    setAuditFlipMode("dataset");
+    renderNeutralResult("dataset");
+    setPrivacyMode(privacyModeEnabled);
+    renderRecentSessions();
+    setSessionStatus(privacyModeEnabled ? "Privacy Mode: new private chat." : "New chat ready.");
+    if (!privacyModeEnabled && hasSignedInUser()) {
+      const draft = await saveCurrentSession({ allowEmpty: true, title: "New chat" });
+      if (draft) {
+        setSessionStatus("New chat created.");
+      }
+    }
+  }
+
+  async function savePrivateWork() {
+    if (!sessionContainsPrivateWork && !privacyModeEnabled) return;
+    const ok = confirm(
+      "Save this private work to Recent Chats? This saves audit metrics, explanations, deterministic reports, chat text, and metadata to your account. Raw uploaded files are not saved.",
+    );
+    if (!ok) return;
+    setPrivacyMode(false);
+    await saveCurrentSession({ force: true, privacyModeSaved: true });
+  }
+
+  function bindSessionControls() {
+    document.querySelectorAll("[data-new-chat-button], #new-chat-btn").forEach((btn) => {
+      btn.addEventListener("click", startNewChat);
+    });
+    document.querySelectorAll("[data-save-private-session], #save-private-session-btn").forEach((btn) => {
+      btn.addEventListener("click", savePrivateWork);
+    });
+    document.addEventListener("baised:auth-changed", loadRecentSessions);
+    window.setTimeout(loadRecentSessions, 500);
   }
 
   async function requestSimulatorPreview() {
@@ -1584,6 +2042,9 @@
       dataset_risk: result.dataset_risk || {},
       bias_pattern: result.bias_pattern || {},
       mode: result.mode,
+      row_count: result.row_count,
+      protected_attribute: result.protected_attribute,
+      outcome_column: result.outcome_column,
     };
   }
 
@@ -1687,6 +2148,9 @@
 
       const formData = new FormData();
       formData.append("file", file);
+      if (privacyModeEnabled) {
+        formData.append("privacy_mode", "true");
+      }
 
       try {
         console.log("Starting scan for file:", file.name);
@@ -1746,8 +2210,15 @@
         document.getElementById('file-drop-zone').classList.add('border-secondary','bg-secondary/10');
         document.getElementById('file-drop-zone').classList.remove('border-secondary/40','bg-secondary/5');
         document.getElementById('file-name-display').textContent = file.name;
+        currentDatasetMeta = {
+          name: file.name,
+          protected_attr: document.getElementById("protected-attribute-input")?.value || "",
+          outcome: document.getElementById("outcome-column-input")?.value || "",
+          row_count: scanResult.row_count || scanResult.profile?.row_count || null,
+        };
         
         window.lastUploadedDatasetFile = file;
+        queueSessionSave();
 
       } catch (err) {
         console.error("Scan error:", err);
@@ -1941,6 +2412,9 @@
       } else {
         formData.append("file", file);
       }
+      if (privacyModeEnabled) {
+        formData.append("privacy_mode", "true");
+      }
 
       const protectedAttribute = document.getElementById("protected-attribute-input").value;
       const outcomeColumn = document.getElementById("outcome-column-input").value;
@@ -2035,6 +2509,9 @@
 
       const formData = new FormData();
       formData.append("file", file);
+      if (privacyModeEnabled) {
+        formData.append("privacy_mode", "true");
+      }
       try {
         const scanResult = await postForm("/scan", formData);
         if (scanResult.error) {
@@ -2107,6 +2584,9 @@
       } else {
         formData.append("file", testFile);
       }
+      if (privacyModeEnabled) {
+        formData.append("privacy_mode", "true");
+      }
       formData.append("model_file", modelFile);
       formData.append("protected_attribute", protectedAttribute);
       formData.append("true_label_column", trueLabelColumn);
@@ -2169,11 +2649,11 @@
       const spinner = document.getElementById("ai-spinner");
       
       const file = window.lastUploadedDatasetFile;
-      
-      resultPanel.classList.add("hidden");
-      errorPanel.classList.add("hidden");
 
-      if ((!file && !currentDatasetId) || !currentAnalysisResult) {
+      currentAiMarkdown = "";
+      clearAiAnalyzerPanels();
+
+      if (((!file && !currentDatasetId) && !privacyModeEnabled) || !currentAnalysisResult) {
         document.getElementById("ai-error-text").textContent = "Please upload a dataset and run the Dataset Audit first.";
         errorPanel.classList.remove("hidden");
         return;
@@ -2189,7 +2669,7 @@
       const formData = new FormData();
       if (currentDatasetId) {
         formData.append("dataset_id", currentDatasetId);
-      } else {
+      } else if (file) {
         formData.append("file", file);
       }
       formData.append("analysis_json", JSON.stringify(compactAnalysisPayload(currentAnalysisResult)));
@@ -2219,6 +2699,7 @@
           }
           document.getElementById("ai-response-text").innerHTML = marked.parse(currentAiMarkdown);
           resultPanel.classList.remove("hidden");
+          queueSessionSave();
         }
       } catch (error) {
         document.getElementById("ai-error-text").textContent = describeRequestError(error);
@@ -2744,6 +3225,7 @@
       // Commit completed reply to history if not an error
       if (!fullReply.startsWith('Error:')) {
         explainerHistory.push({ role: 'assistant', content: fullReply });
+        queueSessionSave();
       }
 
     } catch (err) {
@@ -2765,6 +3247,7 @@
     bindModelAuditForm();
     bindAiAnalyzerForm();
     bindPrivacyModeToggle();
+    bindSessionControls();
     bindDownloadReport();
     bindDemoLoaders();
     bindExportButtons();

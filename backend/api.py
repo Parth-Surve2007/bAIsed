@@ -1402,12 +1402,13 @@ def scan():
     file = request.files.get("file")
     if file is None:
         return jsonify({"error": "A file upload is required."}), 400
+    privacy_mode = str(request.form.get("privacy_mode", "")).lower() == "true"
 
     try:
         df = load_dataset(file)
         df, preprocessor_report = standardize_dataset(df)
 
-        dataset_id = _save_temp_dataset(df)
+        dataset_id = None if privacy_mode else _save_temp_dataset(df)
 
         try:
             from .analysis import _profile_columns  # type: ignore
@@ -1437,6 +1438,7 @@ def upload():
     outcome_column = request.form.get("outcome_column")
     qualification_column = request.form.get("qualification_column")
     advanced_mode = str(request.form.get("advanced_mode", "")).lower() == "true"
+    privacy_mode = str(request.form.get("privacy_mode", "")).lower() == "true"
 
     try:
         if dataset_id:
@@ -1448,7 +1450,7 @@ def upload():
                 return jsonify({"error": "A file upload or dataset ID is required."}), 400
             df = load_dataset(file)
             df, preprocessor_report = standardize_dataset(df)
-            dataset_id = _save_temp_dataset(df)
+            dataset_id = None if privacy_mode else _save_temp_dataset(df)
 
         resolved_protected, resolved_outcome = detect_columns(
             df,
@@ -1479,10 +1481,10 @@ def upload():
     response["derived_outcome"] = result.stats.get("derived_outcome")
     response["qualification_column"] = result.stats.get("qualification_column")
     response["row_count"] = int(len(df))
-    response["dataset_id"] = dataset_id
+    response["dataset_id"] = None if privacy_mode else dataset_id
 
     file_obj = request.files.get("file")
-    response["file_name"] = file_obj.filename if file_obj else f"dataset_{dataset_id}.csv"
+    response["file_name"] = file_obj.filename if file_obj else (f"dataset_{dataset_id}.csv" if dataset_id else "private_dataset.csv")
 
     response["preprocessor_report"] = preprocessor_report
     protected_columns = result.stats.get("protected_attributes", [resolved_protected])
@@ -1510,6 +1512,7 @@ def model_upload():
     true_label_column = request.form.get("true_label_column")
     qualification_column = request.form.get("qualification_column")
     advanced_mode = str(request.form.get("advanced_mode", "")).lower() == "true"
+    privacy_mode = str(request.form.get("privacy_mode", "")).lower() == "true"
     model_file = request.files.get("model_file")
 
     if model_file is None:
@@ -1537,7 +1540,7 @@ def model_upload():
             true_label_column=true_label_column,
             qualification_column=qualification_column,
         )
-        dataset_id = _save_temp_dataset(df)
+        dataset_id = None if privacy_mode else _save_temp_dataset(df)
         if not qualification_column:
             qualification_column = true_label_column
 
@@ -1569,10 +1572,10 @@ def model_upload():
     response["outcome_column"] = resolved_outcome
     response["qualification_column"] = result.stats.get("qualification_column")
     response["row_count"] = int(len(df))
-    response["dataset_id"] = dataset_id
+    response["dataset_id"] = None if privacy_mode else dataset_id
 
     file_obj = request.files.get("file")
-    response["file_name"] = file_obj.filename if file_obj else f"model_test_data_{dataset_id}.csv"
+    response["file_name"] = file_obj.filename if file_obj else (f"model_test_data_{dataset_id}.csv" if dataset_id else "private_model_test_data.csv")
     response["model_audit"] = model_metadata
     response["model_performance_by_group"] = _model_performance_by_group(
         df,
@@ -1650,14 +1653,25 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
 
     dataset_id = request.form.get("dataset_id")
     file = request.files.get("file")
-    if file is None and not dataset_id:
-        return jsonify({"error": "A file upload or dataset ID is required."}), 400
+    privacy_mode = str(request.form.get("privacy_mode", "")).lower() == "true"
 
     analysis_json = request.form.get("analysis_json", "{}")
     try:
         analysis_data = json.loads(analysis_json)
     except Exception:
         analysis_data = {}
+
+    if file is None and not dataset_id and not privacy_mode:
+        return jsonify({"error": "A file upload or dataset ID is required."}), 400
+
+    if privacy_mode and file is None and not dataset_id:
+        row_count = int(analysis_data.get("row_count") or 0)
+        return _return_fallback_ai_report(
+            analysis_data,
+            row_count,
+            [],
+            "Privacy Mode is enabled. No external AI model was called; this report was generated deterministically from fairness metrics.",
+        )
 
     try:
         if dataset_id:
@@ -1672,7 +1686,6 @@ def _run_ai_analyze(*, urllib_error, urllib_parse, urllib_request, time_module):
 
     row_count = int(len(df))
     columns = list(df.columns)
-    privacy_mode = str(request.form.get("privacy_mode", "")).lower() == "true"
     if privacy_mode:
         return _return_fallback_ai_report(
             analysis_data,

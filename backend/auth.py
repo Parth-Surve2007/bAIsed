@@ -2,14 +2,22 @@ from __future__ import annotations
 
 from functools import wraps
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from flask import Blueprint, g, jsonify, request
 
 try:
-    from .fb_admin import auth_client, db
+    from .fb_admin import auth_client, db, init_error
 except ImportError:  # pragma: no cover - direct script fallback
-    auth_client = None
-    db = None
+    try:
+        from fb_admin import auth_client, db, init_error
+    except ImportError as exc:
+        try:
+            from backend.fb_admin import auth_client, db, init_error
+        except ImportError as final_exc:
+            auth_client = None
+            db = None
+            init_error = f"Unable to import Firebase Admin helper: {final_exc or exc}"
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -66,7 +74,8 @@ def verify_token(f):
             return jsonify({"error": "Missing bearer token."}), 401
 
         if auth_client is None:
-            return _not_ready("Firebase Admin SDK is not initialized.", 503)
+            detail = f"Firebase Admin SDK is not initialized. {init_error}" if init_error else "Firebase Admin SDK is not initialized."
+            return _not_ready(detail, 503)
 
         try:
             decoded = auth_client.verify_id_token(token)
@@ -81,6 +90,8 @@ def verify_token(f):
 
 @auth_bp.route("/verify", methods=["OPTIONS"])
 @auth_bp.route("/profile", methods=["OPTIONS"])
+@auth_bp.route("/sessions", methods=["OPTIONS"])
+@auth_bp.route("/sessions/<session_id>", methods=["OPTIONS"])
 def auth_preflight():
     return ("", 204)
 
@@ -128,3 +139,125 @@ def upsert_profile():
 
     ref.set(profile, merge=True)
     return jsonify({"status": "ok", "profile": _profile_from_snapshot(ref.get(), user)})
+
+
+def _sessions_ref(uid: str):
+    return _profile_ref(uid).collection("workbench_sessions")
+
+
+def _clean_session_payload(payload: dict) -> dict:
+    allowed = {
+        "title",
+        "audit_mode",
+        "summary",
+        "explanation",
+        "audit_result",
+        "ai_chat",
+        "ai_report_markdown",
+        "ai_report_source",
+        "dataset_meta",
+        "model_meta",
+        "workspace_state",
+    }
+    cleaned = {key: payload.get(key) for key in allowed if key in payload}
+    title = str(cleaned.get("title") or "Untitled audit").strip()[:120]
+    cleaned["title"] = title or "Untitled audit"
+
+    chat = cleaned.get("ai_chat")
+    if isinstance(chat, list):
+        cleaned["ai_chat"] = [
+            {
+                "role": str(item.get("role", ""))[:20],
+                "content": str(item.get("content", ""))[:8000],
+            }
+            for item in chat[:80]
+            if isinstance(item, dict)
+        ]
+
+    report = cleaned.get("ai_report_markdown")
+    if report is not None:
+        cleaned["ai_report_markdown"] = str(report)[:60000]
+
+    cleaned["privacy_mode_saved"] = bool(payload.get("privacy_mode_saved", False))
+    return cleaned
+
+
+def _session_from_snapshot(snapshot) -> dict:
+    data = snapshot.to_dict() or {}
+    data["id"] = snapshot.id
+    return data
+
+
+@auth_bp.get("/sessions")
+@verify_token
+def list_sessions():
+    if db is None:
+        return _not_ready("Firestore is not initialized.", 503)
+    user = _public_user(g.firebase_user)
+    query = (
+        _sessions_ref(user["uid"])
+        .order_by("updated_at", direction="DESCENDING")
+        .limit(30)
+    )
+    sessions = [_session_from_snapshot(snapshot) for snapshot in query.stream()]
+    return jsonify({"status": "ok", "sessions": sessions})
+
+
+@auth_bp.post("/sessions")
+@verify_token
+def create_session():
+    if db is None:
+        return _not_ready("Firestore is not initialized.", 503)
+    user = _public_user(g.firebase_user)
+    payload = request.get_json(silent=True) or {}
+    now = _utc_now_iso()
+    session_id = str(payload.get("id") or uuid4())
+    data = _clean_session_payload(payload)
+    data.update(
+        {
+            "created_at": now,
+            "updated_at": now,
+            "owner_uid": user["uid"],
+        }
+    )
+    ref = _sessions_ref(user["uid"]).document(session_id)
+    ref.set(data)
+    return jsonify({"status": "ok", "session": _session_from_snapshot(ref.get())})
+
+
+@auth_bp.get("/sessions/<session_id>")
+@verify_token
+def get_session(session_id: str):
+    if db is None:
+        return _not_ready("Firestore is not initialized.", 503)
+    user = _public_user(g.firebase_user)
+    snapshot = _sessions_ref(user["uid"]).document(session_id).get()
+    if not snapshot.exists:
+        return jsonify({"error": "Session not found."}), 404
+    return jsonify({"status": "ok", "session": _session_from_snapshot(snapshot)})
+
+
+@auth_bp.put("/sessions/<session_id>")
+@verify_token
+def update_session(session_id: str):
+    if db is None:
+        return _not_ready("Firestore is not initialized.", 503)
+    user = _public_user(g.firebase_user)
+    payload = request.get_json(silent=True) or {}
+    ref = _sessions_ref(user["uid"]).document(session_id)
+    if not ref.get().exists:
+        return jsonify({"error": "Session not found."}), 404
+    data = _clean_session_payload(payload)
+    data["updated_at"] = _utc_now_iso()
+    ref.set(data, merge=True)
+    return jsonify({"status": "ok", "session": _session_from_snapshot(ref.get())})
+
+
+@auth_bp.delete("/sessions/<session_id>")
+@verify_token
+def delete_session(session_id: str):
+    if db is None:
+        return _not_ready("Firestore is not initialized.", 503)
+    user = _public_user(g.firebase_user)
+    _sessions_ref(user["uid"]).document(session_id).delete()
+    return jsonify({"status": "ok"})

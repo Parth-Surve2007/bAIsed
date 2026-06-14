@@ -150,7 +150,37 @@
   </div>
 </header>
 
-<main class="grid-fade min-h-screen pt-20">
+<aside class="fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] w-72 border-r border-slate-200 bg-white/95 px-4 py-5 shadow-sm backdrop-blur lg:block" id="session-sidebar">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Workspace</p>
+      <h2 class="mt-1 text-lg font-black text-slate-950">Recent Chats</h2>
+    </div>
+    <button class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-50" id="new-chat-btn" data-new-chat-button type="button" title="New chat">
+      <span class="material-symbols-outlined text-base">add</span>
+    </button>
+  </div>
+
+  <div class="mt-4 rounded-2xl border border-teal-200 bg-teal-50/70 p-3">
+    <label class="flex cursor-pointer items-start justify-between gap-3">
+      <div>
+        <span class="text-sm font-bold text-teal-950">Privacy Mode</span>
+        <span class="mt-1 block text-xs leading-5 text-teal-800">No AI calls or autosave. Private work stays local unless you save it.</span>
+      </div>
+      <input id="privacy-mode-toggle" data-privacy-mode-toggle type="checkbox" class="mt-1 h-5 w-5 rounded border-teal-300 text-teal-700 focus:ring-teal-600">
+    </label>
+    <button class="mt-3 hidden w-full rounded-xl border border-teal-300 bg-white px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-50" id="save-private-session-btn" data-save-private-session type="button">
+      Save private work
+    </button>
+  </div>
+
+  <p class="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500" id="session-status-text">Sign in to save recent chats.</p>
+  <div class="mt-4 space-y-2 overflow-y-auto pr-1" id="recent-sessions-list" style="max-height: calc(100vh - 18rem);">
+    <div class="rounded-xl border border-dashed border-slate-200 px-3 py-4 text-sm text-slate-500">No saved chats yet.</div>
+  </div>
+</aside>
+
+<main class="grid-fade min-h-screen pt-20 lg:pl-72">
   <section class="mx-auto max-w-7xl px-6 py-10">
     <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
@@ -171,6 +201,29 @@
           <p class="mt-2 text-2xl font-black text-black dark:text-white">0 to 100</p>
         </div>
       </div>
+    </div>
+
+    <div class="mb-6 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm lg:hidden">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Workspace</p>
+          <p class="mt-1 text-sm text-slate-600">Recent chats save to your account. Privacy Mode keeps this chat local.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700" data-new-chat-button type="button">
+            <span class="material-symbols-outlined text-base">add</span>
+            New Chat
+          </button>
+          <label class="inline-flex items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-bold text-teal-900">
+            <input data-privacy-mode-toggle type="checkbox" class="h-4 w-4 rounded border-teal-300 text-teal-700 focus:ring-teal-600">
+            Privacy
+          </label>
+          <button class="hidden rounded-xl border border-teal-300 bg-white px-3 py-2 text-sm font-bold text-teal-800" data-save-private-session type="button">
+            Save private work
+          </button>
+        </div>
+      </div>
+      <p class="mt-3 text-xs text-slate-500" id="mobile-session-status-text">Sign in to save recent chats.</p>
     </div>
 
     <div class="mb-8 flex items-center justify-start">
@@ -591,16 +644,6 @@
               <p class="mt-1 text-sm text-on-surface-variant">Perform a plain-English bias analysis using the configured AI models.</p>
             </div>
             <div class="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-container" id="ai-mode-chip">AI Powered</div>
-          </div>
-
-          <div class="mb-5 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 dark:border-teal-900/60 dark:bg-teal-950/20">
-            <label class="flex cursor-pointer items-start justify-between gap-4">
-              <div>
-                <span class="text-sm font-bold text-teal-950 dark:text-teal-100">Privacy Mode</span>
-                <span class="mt-1 block text-sm leading-6 text-teal-800 dark:text-teal-200">Disable external AI report and chat calls. Reports use deterministic metrics only.</span>
-              </div>
-              <input id="privacy-mode-toggle" type="checkbox" class="mt-1 h-5 w-5 rounded border-teal-300 text-teal-700 focus:ring-teal-600">
-            </label>
           </div>
 
           <!-- ── Conversational AI Explainer Panel ── -->
@@ -1028,6 +1071,10 @@
 
   </section>
 </main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="/frontend/js/firebase-config.js"></script>
+<script src="/frontend/js/auth.js"></script>
 <script src="/frontend/js/site.js"></script>
 <script src="/frontend/js/workbench.js?v=3"></script>
 <script>
