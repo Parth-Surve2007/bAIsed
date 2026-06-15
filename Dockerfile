@@ -13,8 +13,8 @@ COPY . .
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
-# Expose the port required by Hugging Face Spaces
-EXPOSE 7860
+# Expose the port (Cloud Run sets the PORT env var, defaults to 8080)
+EXPOSE $PORT
 
 # Run the Flask app with Gunicorn
-CMD ["gunicorn", "backend.app:app", "-b", "0.0.0.0:7860", "--timeout", "120"]
+CMD ["sh", "-c", "gunicorn backend.app:app -b 0.0.0.0:${PORT:-8080} --timeout 120"]
